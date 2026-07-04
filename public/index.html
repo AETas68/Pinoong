@@ -86,6 +86,7 @@ input[type=number]{font-family:'IBM Plex Mono',monospace}
 .tag-thit{background:#fce4ec;color:#7a1a35;border-radius:2px;padding:1px 6px;font-size:10px;font-weight:700}
 .tag-kho{background:#e3f2fd;color:#1a3f7a;border-radius:2px;padding:1px 6px;font-size:10px;font-weight:700}
 .tag-gia{background:#f3e5f5;color:#4a1a7a;border-radius:2px;padding:1px 6px;font-size:10px;font-weight:700}
+.tag-them{background:#E0F2F1;color:#00695C;border-radius:2px;padding:1px 6px;font-size:10px;font-weight:700}
 
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center}
@@ -345,6 +346,7 @@ tr:hover .sticky-col{background:#F7F4F0}
       <option>🥩 Nhóm Thịt &amp; Cá</option>
       <option>📦 Nhóm Hàng Khô</option>
       <option>🧂 Nhóm Gia Vị</option>
+      <option>🍢 Nhóm Món Thêm</option>
     </select>
     <button class="btn btn-teal btn-sm" onclick="openModal('modal-nvl-add')">➕ Thêm NVL</button>
     <button class="btn btn-outline btn-sm" onclick="exportNVL()">📥 Xuất Excel</button>
@@ -377,7 +379,7 @@ tr:hover .sticky-col{background:#F7F4F0}
       <option value="">— Tất Cả Nhóm —</option>
       <option>🥬 Nhóm Rau Củ</option><option>🍲 Nhóm BTP</option>
       <option>🥩 Nhóm Thịt &amp; Cá</option><option>📦 Nhóm Hàng Khô</option>
-      <option>🧂 Nhóm Gia Vị</option>
+      <option>🧂 Nhóm Gia Vị</option><option>🍢 Nhóm Món Thêm</option>
     </select>
     <button class="btn btn-teal btn-sm" onclick="openModal('modal-inv-add')">➕ Nhập Hàng Mới</button>
     <button class="btn btn-outline btn-sm" onclick="exportInventory()">📥 Xuất CSV</button>
@@ -526,6 +528,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </label>
     <button class="btn btn-teal btn-sm" onclick="openModal('modal-menu-add')">➕ Thêm Món</button>
     <button class="btn btn-outline btn-sm" onclick="openComboModal()">🔗 Tạo Combo</button>
+    <button class="btn btn-sm" style="background:#00695C;color:#fff;border-color:#004d40" onclick="openSyncModal('app_to_tc')" title="Đồng bộ công thức & món mới giữa App và Tại Chỗ">↔ Đồng Bộ Tại Chỗ</button>
     <button class="btn btn-outline btn-sm" onclick="renderMenu()">🔄 Tính Lại</button>
     <div class="metrics" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-left:auto;margin-bottom:0">
       <div class="metric m-blue" style="padding:8px 12px"><div class="metric-label">Tổng SL Bán</div><div class="metric-val fs11 mono" id="menu-foot-sl">0</div></div>
@@ -553,7 +556,8 @@ tr:hover .sticky-col{background:#F7F4F0}
       <option value="">— Tất Cả Nhóm —</option>
     </select>
     <button class="btn btn-teal btn-sm" onclick="openModal('modal-tc-add')">➕ Thêm Món Tại Chỗ</button>
-    <button class="btn btn-sm" style="background:var(--orange);color:#fff;border-color:#c0620d" onclick="copyGiaFromApp()">📋 Đồng Bộ Món Mới Từ App</button>
+    <button class="btn btn-sm" style="background:var(--orange);color:#fff;border-color:#c0620d" onclick="openSyncModal('app_to_tc')">📥 App → Tại Chỗ</button>
+    <button class="btn btn-sm" style="background:var(--blue);color:#fff;border-color:#1247a0" onclick="openSyncModal('tc_to_app')">📤 Tại Chỗ → App</button>
     <button class="btn btn-outline btn-sm" onclick="renderTaiCho()">🔄 Tính Lại</button>
     <div class="metrics" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-left:auto;margin-bottom:0">
       <div class="metric m-blue" style="padding:8px 12px"><div class="metric-label">Tổng SL Bán</div><div class="metric-val fs11 mono" id="tc-foot-sl">0</div></div>
@@ -1057,7 +1061,7 @@ tr:hover .sticky-col{background:#F7F4F0}
         <select id="nvl-new-nhom">
           <option>🥬 Nhóm Rau Củ</option><option>🍲 Nhóm BTP</option>
           <option>🥩 Nhóm Thịt &amp; Cá</option><option>📦 Nhóm Hàng Khô</option>
-          <option>🧂 Nhóm Gia Vị</option>
+          <option>🧂 Nhóm Gia Vị</option><option>🍢 Nhóm Món Thêm</option>
         </select>
       </div>
       <div class="form-group"><label>% Hao Hụt (0-100)</label><input type="number" id="nvl-new-hh" placeholder="5" min="0" max="100"></div>
@@ -1348,7 +1352,7 @@ tr:hover .sticky-col{background:#F7F4F0}
         <select id="nvl-edit-nhom">
           <option>🥬 Nhóm Rau Củ</option><option>🍲 Nhóm BTP</option>
           <option>🥩 Nhóm Thịt &amp; Cá</option><option>📦 Nhóm Hàng Khô</option>
-          <option>🧂 Nhóm Gia Vị</option>
+          <option>🧂 Nhóm Gia Vị</option><option>🍢 Nhóm Món Thêm</option>
         </select>
       </div>
     </div>
@@ -1391,6 +1395,13 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
+<!-- ════ Modal Đồng Bộ 2 Chiều App ↔ Tại Chỗ ════ -->
+<div class="modal-bg" id="modal-sync">
+  <div class="modal" style="max-width:780px;max-height:90vh;overflow-y:auto">
+    <div id="modal-sync-body"><!-- filled by openSyncModal() --></div>
+  </div>
+</div>
+
 </div><!-- /#app-root -->
 
 <script>
@@ -1427,6 +1438,28 @@ let S = {
 
 // ── Chuẩn hoá tên NVL để so khớp (bỏ khoảng trắng dư, không phân biệt hoa/thường) ──
 function normName(s){ return (s||'').replace(/\s+/g,' ').trim().toLowerCase(); }
+
+// ── Chuyển đổi đơn vị lưu trữ → đơn vị nhập thực tế ──────────
+function getInputUnit(dvt){
+  const d=(dvt||'kg').toLowerCase().trim();
+  if(['kg','kilo','k'].includes(d)) return 'g';
+  if(['lit','lít','l','liter'].includes(d)) return 'ml';
+  if(['g','gr','gram'].includes(d)) return 'g';
+  if(d==='ml') return 'ml';
+  return dvt;
+}
+
+// ── Cập nhật tất cả datalist NVL trên toàn trang ───────────────
+function refreshNVLDatalist(){
+  const opts=sortAZ(S.nvl).map(n=>`<option value="${n.ten}">`).join('');
+  ['nvl-datalist','nvl-datalist2'].forEach(id=>{
+    let dl=document.getElementById(id);
+    if(!dl){dl=document.createElement('datalist');dl.id=id;document.body.appendChild(dl);}
+    dl.innerHTML=opts;
+  });
+  const dl3=document.getElementById('nvl-inv-datalist');
+  if(dl3) dl3.innerHTML=opts;
+}
 
 // ── Nhận diện món Hủ Tiếu (để cộng thêm tuỳ chọn "Khô +5.000đ") ──
 function isHuTieu(ten){ return (ten||'').toLowerCase().includes('hủ tiếu'); }
@@ -1469,7 +1502,8 @@ function ensureMenuTaiCho(){
       const giaTC=(S.gia_tai_cho&&S.gia_tai_cho[m.id]>0)?S.gia_tai_cho[m.id]:m.gia_ban;
       return {
         id:m.id, ten:m.ten, nhom_mon:m.nhom_mon||getMonNhom(m.ten),
-        gia_ban:giaTC, so_ban:0,
+        gia_ban:giaTC, pct_san:0, pct_mkt:0,
+        so_ban:0,
         nguyen_lieu:JSON.parse(JSON.stringify(m.nguyen_lieu||[]))
       };
     });
@@ -1480,6 +1514,7 @@ function ensureMenuTaiCho(){
 // ── Menu group detection (auto A-Z sorted) ───────────────
 function getMonNhom(ten){
   const t=(ten||'').toLowerCase();
+  if(t.startsWith('thêm ')||t.startsWith('+ ')||t.includes('topping')) return '🍢 Món Thêm / Topping';
   if(t.includes('trà sữa'))                       return 'Trà Sữa Thái';
   if(t.includes('trà tắc')||t.includes('trà olong')) return 'Trà Thái';
   if(t.includes('hủ tiếu')&&t.includes('nước đục')) return 'Hủ Tiếu Nước Đục';
@@ -1515,11 +1550,13 @@ function groupBy(arr, fn){
 // NVL group colors
 const NVL_NHOM_COLOR={
   '🥬 Nhóm Rau Củ':'#1B5E20','🍲 Nhóm BTP':'#E65100',
-  '🥩 Nhóm Thịt & Cá':'#880E4F','📦 Nhóm Hàng Khô':'#0D47A1','🧂 Nhóm Gia Vị':'#4A148C'
+  '🥩 Nhóm Thịt & Cá':'#880E4F','📦 Nhóm Hàng Khô':'#0D47A1','🧂 Nhóm Gia Vị':'#4A148C',
+  '🍢 Nhóm Món Thêm':'#00695C'
 };
 const NVL_NHOM_BG={
   '🥬 Nhóm Rau Củ':'#F1F8E9','🍲 Nhóm BTP':'#FFF3E0',
-  '🥩 Nhóm Thịt & Cá':'#FCE4EC','📦 Nhóm Hàng Khô':'#E3F2FD','🧂 Nhóm Gia Vị':'#F3E5F5'
+  '🥩 Nhóm Thịt & Cá':'#FCE4EC','📦 Nhóm Hàng Khô':'#E3F2FD','🧂 Nhóm Gia Vị':'#F3E5F5',
+  '🍢 Nhóm Món Thêm':'#E0F2F1'
 };
 
 
@@ -1640,13 +1677,16 @@ function renderInventory(){
     return true;
   }).sort((a,b)=>a.date.localeCompare(b.date)||a.ten.localeCompare(b.ten,'vi'));
 
-  // Set default date
+  // Set default date — luôn về hôm nay khi xem tháng hiện tại
   const ngayEl=document.getElementById('inv-q-ngay');
-  if(ngayEl&&!ngayEl.value) ngayEl.value=new Date().toISOString().slice(0,10);
+  if(ngayEl){
+    const _t=new Date(),_ts=_t.toISOString().slice(0,10);
+    const _curMk=getInvMK(),_nowMk=mkey(_t.getMonth()+1,_t.getFullYear());
+    if(!ngayEl.value||_curMk===_nowMk) ngayEl.value=_ts;
+  }
 
   // Populate NVL datalist (A-Z)
-  const dl=document.getElementById('nvl-inv-datalist');
-  if(dl) dl.innerHTML=sortAZ(S.nvl).map(n=>`<option value="${n.ten}">`).join('');
+  refreshNVLDatalist();
 
   // Populate history NVL selector (A-Z)
   const histSel=document.getElementById('inv-history-nvl');
@@ -2358,8 +2398,10 @@ async function renderNguoiDung(){
       } else if(isSuper){
         // Không ai được xoá hoặc sửa superadmin
         actions = '<span class="fs11 txt-gray" title="Tài khoản được bảo vệ">🔒 Được bảo vệ</span>';
-      } else {
+      } else if(iAmSuper){
         actions = `<button class="btn btn-red btn-sm" onclick="deleteUser(${u.id}, '${escHtml(u.name)}')">Xoá</button>`;
+      } else {
+        actions = '<span class="fs11 txt-gray" title="Chỉ Super Admin mới được xoá tài khoản">—</span>';
       }
 
       return `
@@ -2680,6 +2722,7 @@ function nhomTag(nhom){
   if(nhom.includes('Thịt')) return `<span class="tag-thit">Thịt & Cá</span>`;
   if(nhom.includes('Khô')) return `<span class="tag-kho">Hàng Khô</span>`;
   if(nhom.includes('Gia Vị')) return `<span class="tag-gia">Gia Vị</span>`;
+  if(nhom.includes('Món Thêm')||nhom.includes('Topping')) return `<span class="tag-them">🍢 Thêm</span>`;
   return `<span class="badge b-gray">${nhom}</span>`;
 }
 
@@ -2693,7 +2736,7 @@ function goPage(id){
   event?.target?.classList.add('on');
   // Sync month pickers
   const t=S.thang, n=S.nam;
-  ['bh','cc','cp','tk','bc'].forEach(prefix=>{
+  ['bh','cc','cp','tk','bc','inv'].forEach(prefix=>{
     const ts = document.getElementById(prefix+'-thang');
     const tn = document.getElementById(prefix+'-nam');
     if(ts) ts.value = t;
@@ -3170,7 +3213,7 @@ function addNVL(){
   const hh=parseFloat(document.getElementById('nvl-new-hh').value)||5;
   S.hao_hut[ten]=hh;
   closeModal('modal-nvl-add');
-  saveData(); renderNVL();
+  saveData(); renderNVL(); refreshNVLDatalist();
   ['nvl-new-ten','nvl-new-dvt','nvl-new-gia','nvl-new-hh','nvl-new-ton'].forEach(id=>document.getElementById(id).value='');
 }
 
@@ -3214,7 +3257,7 @@ function saveNVLEdit(){
     S.nvl[idx].gia_chuan=newGia;
     S.nvl[idx].gia_chuan_ngay=new Date().toISOString().slice(0,10);
   }
-  closeModal('modal-nvl-edit'); saveData(); renderNVL();
+  closeModal('modal-nvl-edit'); saveData(); renderNVL(); refreshNVLDatalist();
 }
 function delNVL(idx){
   if(!confirm('Xóa NVL này?')) return;
@@ -3612,64 +3655,46 @@ function editMonMoi(idx){
   for(const nl of (mon.nguyen_lieu||[])){
     addEditIngr(nl.ten, nl.dvt_nvl, nl.dinh_luong);
   }
+  refreshNVLDatalist();
   openModal('modal-menu-edit');
 }
 
 let editIngrCount = 0;
 function addEditIngr(ten='', dvt='g', dl=0){
   editIngrCount++;
-  const el = document.getElementById('edit-mon-ingr');
-  const div = document.createElement('div');
-  div.className = 'form-grid fg3 mt8';
-  div.id = `ei-${editIngrCount}`;
-  div.style.alignItems = 'flex-end';
-  div.innerHTML = `
+  const el=document.getElementById('edit-mon-ingr');
+  const div=document.createElement('div');
+  div.className='form-grid fg3 mt8';
+  div.id=`ei-${editIngrCount}`;
+  div.style.alignItems='flex-end';
+  const _iu=getInputUnit(dvt);
+  div.innerHTML=`
     <div class="form-group"><label>Tên NVL</label>
-      <input list="nvl-datalist" id="ei${editIngrCount}-ten" value="${ten}" placeholder="Tên nguyên liệu"
+      <input list="nvl-datalist" id="ei${editIngrCount}-ten" value="${ten}" placeholder="Gõ để tìm NVL..."
         oninput="autoFillUnit(${editIngrCount})"></div>
-    <div class="form-group"><label>ĐVT NVL (tự động)</label>
-      <input id="ei${editIngrCount}-dvt" value="${dvt}" placeholder="kg" readonly style="background:#f5f5f3"></div>
-    <div class="form-group">
-      <label>Định Lượng <span id="ei${editIngrCount}-unit-hint" style="font-weight:700;color:var(--teal)">(g)</span></label>
+    <div class="form-group"><label>Đơn Vị Nhập</label>
+      <input id="ei${editIngrCount}-dvt" value="${_iu}" placeholder="g" readonly
+        style="background:#f0fdf4;border-color:var(--teal);font-weight:700;color:var(--teal)"></div>
+    <div class="form-group"><label>Định Lượng</label>
       <div style="display:flex;gap:4px;align-items:center">
         <input type="number" id="ei${editIngrCount}-dl" value="${dl}" placeholder="0" step="0.001" min="0" style="flex:1">
-        <span id="ei${editIngrCount}-unit-tag" style="font-size:12px;font-weight:700;color:var(--teal);min-width:22px">g</span>
+        <span id="ei${editIngrCount}-unit-tag" style="font-size:12px;font-weight:700;color:var(--teal);min-width:22px">${_iu}</span>
         <button type="button" class="btn btn-red btn-sm" onclick="document.getElementById('ei-${editIngrCount}').remove()">✕</button>
       </div>
     </div>`;
   el.appendChild(div);
-  // Pre-fill unit hint if ten is already provided
-  if(ten) {
-    const nvl = S.nvl.find(x=>normName(x.ten)===normName(ten));
-    if(nvl) {
-      const dvtX = (nvl.dvt||'kg').toLowerCase().trim();
-      const isWeight = ['kg','kilo','k','g','gr','gram'].includes(dvtX);
-      const isVol = ['lit','lít','l','liter','ml'].includes(dvtX);
-      const unitLbl = isWeight ? 'g' : isVol ? 'ml' : nvl.dvt;
-      const hint = document.getElementById(`ei${editIngrCount}-unit-hint`);
-      const tag = document.getElementById(`ei${editIngrCount}-unit-tag`);
-      if(hint) hint.textContent = `(${unitLbl})`;
-      if(tag) tag.textContent = unitLbl;
-    }
-  }
 }
 
 function autoFillUnit(i){
-  const ten = document.getElementById(`ei${i}-ten`)?.value?.trim();
+  const ten=document.getElementById(`ei${i}-ten`)?.value?.trim();
   if(!ten) return;
-  const nvl = S.nvl.find(x=>normName(x.ten)===normName(ten));
-  if(nvl) {
-    const el = document.getElementById(`ei${i}-dvt`);
-    if(el) el.value = nvl.dvt;
-    // Cập nhật hint đơn vị nhập cho Định Lượng
-    const dvt = (nvl.dvt||'kg').toLowerCase().trim();
-    const isWeight = ['kg','kilo','k','g','gr','gram'].includes(dvt);
-    const isVol = ['lit','lít','l','liter','ml'].includes(dvt);
-    const unitLabel = isWeight ? 'g' : isVol ? 'ml' : nvl.dvt;
-    const hint = document.getElementById(`ei${i}-unit-hint`);
-    const tag = document.getElementById(`ei${i}-unit-tag`);
-    if(hint) hint.textContent = `(${unitLabel})`;
-    if(tag) tag.textContent = unitLabel;
+  const nvl=S.nvl.find(x=>normName(x.ten)===normName(ten));
+  if(nvl){
+    const iu=getInputUnit(nvl.dvt);
+    const el=document.getElementById(`ei${i}-dvt`);
+    if(el) el.value=iu;
+    const tag=document.getElementById(`ei${i}-unit-tag`);
+    if(tag) tag.textContent=iu;
   }
 }
 
@@ -3770,14 +3795,11 @@ function autoFillMnUnit(i){
   if(!ten) return;
   const nvl=S.nvl.find(x=>normName(x.ten)===normName(ten));
   if(nvl){
+    const iu=getInputUnit(nvl.dvt);
     const el=document.getElementById(`mn-i${i}-dvt`);
-    if(el) el.value=nvl.dvt;
-    const dvt=(nvl.dvt||'kg').toLowerCase().trim();
-    const isWeight=['kg','kilo','k','g','gr','gram'].includes(dvt);
-    const isVol=['lit','lít','l','liter','ml'].includes(dvt);
-    const unitLabel=isWeight?'g':isVol?'ml':nvl.dvt;
+    if(el) el.value=iu;
     const hint=document.getElementById(`mn-i${i}-unit-hint`);
-    if(hint) hint.textContent=`(${unitLabel})`;
+    if(hint) hint.textContent=`(${iu})`;
   }
 }
 function addMNIngr(){
@@ -3789,18 +3811,13 @@ function addMNIngr(){
   div.innerHTML=`
     <div class="form-group"><label>Tên NVL</label>
       <input list="nvl-datalist" id="mn-i${mnIngrCount}-ten" placeholder="Gõ để tìm..." oninput="autoFillMnUnit(${mnIngrCount})"></div>
-    <div class="form-group"><label>Đơn Vị Kho</label><input id="mn-i${mnIngrCount}-dvt" placeholder="kg" style="background:#f5f5f3" readonly></div>
-    <div class="form-group"><label>Định Lượng <span id="mn-i${mnIngrCount}-unit-hint" style="font-weight:700;color:var(--teal)">(g)</span></label>
+    <div class="form-group"><label>Đơn Vị Nhập</label>
+      <input id="mn-i${mnIngrCount}-dvt" placeholder="g" readonly style="background:#f0fdf4;border-color:var(--teal);font-weight:700;color:var(--teal)"></div>
+    <div class="form-group"><label>Định Lượng</label>
       <input type="number" id="mn-i${mnIngrCount}-dl" placeholder="0" step="0.1" min="0">
     </div>`;
   el.appendChild(div);
-  // Add datalist if not exists
-  if(!document.getElementById('nvl-datalist')){
-    const dl=document.createElement('datalist');
-    dl.id='nvl-datalist';
-    dl.innerHTML=S.nvl.map(n=>`<option value="${n.ten}">`).join('');
-    document.body.appendChild(dl);
-  }
+  refreshNVLDatalist();
 }
 
 function addMonMoi(){
@@ -4157,7 +4174,7 @@ function _xuatThangMK(nvlTen, mk){
     if(nl && sl > 0) total += sl * (nl.dinh_luong / 1000) * (1 + (S.hao_hut[nvlTen] || 0) / 100);
   }
   // Xuất từ menu tại chỗ
-  for(const mon of (S.menu_tc || [])){
+  for(const mon of (S.menu_taicho || [])){
     const sl = getTotalBan(mk, 'tc_' + mon.id);
     const nl = (mon.nguyen_lieu || []).find(x => x.ten === nvlTen);
     if(nl && sl > 0) total += sl * (nl.dinh_luong / 1000) * (1 + (S.hao_hut[nvlTen] || 0) / 100);
@@ -4505,7 +4522,10 @@ function renderBaoCao(){
 // ═══════════════════════════════════════════════════════════════
 // MODALS
 // ═══════════════════════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('open');}
+function openModal(id){
+  if(['modal-menu-add','modal-tc-add','modal-menu-edit','modal-tc-edit'].includes(id)) refreshNVLDatalist();
+  document.getElementById(id).classList.add('open');
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));});
@@ -5063,21 +5083,187 @@ function doMergeNhanVienJSON(){
 // (S.menu_taicho — độc lập với S.menu, CRUD đầy đủ)
 // ═══════════════════════════════════════════════════════════════
 
-/** Đồng bộ thêm món mới từ App vào Menu Tại Chỗ (không ghi đè món đã có) */
-function copyGiaFromApp(){
-  if(!confirm('Đồng bộ thêm các món MỚI từ App vào Menu Tại Chỗ?\n(Các món đã có trong Menu Tại Chỗ sẽ KHÔNG bị thay đổi)')) return;
-  const existIds=new Set((S.menu_taicho||[]).map(m=>m.id));
-  let added=0;
-  for(const mon of S.menu){
-    if(!existIds.has(mon.id)){
-      S.menu_taicho.push(JSON.parse(JSON.stringify(mon)));
-      added++;
-    }
+function copyGiaFromApp(){ openSyncModal('app_to_tc'); }
+
+// ════ Đồng Bộ 2 Chiều App ↔ Menu Tại Chỗ ════════════════════════
+function openSyncModal(dir){
+  ensureMenuTaiCho();
+  const tcIds=new Set((S.menu_taicho||[]).map(m=>m.id));
+  const apIds=new Set((S.menu||[]).map(m=>m.id));
+
+  function diffBadge(a,b){
+    // So sánh công thức có khác nhau không
+    const ja=JSON.stringify((a.nguyen_lieu||[]).map(x=>x.ten+'|'+x.dinh_luong).sort());
+    const jb=JSON.stringify((b.nguyen_lieu||[]).map(x=>x.ten+'|'+x.dinh_luong).sort());
+    return ja!==jb
+      ? '<span class="badge b-amber" style="font-size:10px">CT khác</span>'
+      : '<span class="badge b-green" style="font-size:10px">CT giống</span>';
+  }
+
+  let html='';
+  if(dir==='app_to_tc'){
+    const newItems=(S.menu||[]).filter(m=>!tcIds.has(m.id));
+    const updItems=(S.menu||[]).filter(m=>tcIds.has(m.id));
+    html=`
+      <div class="modal-hdr">
+        <span class="modal-title">📥 Đồng Bộ: App → Menu Tại Chỗ</span>
+        <button class="modal-close" onclick="closeModal('modal-sync')">✕</button>
+      </div>
+      <div class="alert alert-success fs11 mb8">
+        ✅ <strong>Giá tại chỗ sẽ KHÔNG bị ghi đè.</strong>
+        Chỉ thêm món mới hoặc cập nhật công thức nguyên liệu theo lựa chọn.
+      </div>
+      ${newItems.length>0?`
+      <div class="sec-label">➕ Món MỚI chưa có trong Tại Chỗ (${newItems.length} món)</div>
+      <div style="border:1.5px solid var(--teal);border-radius:2px;max-height:200px;overflow-y:auto;margin-bottom:10px">
+        <div style="padding:6px 10px;background:#f0fdf4;font-size:10px;font-weight:700;color:var(--teal)">
+          ✓ Chọn tất cả mới &nbsp;
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px"
+            onclick="document.querySelectorAll('.chk-new-atc').forEach(c=>c.checked=true)">Chọn tất</button>
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px;margin-left:4px"
+            onclick="document.querySelectorAll('.chk-new-atc').forEach(c=>c.checked=false)">Bỏ tất</button>
+        </div>
+        ${newItems.map(m=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px">
+          <input type="checkbox" class="chk-new-atc" value="new_${m.id}" checked style="width:14px;height:14px">
+          <span style="flex:1;font-weight:600">${m.ten}</span>
+          <span class="mono txt-gray" style="font-size:11px">${fmt(m.gia_ban)}</span>
+          <span class="badge b-blue" style="font-size:10px">${m.nhom_mon||getMonNhom(m.ten)}</span>
+        </label>`).join('')}
+      </div>`:'<div class="alert alert-success fs11 mb8">✅ Không có món mới nào cần thêm.</div>'}
+      ${updItems.length>0?`
+      <div class="sec-label">🔄 Cập Nhật Công Thức NVL Từ App Sang TC (${updItems.length} món)</div>
+      <div style="border:1.5px solid var(--border);border-radius:2px;max-height:200px;overflow-y:auto;margin-bottom:10px">
+        <div style="padding:6px 10px;background:#f5f5f3;font-size:10px;font-weight:700;color:var(--text2)">
+          Chỉ cập nhật công thức — giá tại chỗ giữ nguyên &nbsp;
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px"
+            onclick="document.querySelectorAll('.chk-upd-atc').forEach(c=>c.checked=true)">Chọn tất</button>
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px;margin-left:4px"
+            onclick="document.querySelectorAll('.chk-upd-atc').forEach(c=>c.checked=false)">Bỏ tất</button>
+        </div>
+        ${updItems.map(m=>{
+          const tc=S.menu_taicho.find(x=>x.id===m.id)||{};
+          return `<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px">
+            <input type="checkbox" class="chk-upd-atc" value="upd_${m.id}" style="width:14px;height:14px">
+            <span style="flex:1;font-weight:600">${m.ten}</span>
+            <span class="mono txt-gray fs11">App: ${fmt(m.gia_ban)}</span>
+            <span class="mono txt-amber fs11">TC: ${fmt(tc.gia_ban||m.gia_ban)}</span>
+            ${diffBadge(m, tc)}
+          </label>`;
+        }).join('')}
+      </div>`:''}
+      <div class="mt12 flex-center" style="justify-content:flex-end;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="openSyncModal('tc_to_app')">🔄 Đổi: TC→App</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-sync')">Hủy</button>
+        <button class="btn btn-teal" onclick="doSync('app_to_tc')">✓ Đồng Bộ Ngay</button>
+      </div>`;
+  } else {
+    const newTCItems=(S.menu_taicho||[]).filter(m=>!apIds.has(m.id));
+    const updTCItems=(S.menu_taicho||[]).filter(m=>apIds.has(m.id));
+    html=`
+      <div class="modal-hdr">
+        <span class="modal-title">📤 Đồng Bộ: Menu Tại Chỗ → App</span>
+        <button class="modal-close" onclick="closeModal('modal-sync')">✕</button>
+      </div>
+      <div class="alert alert-success fs11 mb8">
+        ✅ <strong>Giá App sẽ KHÔNG bị ghi đè.</strong>
+        Chỉ thêm món mới từ Tại Chỗ vào App hoặc cập nhật công thức nguyên liệu.
+      </div>
+      ${newTCItems.length>0?`
+      <div class="sec-label">➕ Món Tại Chỗ MỚI chưa có trong App (${newTCItems.length} món)</div>
+      <div style="border:1.5px solid var(--orange);border-radius:2px;max-height:200px;overflow-y:auto;margin-bottom:10px">
+        <div style="padding:6px 10px;background:#fff8f0;font-size:10px;font-weight:700;color:var(--orange)">
+          Sẽ thêm vào App với phí sàn 29.5% mặc định &nbsp;
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px"
+            onclick="document.querySelectorAll('.chk-new-tca').forEach(c=>c.checked=true)">Chọn tất</button>
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px;margin-left:4px"
+            onclick="document.querySelectorAll('.chk-new-tca').forEach(c=>c.checked=false)">Bỏ tất</button>
+        </div>
+        ${newTCItems.map(m=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px">
+          <input type="checkbox" class="chk-new-tca" value="newtc_${m.id}" checked style="width:14px;height:14px">
+          <span style="flex:1;font-weight:600">${m.ten}</span>
+          <span class="mono txt-amber fs11">TC: ${fmt(m.gia_ban)}</span>
+        </label>`).join('')}
+      </div>`:'<div class="alert alert-success fs11 mb8">✅ Không có món tại chỗ mới cần đồng bộ về App.</div>'}
+      ${updTCItems.length>0?`
+      <div class="sec-label">🔄 Đồng Bộ Công Thức Từ TC → App (${updTCItems.length} món)</div>
+      <div style="border:1.5px solid var(--border);border-radius:2px;max-height:200px;overflow-y:auto;margin-bottom:10px">
+        <div style="padding:6px 10px;background:#f5f5f3;font-size:10px;font-weight:700;color:var(--text2)">
+          Chỉ cập nhật công thức — giá App giữ nguyên &nbsp;
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px"
+            onclick="document.querySelectorAll('.chk-upd-tca').forEach(c=>c.checked=true)">Chọn tất</button>
+          <button class="btn btn-sm btn-outline" style="font-size:10px;padding:1px 6px;margin-left:4px"
+            onclick="document.querySelectorAll('.chk-upd-tca').forEach(c=>c.checked=false)">Bỏ tất</button>
+        </div>
+        ${updTCItems.map(m=>{
+          const ap=S.menu.find(x=>x.id===m.id)||{};
+          return `<label style="display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px">
+            <input type="checkbox" class="chk-upd-tca" value="updtc_${m.id}" style="width:14px;height:14px">
+            <span style="flex:1;font-weight:600">${m.ten}</span>
+            <span class="mono txt-gray fs11">App: ${fmt(ap.gia_ban||0)}</span>
+            <span class="mono txt-amber fs11">TC: ${fmt(m.gia_ban)}</span>
+            ${diffBadge(m, ap)}
+          </label>`;
+        }).join('')}
+      </div>`:''}
+      <div class="mt12 flex-center" style="justify-content:flex-end;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="openSyncModal('app_to_tc')">🔄 Đổi: App→TC</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-sync')">Hủy</button>
+        <button class="btn btn-teal" onclick="doSync('tc_to_app')">✓ Đồng Bộ Ngay</button>
+      </div>`;
+  }
+  document.getElementById('modal-sync-body').innerHTML=html;
+  openModal('modal-sync');
+}
+
+function doSync(dir){
+  const sel=id=>[...document.querySelectorAll(`#modal-sync-body input[type=checkbox][value^="${id}"]:checked`)];
+  let added=0, updated=0;
+  if(dir==='app_to_tc'){
+    sel('new_').forEach(cb=>{
+      const id=parseInt(cb.value.replace('new_',''));
+      const m=S.menu.find(x=>x.id===id);
+      if(m&&!S.menu_taicho.find(x=>x.id===id)){
+        const giaTC=(S.gia_tai_cho&&S.gia_tai_cho[id]>0)?S.gia_tai_cho[id]:m.gia_ban;
+        S.menu_taicho.push({...JSON.parse(JSON.stringify(m)),gia_ban:giaTC,pct_san:0,pct_mkt:0});
+        added++;
+      }
+    });
+    sel('upd_').forEach(cb=>{
+      const id=parseInt(cb.value.replace('upd_',''));
+      const app=S.menu.find(x=>x.id===id);
+      const tc=S.menu_taicho.find(x=>x.id===id);
+      if(app&&tc){
+        tc.nguyen_lieu=JSON.parse(JSON.stringify(app.nguyen_lieu||[]));
+        tc.ten=app.ten; tc.nhom_mon=app.nhom_mon||getMonNhom(app.ten);
+        updated++;
+      }
+    });
+  } else {
+    sel('newtc_').forEach(cb=>{
+      const id=parseInt(cb.value.replace('newtc_',''));
+      const tc=S.menu_taicho.find(x=>x.id===id);
+      if(tc&&!S.menu.find(x=>x.id===id)){
+        const newId=Math.max(0,...S.menu.map(x=>x.id))+1;
+        S.menu.push({...JSON.parse(JSON.stringify(tc)),id:newId,pct_san:0.295,pct_mkt:0,so_ban:0});
+        added++;
+      }
+    });
+    sel('updtc_').forEach(cb=>{
+      const id=parseInt(cb.value.replace('updtc_',''));
+      const tc=S.menu_taicho.find(x=>x.id===id);
+      const app=S.menu.find(x=>x.id===id);
+      if(tc&&app){
+        app.nguyen_lieu=JSON.parse(JSON.stringify(tc.nguyen_lieu||[]));
+        updated++;
+      }
+    });
   }
   ensureNVLForIngredients(); syncNVLHaoHut();
-  saveData();
-  renderTaiCho();
-  alert(added>0?`✅ Đã thêm ${added} món mới từ App vào Menu Tại Chỗ!`:'Không có món mới nào để thêm.');
+  closeModal('modal-sync');
+  saveData(); renderTaiCho(); renderMenu();
+  alert(`✅ Đồng bộ hoàn tất!\n➕ Thêm mới: ${added} món\n🔄 Cập nhật công thức: ${updated} món`);
 }
 
 function renderTaiCho(){
@@ -5260,52 +5446,33 @@ function addEditIngrTC(ten='', dvt='kg', dl=0){
   div.className='form-grid fg3 mt8';
   div.id=`eitc-${editIngrCountTC}`;
   div.style.alignItems='flex-end';
+  const _iu=getInputUnit(dvt);
   div.innerHTML=`
     <div class="form-group"><label>Tên NVL</label>
-      <input list="nvl-datalist" id="eitc${editIngrCountTC}-ten" value="${ten}" placeholder="Tên nguyên liệu"
+      <input list="nvl-datalist" id="eitc${editIngrCountTC}-ten" value="${ten}" placeholder="Gõ để tìm NVL..."
         oninput="autoFillUnitTC(${editIngrCountTC})"></div>
-    <div class="form-group"><label>ĐVT NVL (tự động)</label>
-      <input id="eitc${editIngrCountTC}-dvt" value="${dvt}" placeholder="kg" readonly style="background:#f5f5f3"></div>
-    <div class="form-group">
-      <label>Định Lượng <span id="eitc${editIngrCountTC}-unit-hint" style="font-weight:700;color:var(--teal)">(g)</span></label>
+    <div class="form-group"><label>Đơn Vị Nhập</label>
+      <input id="eitc${editIngrCountTC}-dvt" value="${_iu}" placeholder="g" readonly
+        style="background:#f0fdf4;border-color:var(--teal);font-weight:700;color:var(--teal)"></div>
+    <div class="form-group"><label>Định Lượng</label>
       <div style="display:flex;gap:4px;align-items:center">
         <input type="number" id="eitc${editIngrCountTC}-dl" value="${dl}" placeholder="0" step="0.001" min="0" style="flex:1">
-        <span id="eitc${editIngrCountTC}-unit-tag" style="font-size:12px;font-weight:700;color:var(--teal);min-width:22px">g</span>
+        <span id="eitc${editIngrCountTC}-unit-tag" style="font-size:12px;font-weight:700;color:var(--teal);min-width:22px">${_iu}</span>
         <button type="button" class="btn btn-red btn-sm" onclick="document.getElementById('eitc-${editIngrCountTC}').remove()">✕</button>
       </div>
     </div>`;
   el.appendChild(div);
-  // Pre-fill unit hint if ten is already provided
-  if(ten) {
-    const nvlX=S.nvl.find(x=>normName(x.ten)===normName(ten));
-    if(nvlX) {
-      const dvtX=(nvlX.dvt||'kg').toLowerCase().trim();
-      const isWeightX=['kg','kilo','k','g','gr','gram'].includes(dvtX);
-      const isVolX=['lit','lít','l','liter','ml'].includes(dvtX);
-      const unitLblX=isWeightX?'g':isVolX?'ml':nvlX.dvt;
-      const hintX=document.getElementById(`eitc${editIngrCountTC}-unit-hint`);
-      const tagX=document.getElementById(`eitc${editIngrCountTC}-unit-tag`);
-      if(hintX) hintX.textContent=`(${unitLblX})`;
-      if(tagX) tagX.textContent=unitLblX;
-    }
-  }
 }
 function autoFillUnitTC(i){
   const ten=document.getElementById(`eitc${i}-ten`)?.value?.trim();
   if(!ten) return;
   const nvl=S.nvl.find(x=>normName(x.ten)===normName(ten));
   if(nvl){
+    const iu=getInputUnit(nvl.dvt);
     const el=document.getElementById(`eitc${i}-dvt`);
-    if(el) el.value=nvl.dvt;
-    // Cập nhật hint đơn vị nhập cho Định Lượng
-    const dvt=(nvl.dvt||'kg').toLowerCase().trim();
-    const isWeight=['kg','kilo','k','g','gr','gram'].includes(dvt);
-    const isVol=['lit','lít','l','liter','ml'].includes(dvt);
-    const unitLabel=isWeight?'g':isVol?'ml':nvl.dvt;
-    const hint=document.getElementById(`eitc${i}-unit-hint`);
+    if(el) el.value=iu;
     const tag=document.getElementById(`eitc${i}-unit-tag`);
-    if(hint) hint.textContent=`(${unitLabel})`;
-    if(tag) tag.textContent=unitLabel;
+    if(tag) tag.textContent=iu;
   }
 }
 
@@ -5320,6 +5487,7 @@ function editMonTC(idx){
   for(const nl of (mon.nguyen_lieu||[])){
     addEditIngrTC(nl.ten, nl.dvt_nvl, nl.dinh_luong);
   }
+  refreshNVLDatalist();
   openModal('modal-tc-edit');
 }
 
@@ -5345,6 +5513,7 @@ function saveMonTCEdit(){
     ten,
     nhom_mon: getMonNhom(ten),
     gia_ban: parseFloat(document.getElementById('edit-tc-gia').value)||0,
+    pct_san:0, pct_mkt:0,
     nguyen_lieu: ingr
   };
   closeModal('modal-tc-edit');
@@ -5364,8 +5533,8 @@ function addTCNewIngr(){
   div.innerHTML=`
     <div class="form-group"><label>Tên NVL</label>
       <input list="nvl-datalist" id="tcni${tcNewIngrCount}-ten" placeholder="Gõ để tìm..." oninput="autoFillTCNewUnit(${tcNewIngrCount})"></div>
-    <div class="form-group"><label>ĐVT NVL (tự động)</label>
-      <input id="tcni${tcNewIngrCount}-dvt" placeholder="kg" readonly style="background:#f5f5f3"></div>
+    <div class="form-group"><label>Đơn Vị Nhập</label>
+      <input id="tcni${tcNewIngrCount}-dvt" placeholder="g" readonly style="background:#f0fdf4;border-color:var(--teal);font-weight:700;color:var(--teal)"></div>
     <div class="form-group">
       <label>Định Lượng <span id="tcni${tcNewIngrCount}-unit-hint" style="font-weight:700;color:var(--teal)">(g)</span></label>
       <div style="display:flex;gap:4px;align-items:center">
@@ -5375,28 +5544,18 @@ function addTCNewIngr(){
       </div>
     </div>`;
   el.appendChild(div);
-  if(!document.getElementById('nvl-datalist')){
-    const dl=document.createElement('datalist');
-    dl.id='nvl-datalist';
-    dl.innerHTML=S.nvl.map(n=>`<option value="${n.ten}">`).join('');
-    document.body.appendChild(dl);
-  }
+  refreshNVLDatalist();
 }
 function autoFillTCNewUnit(i){
   const ten=document.getElementById(`tcni${i}-ten`)?.value?.trim();
   if(!ten) return;
   const nvl=S.nvl.find(x=>normName(x.ten)===normName(ten));
   if(nvl){
+    const iu=getInputUnit(nvl.dvt);
     const el=document.getElementById(`tcni${i}-dvt`);
-    if(el) el.value=nvl.dvt;
-    const dvt=(nvl.dvt||'kg').toLowerCase().trim();
-    const isWeight=['kg','kilo','k','g','gr','gram'].includes(dvt);
-    const isVol=['lit','lít','l','liter','ml'].includes(dvt);
-    const unitLabel=isWeight?'g':isVol?'ml':nvl.dvt;
-    const hint=document.getElementById(`tcni${i}-unit-hint`);
+    if(el) el.value=iu;
     const tag=document.getElementById(`tcni${i}-unit-tag`);
-    if(hint) hint.textContent=`(${unitLabel})`;
-    if(tag) tag.textContent=unitLabel;
+    if(tag) tag.textContent=iu;
   }
 }
 
@@ -5421,6 +5580,7 @@ function addMonTCMoi(){
   S.menu_taicho.push({id:newId, ten,
     nhom_mon: getMonNhom(ten),
     gia_ban: parseFloat(document.getElementById('tc-new-gia').value)||0,
+    pct_san:0, pct_mkt:0,
     so_ban:0, nguyen_lieu:ingr});
   closeModal('modal-tc-add');
   document.getElementById('tc-new-ingr-list').innerHTML='';
@@ -5483,13 +5643,15 @@ function showCThucTaiCho(idx){
 
 // ═══════════════════════════════════════════════════════════════
 
-setInterval(saveData, 120000);
+// ── Auto-refresh datalist mỗi khi save (đảm bảo luôn mới) ──
+setInterval(()=>{ saveData(); refreshNVLDatalist(); }, 120000);
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
 async function init(){
   await loadData();
+  refreshNVLDatalist();
   if(!S.huy_hang) S.huy_hang={};
   if(!S.inventory) S.inventory={};
   if(!S.thuong) S.thuong={};
@@ -5505,13 +5667,8 @@ async function init(){
     if(ts) ts.value=t;
     if(tn) tn.value=n;
   });
-  // Add nvl datalist for huy hang
-  if(!document.getElementById('nvl-datalist2')){
-    const dl=document.createElement('datalist');
-    dl.id='nvl-datalist2';
-    dl.innerHTML=S.nvl.map(n=>`<option value="${n.ten}">`).join('');
-    document.body.appendChild(dl);
-  }
+  const _iNgay=document.getElementById('inv-q-ngay');
+  if(_iNgay) _iNgay.value=new Date().toISOString().slice(0,10);
   document.getElementById('tsLabel').textContent=new Date().toLocaleTimeString('vi');
   renderDashboard();
 }
