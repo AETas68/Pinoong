@@ -176,7 +176,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 <body>
 <script src="/socket.io/socket.io.js"></script>
 
-
+<!-- LOGIN OVERLAY -->
 <div id="login-overlay" class="login-overlay">
   <div class="login-box">
     <div class="login-logo">🍜 <span>Khạp</span>Khun</div>
@@ -196,7 +196,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 
 <div id="app-root" class="hidden">
 
-
+<!-- NAV -->
 <nav class="nav">
   <span class="logo">🍜 <span>Khạp</span>Khun</span>
   <span class="ver">v13</span>
@@ -226,7 +226,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 
 <div class="content">
 
-
+<!-- ════════════════════════════════════════════ DASHBOARD ══ -->
 <div class="page on" id="page-dashboard">
   <div class="sec-label">📊 Tổng Quan Tháng <span id="db-thang-label">—</span></div>
 
@@ -267,7 +267,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ BÁN HÀNG ══ -->
 <div class="page" id="page-banhang">
   <div class="sec-label">🛒 Nhập Doanh Thu Bán Hàng</div>
 
@@ -296,7 +296,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Search bar Bán Hàng -->
   <div class="card" style="padding:10px 14px;margin-bottom:8px">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <span class="fw700 fs11">🔍 Tìm Món:</span>
@@ -308,7 +308,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Menu nhập số bán theo ngày -->
   <div class="card">
     <div class="card-title flex-center">
       🍽 Nhập Số Lượng Bán — Ngày <span id="bh-cur-ngay">1</span>
@@ -336,7 +336,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Lịch doanh thu tháng -->
   <div class="card">
     <div class="card-title">📅 Doanh Thu Theo Ngày</div>
     <div class="cal-grid" id="bh-cal-hdr">
@@ -348,7 +348,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ NVL ══ -->
 <div class="page" id="page-nvl">
   <div class="sec-label">📦 Quản Lý Nguyên Vật Liệu (120 mục)</div>
 
@@ -371,11 +371,11 @@ tr:hover .sticky-col{background:#F7F4F0}
   <div id="nvl-tbody"></div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ NHẬP HÀNG ══ -->
 <div class="page" id="page-inventory">
   <div class="sec-label">🚚 Nhập Hàng & Quản Lý Giá NVL Theo Ngày</div>
 
-  
+  <!-- Controls row -->
   <div class="flex-center mb12" style="flex-wrap:wrap;gap:8px">
     <div class="form-group" style="flex-direction:row;align-items:center;gap:6px">
       <label>Tháng:</label>
@@ -400,7 +400,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     <button class="btn btn-outline btn-sm" onclick="exportInventory()">📥 Xuất CSV</button>
   </div>
 
-  
+  <!-- Summary metrics -->
   <div class="metrics mb12">
     <div class="metric m-bad"><div class="metric-label">Tổng Chi Nhập Hàng</div>
       <div class="metric-val" id="inv-total-chi">0đ</div>
@@ -416,7 +416,7 @@ tr:hover .sticky-col{background:#F7F4F0}
       <div class="metric-sub">Loại NVL khác nhau</div></div>
   </div>
 
-  
+  <!-- Quick input form (inline, no modal) -->
   <div class="card mb12">
     <div class="card-title">➕ Nhập Nhanh Hàng Ngày</div>
     <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
@@ -454,7 +454,7 @@ tr:hover .sticky-col{background:#F7F4F0}
         </button>
       </div>
     </div>
-    
+    <!-- Giá chuẩn hint + live warning -->
     <div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">
       <div id="inv-gia-chuan-hint" style="font-size:11px;min-height:18px"></div>
       <div id="inv-gia-warn-hint" style="font-size:11px;min-height:18px"></div>
@@ -462,7 +462,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     <div id="inv-quick-msg" class="mt4" style="font-size:11px;color:var(--teal);min-height:18px"></div>
   </div>
 
-  
+  <!-- Inventory log table -->
   <div class="card">
     <div class="card-title flex-center">
       📋 Sổ Nhập Hàng Tháng
@@ -497,7 +497,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Price history per NVL -->
   <div class="card mt12">
     <div class="card-title flex-center">
       📈 Lịch Sử Giá Theo NVL
@@ -512,7 +512,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Báo Cáo Giá NVL -->
   <div class="card mt12">
     <div class="card-title flex-center" style="gap:8px">
       📊 Báo Cáo Biến Động Giá NVL
@@ -529,7 +529,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ MENU ══ -->
 <div class="page" id="page-menu">
   <div class="sec-label">🍽 Menu & Công Thức</div>
 
@@ -555,7 +555,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   <div id="menu-groups-container"></div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ MENU TẠI CHỖ ══ -->
 <div class="page" id="page-bantaicho">
   <div class="sec-label">🏠 Menu Bán Tại Chỗ — Không Phí Sàn / MKT</div>
 
@@ -585,7 +585,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   <div id="tc-groups-container"></div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ CHẤM CÔNG ══ -->
 <div class="page" id="page-chamcong">
   <div class="sec-label">👥 Bảng Chấm Công & Tính Lương</div>
 
@@ -624,7 +624,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ CHI PHÍ ══ -->
 <div class="page" id="page-chiphi">
   <div class="sec-label">💸 Quản Lý Chi Phí Vận Hành</div>
 
@@ -663,7 +663,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ HAO HỤT ══ -->
 <div class="page" id="page-haohut">
   <div class="sec-label">📉 Tỷ Lệ Hao Hụt NVL (116 mục)</div>
 
@@ -696,7 +696,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ HỦY HÀNG ══ -->
 <div class="page" id="page-huyhang">
   <div class="sec-label">🗑 Ghi Nhận Hủy Hàng & Thất Thoát</div>
 
@@ -735,7 +735,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal Hủy Hàng -->
 <div class="modal-bg" id="modal-huy-add">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">🗑 Ghi Nhận Hủy Hàng</span><button class="modal-close" onclick="closeModal('modal-huy-add')">✕</button></div>
@@ -773,7 +773,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ TỒN KHO ══ -->
 <div class="page" id="page-tonkho">
   <div class="sec-label">🗄 Tồn Kho Cuối Tháng</div>
 
@@ -800,7 +800,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Hướng dẫn nhanh -->
   <div style="background:var(--bg2);border-left:3px solid var(--teal);padding:8px 12px;font-size:11px;margin-bottom:10px;line-height:1.7">
     <b>📌 Cách hoạt động:</b>
     <b>Tồn Đầu</b> = tự lấy từ Tồn Cuối tháng trước (có thể sửa tay nếu cần) &nbsp;·&nbsp;
@@ -832,7 +832,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ BÁO CÁO ══ -->
 <div class="page" id="page-baocao">
   <div class="sec-label">📈 Báo Cáo Lợi Nhuận & KPI</div>
 
@@ -886,11 +886,11 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ DỰ BÁO DOANH THU ══ -->
 <div class="page" id="page-dubaodoanhthu">
   <div class="sec-label">📐 Dự Báo Doanh Thu Theo Kịch Bản — Tăng / Giảm 10% → 50%</div>
 
-  
+  <!-- Thông số gốc -->
   <div class="card mb12">
     <div class="card-title">⚙️ Thông Số Cơ Sở (Chỉnh Tay)</div>
     <div class="form-grid fg4" style="align-items:end">
@@ -917,10 +917,10 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Metrics cơ sở -->
   <div class="metrics mb12" id="dubao-metrics-base"></div>
 
-  
+  <!-- Bảng kịch bản chính -->
   <div class="card mb12">
     <div class="card-title flex-center">
       📊 Bảng Dự Báo Đầy Đủ — 10 Kịch Bản Tăng & Giảm
@@ -948,7 +948,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Biểu đồ thanh + 2 bảng chi tiết -->
   <div class="col-2 mb12">
     <div class="card">
       <div class="card-title">📈 Biểu Đồ Lợi Nhuận Theo Kịch Bản</div>
@@ -960,7 +960,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Bảng cân nhắc chi phí theo kịch bản -->
   <div class="card mb12">
     <div class="card-title flex-center">
       🎛️ Cân Nhắc Chi Phí Linh Hoạt Theo Kịch Bản
@@ -1001,18 +1001,18 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Khuyến nghị thực hành -->
   <div class="card">
     <div class="card-title">📋 Khuyến Nghị Hành Động Theo Từng Kịch Bản</div>
     <div id="dubao-khuyen-nghi"></div>
   </div>
 </div>
 
-
+<!-- ════════════════════════════════════════════ NGƯỜI DÙNG (admin) ══ -->
 <div class="page" id="page-nguoidung">
   <div class="sec-label">👤 Quản Lý Người Dùng & Cài Đặt</div>
 
-  
+  <!-- Tên app -->
   <div class="card">
     <div class="card-title">🏷 Tên Quán / Tên App</div>
     <div class="form-grid fg3">
@@ -1026,13 +1026,13 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Danh sách tài khoản -->
   <div class="card">
     <div class="card-title flex-center" style="justify-content:space-between">
       <span>Tài khoản nhân viên</span>
       <button class="btn btn-teal btn-sm" onclick="openModal('modal-user-add')">+ Thêm Người Dùng</button>
     </div>
-    
+    <!-- Bảng phân quyền mô tả -->
     <div style="background:#f0fdf4;border:1.5px solid var(--teal);padding:10px 14px;font-size:11px;margin-bottom:12px;line-height:1.9;border-radius:3px">
       <b>🔐 Hệ Thống Phân Quyền:</b><br>
       🔐 <b>Super Admin</b> — Tài khoản gốc, toàn quyền tất cả tab, <strong>không ai xóa được</strong><br>
@@ -1047,7 +1047,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
-  
+  <!-- Đổi mật khẩu -->
   <div class="card">
     <div class="card-title">🔑 Đổi Mật Khẩu Của Tôi</div>
     <div class="form-grid fg3">
@@ -1059,11 +1059,11 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-</div>
+</div><!-- end .content -->
 
+<!-- ══════════════════════════════ MODALS ══ -->
 
-
-
+<!-- Modal: Thêm NVL -->
 <div class="modal-bg" id="modal-nvl-add">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">➕ Thêm Nguyên Vật Liệu Mới</span><button class="modal-close" onclick="closeModal('modal-nvl-add')">✕</button></div>
@@ -1088,7 +1088,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Thêm Món -->
 <div class="modal-bg" id="modal-menu-add">
   <div class="modal" style="max-width:860px">
     <div class="modal-hdr"><span class="modal-title">➕ Thêm Món Mới & Công Thức <span style="font-size:11px;font-weight:400;color:#00695C">· Tên bắt đầu "Thêm " = Đồ Thêm</span></span><button class="modal-close" onclick="closeModal('modal-menu-add')">✕</button></div>
@@ -1108,7 +1108,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Thêm Nhân Viên -->
 <div class="modal-bg" id="modal-nv-add">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">➕ Thêm Nhân Viên</span><button class="modal-close" onclick="closeModal('modal-nv-add')">✕</button></div>
@@ -1126,8 +1126,8 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
-
+<!-- Modal: Thêm Chi Phí -->
+<!-- Modal: Sửa Nhân Viên -->
 <div class="modal-bg" id="modal-nv-edit">
   <div class="modal">
     <div class="modal-hdr">
@@ -1176,7 +1176,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Sửa Món -->
 <div class="modal-bg" id="modal-menu-edit">
   <div class="modal" style="max-width:900px">
     <div class="modal-hdr">
@@ -1235,7 +1235,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Thêm Món Tại Chỗ -->
 <div class="modal-bg" id="modal-tc-add">
   <div class="modal" style="max-width:860px">
     <div class="modal-hdr"><span class="modal-title">➕ Thêm Món Tại Chỗ & Công Thức</span><button class="modal-close" onclick="closeModal('modal-tc-add')">✕</button></div>
@@ -1257,7 +1257,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Sửa Món Tại Chỗ -->
 <div class="modal-bg" id="modal-tc-edit">
   <div class="modal" style="max-width:900px">
     <div class="modal-hdr">
@@ -1293,7 +1293,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Tạo Combo -->
 <div class="modal-bg" id="modal-combo-add">
   <div class="modal" style="max-width:680px">
     <div class="modal-hdr">
@@ -1332,7 +1332,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Sửa Combo -->
 <div class="modal-bg" id="modal-combo-edit">
   <div class="modal" style="max-width:620px">
     <div class="modal-hdr">
@@ -1372,7 +1372,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Công Thức Chi Tiết -->
 <div class="modal-bg" id="modal-cthuc">
   <div class="modal" style="max-width:680px">
     <div class="modal-hdr"><span class="modal-title" id="cthuc-title">Công Thức</span><button class="modal-close" onclick="closeModal('modal-cthuc')">✕</button></div>
@@ -1380,7 +1380,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Sửa NVL -->
 <div class="modal-bg" id="modal-nvl-edit">
   <div class="modal">
     <div class="modal-hdr"><span class="modal-title">✏️ Sửa Nguyên Vật Liệu</span><button class="modal-close" onclick="closeModal('modal-nvl-edit')">✕</button></div>
@@ -1411,7 +1411,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Thêm Người Dùng -->
 <div class="modal-bg" id="modal-user-add">
   <div class="modal" style="max-width:600px">
     <div class="modal-hdr">
@@ -1464,7 +1464,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- Modal: Sửa Quyền Tab Người Dùng -->
 <div class="modal-bg" id="modal-user-tabs">
   <div class="modal" style="max-width:580px">
     <div class="modal-hdr">
@@ -1509,7 +1509,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════ Modal Quản Lý Nhóm Món ════ -->
 <div class="modal-bg" id="modal-nhom-mon">
   <div class="modal" style="max-width:900px;max-height:92vh;overflow-y:auto">
     <div class="modal-hdr">
@@ -1520,17 +1520,19 @@ tr:hover .sticky-col{background:#F7F4F0}
   </div>
 </div>
 
-
+<!-- ════ Modal Đồng Bộ 2 Chiều App ↔ Tại Chỗ ════ -->
 <div class="modal-bg" id="modal-sync">
   <div class="modal" style="max-width:780px;max-height:90vh;overflow-y:auto">
     <div id="modal-sync-body"></div>
   </div>
 </div>
 
-</div>
+</div><!-- /#app-root -->
 
 <script>
+// ═══════════════════════════════════════════════════════════════
 // DATA — loaded from KhapKhun v15
+// ═══════════════════════════════════════════════════════════════
 const INITIAL_NVL = [{"id":1,"ten":"Bắp cải thảo","dvt":"kg","gia":13000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":2,"ten":"Bắp cải trắng","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":3,"ten":"Bắp cải tím","dvt":"kg","gia":30000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":4,"ten":"Chanh","dvt":"kg","gia":36000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":5,"ten":"Cà chua bi","dvt":"kg","gia":25000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":6,"ten":"Cà rốt","dvt":"kg","gia":16000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":7,"ten":"Cà xanh thái","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":8,"ten":"Cải bẹ xanh","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":9,"ten":"Dưa Leo","dvt":"kg","gia":18000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":10,"ten":"Giá sống","dvt":"kg","gia":8000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":11,"ten":"Hành tây","dvt":"kg","gia":15000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":12,"ten":"Hành tím","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":13,"ten":"Hẹ lá","dvt":"kg","gia":12000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":14,"ten":"Lá chanh","dvt":"kg","gia":275000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":15,"ten":"Lá dứa","dvt":"kg","gia":10000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":16,"ten":"Lá é","dvt":"kg","gia":50000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":17,"ten":"Me","dvt":"kg","gia":30000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":18,"ten":"Ngò gai","dvt":"kg","gia":17000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":19,"ten":"Ngò rí","dvt":"kg","gia":30000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":20,"ten":"Nấm hải sản","dvt":"kg","gia":60000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":21,"ten":"Rau muống","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":22,"ten":"Riềng","dvt":"kg","gia":25000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":23,"ten":"Sả cây","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":24,"ten":"Sả xay","dvt":"kg","gia":25000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":25,"ten":"Tắc trái","dvt":"kg","gia":25000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":26,"ten":"Tỏi xay","dvt":"kg","gia":45000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":27,"ten":"Xoài xanh","dvt":"kg","gia":16000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":28,"ten":"Đu đủ xanh","dvt":"kg","gia":10000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":29,"ten":"Đậu khuôn","dvt":"miếng","gia":3000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":30,"ten":"Đậu đũa","dvt":"kg","gia":20000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":31,"ten":"Ớt ba tri","dvt":"kg","gia":40000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":32,"ten":"Ớt hiểm đỏ","dvt":"kg","gia":30000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":33,"ten":"Ớt sừng đỏ","dvt":"kg","gia":40000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":34,"ten":"Ớt xay","dvt":"kg","gia":40000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":35,"ten":"Ớt xiêm xanh","dvt":"kg","gia":50000.0,"nhom":"🥬 Nhóm Rau Củ"},{"id":36,"ten":"BTP - Trà Thái Xanh","dvt":"lit","gia":9700.0,"nhom":"🍲 Nhóm BTP"},{"id":37,"ten":"Btp - Cốt dừa","dvt":"lit","gia":65000.0,"nhom":"🍲 Nhóm BTP"},{"id":38,"ten":"Btp - Sa tế","dvt":"kg","gia":50000.0,"nhom":"🍲 Nhóm BTP"},{"id":39,"ten":"Btp - cốt chanh","dvt":"lit","gia":50000.0,"nhom":"🍲 Nhóm BTP"},{"id":40,"ten":"Btp - cốt lèo","dvt":"kg","gia":97000.0,"nhom":"🍲 Nhóm BTP"},{"id":41,"ten":"Btp - somtam","dvt":"lit","gia":40000.0,"nhom":"🍲 Nhóm BTP"},{"id":42,"ten":"Btp - sốt pad","dvt":"kg","gia":55000.0,"nhom":"🍲 Nhóm BTP"},{"id":43,"ten":"Btp - sốt xiên nướng","dvt":"kg","gia":134000.0,"nhom":"🍲 Nhóm BTP"},{"id":44,"ten":"Cơm trắng","dvt":"kg","gia":12000.0,"nhom":"🍲 Nhóm BTP"},{"id":45,"ten":"Lèo hủ tiếu","dvt":"lit","gia":7000.0,"nhom":"🍲 Nhóm BTP"},{"id":46,"ten":"Xôi lá dứa","dvt":"kg","gia":19000.0,"nhom":"🍲 Nhóm BTP"},{"id":47,"ten":"Btp - Sốt Gà Nướng Yang Gai","dvt":"kg","gia":82500.0,"nhom":"🍲 Nhóm BTP"},{"id":48,"ten":"Btp -  Mắm Gỏi","dvt":"kg","gia":52000.0,"nhom":"🍲 Nhóm BTP"},{"id":49,"ten":"Mắm Cá Thái","dvt":"lit","gia":162500.0,"nhom":"🍲 Nhóm BTP"},{"id":50,"ten":"Btp - Mắm Cá Thái","dvt":"lit","gia":79000.0,"nhom":"🍲 Nhóm BTP"},{"id":51,"ten":"Btp - Trà Sữa Thái Xanh","dvt":"lit","gia":18500.0,"nhom":"🍲 Nhóm BTP"},{"id":52,"ten":"Btp - Trà Sữa Thái Đỏ","dvt":"lit","gia":17000.0,"nhom":"🍲 Nhóm BTP"},{"id":53,"ten":"Ba chỉ bò","dvt":"kg","gia":130000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":54,"ten":"Btp - Trà Thái Đỏ","dvt":"lit","gia":7800.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":55,"ten":"Btp - Trà Olong","dvt":"lit","gia":6200.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":56,"ten":"Bò viên","dvt":"kg","gia":65000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":57,"ten":"Cá basa file","dvt":"kg","gia":140000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":58,"ten":"Cá tra bè","dvt":"kg","gia":59000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":59,"ten":"Cá viên","dvt":"kg","gia":80000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":60,"ten":"Cốt Bò","dvt":"kg","gia":240000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":61,"ten":"Gân bò","dvt":"kg","gia":145000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":62,"ten":"Lèo Xương","dvt":"lit","gia":15000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":63,"ten":"Mọc heo","dvt":"kg","gia":120000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":64,"ten":"Mực ống","dvt":"kg","gia":200000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":65,"ten":"Nghêu","dvt":"kg","gia":30000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":66,"ten":"Nạc vai heo","dvt":"kg","gia":120000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":67,"ten":"Nạm bò","dvt":"kg","gia":125000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":68,"ten":"Nấm đùi gà","dvt":"kg","gia":55000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":69,"ten":"Thịt thăn heo","dvt":"kg","gia":120000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":70,"ten":"Thịt xay","dvt":"kg","gia":85000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":71,"ten":"Trứng gà","dvt":"trái","gia":1750.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":72,"ten":"Tôm khô","dvt":"kg","gia":722000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":73,"ten":"Tôm tươi","dvt":"kg","gia":170000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":74,"ten":"Xoài cát","dvt":"kg","gia":35000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":75,"ten":"Xương cổ","dvt":"kg","gia":85000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":76,"ten":"Đùi gà Nướng kiểu thái","dvt":"kg","gia":147000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":77,"ten":"Đùi gà góc 4","dvt":"kg","gia":115000.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":78,"ten":"Đường cát","dvt":"kg","gia":18800.0,"nhom":"🥩 Nhóm Thịt & Cá"},{"id":79,"ten":"Bún tươi","dvt":"kg","gia":10000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":80,"ten":"Bột Năng","dvt":"kg","gia":32500.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":81,"ten":"Bột sương sáo","dvt":"kg","gia":300000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":82,"ten":"Bột xù","dvt":"kg","gia":66000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":83,"ten":"Bột ớt","dvt":"kg","gia":109000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":84,"ten":"Da hoành thánh","dvt":"kg","gia":15000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":85,"ten":"Dầu ăn","dvt":"lit","gia":52000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":86,"ten":"Gạo trắng","dvt":"kg","gia":20000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":87,"ten":"Hủ tiếu dai","dvt":"kg","gia":25000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":88,"ten":"Màu thực phẩm","dvt":"chai","gia":24000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":89,"ten":"Mè Trắng","dvt":"kg","gia":92000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":90,"ten":"Mỳ gói","dvt":"gói","gia":2000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":91,"ten":"Nếp Sáp","dvt":"kg","gia":20000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":92,"ten":"Trân châu trắng","dvt":"kg","gia":34000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":93,"ten":"Trân châu đen","dvt":"kg","gia":28000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":94,"ten":"Đậu phộng","dvt":"kg","gia":65000.0,"nhom":"📦 Nhóm Hàng Khô"},{"id":95,"ten":"Bột Ngọt","dvt":"kg","gia":73000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":96,"ten":"Bột béo","dvt":"kg","gia":75000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":97,"ten":"Bột chanh","dvt":"kg","gia":285000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":98,"ten":"Cốt Dừa","dvt":"lit","gia":70000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":99,"ten":"Dầu hào","dvt":"kg","gia":70000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":100,"ten":"Gia vị phụ thêm","dvt":"kg","gia":7000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":101,"ten":"Giấm Lp","dvt":"lit","gia":518000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":102,"ten":"Hoa hồi","dvt":"kg","gia":440000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":103,"ten":"Hạt Nêm","dvt":"kg","gia":72000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":104,"ten":"Muối trắng","dvt":"kg","gia":8500.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":105,"ten":"Mật ong","dvt":"kg","gia":180000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":106,"ten":"Nước Mắm","dvt":"kg","gia":24000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":107,"ten":"Nước tương maggi","dvt":"lit","gia":39000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":108,"ten":"Quế cây","dvt":"kg","gia":150000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":109,"ten":"Sữa Đặc","dvt":"lit","gia":51000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":110,"ten":"Tiêu hạt","dvt":"kg","gia":380000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":111,"ten":"Trà Lài","dvt":"kg","gia":35000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":112,"ten":"Trà thái xanh","dvt":"kg","gia":350000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":113,"ten":"Trà thái đỏ","dvt":"kg","gia":175000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":114,"ten":"Trà đen","dvt":"kg","gia":0.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":115,"ten":"Tương ót chua ngọt","dvt":"kg","gia":35000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":116,"ten":"Tương ớt","dvt":"kg","gia":26800.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":117,"ten":"Xì dầu đặc biệt","dvt":"lit","gia":70000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":118,"ten":"Đinh hương","dvt":"kg","gia":650000.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":119,"ten":"Đường phèn","dvt":"kg","gia":25500.0,"nhom":"🧂 Nhóm Gia Vị"},{"id":120,"ten":"Hạt Chia","dvt":"kg","gia":0.0,"nhom":"🧂 Nhóm Gia Vị"}];
 
 const INITIAL_MENU = [{"id":1,"ten":"Cơm Thịt Heo Xào","gia_ban":68000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Lá é","dvt_nvl":"kg","dinh_luong":3.0},{"ten":"Đậu đũa","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Btp - Sa tế","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Cơm trắng","dvt_nvl":"kg","dinh_luong":180.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":1.0}]},{"id":2,"ten":"Hủ Tiếu Thịt Heo","gia_ban":65000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Thịt thăn heo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mọc heo","dvt_nvl":"kg","dinh_luong":20.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":2000.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0}]},{"id":3,"ten":"Hủ Tiếu Thịt Bò","gia_ban":89000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Nạm bò","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Gân bò","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0}]},{"id":4,"ten":"Hủ Tiếu Đặc Biệt","gia_ban":92000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Nạm bò","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Gân bò","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Thịt thăn heo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0}]},{"id":5,"ten":"Hủ Tiếu Hải Sản","gia_ban":80000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0}]},{"id":6,"ten":"Hủ Tiếu Thịt Heo Nước Đục","gia_ban":69000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Thịt thăn heo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mọc heo","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":500.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0}]},{"id":7,"ten":"Hủ Tiếu Tôm","gia_ban":73000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":80.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0}]},{"id":8,"ten":"Hủ tiếu Mực","gia_ban":73000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":40.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":15.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo hủ tiếu","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5}]},{"id":9,"ten":"Hủ Tiếu Thịt Bò Nước Đục","gia_ban":94000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Nạm bò","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Gân bò","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":10,"ten":"Hủ Tiếu Đặc Biệt Nước Đục","gia_ban":97000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Nạm bò","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Gân bò","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Bò viên","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Thịt thăn heo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":11,"ten":"Hủ tiếu Mực Nước Đục","gia_ban":78000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":40.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":12,"ten":"Hủ Tiếu Tôm Nước Đục","gia_ban":94000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":80.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":13,"ten":"Hủ Tiếu Hải Sản Nước Đục","gia_ban":84000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":14,"ten":"Bún Mực nước Đục","gia_ban":77000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Bún tươi","dvt_nvl":"kg","dinh_luong":180.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":40.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":15,"ten":"Bún Tôm Nước Đục","gia_ban":77000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Bún tươi","dvt_nvl":"kg","dinh_luong":180.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":80.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0}]},{"id":16,"ten":"Bún Hải Sản Nước Đục","gia_ban":82000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Hủ tiếu dai","dvt_nvl":"kg","dinh_luong":90.0},{"ten":"Giá sống","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Rau muống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Btp - cốt lèo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Trứng gà","dvt_nvl":"trái","dinh_luong":0.5},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Cá basa file","dvt_nvl":"kg","dinh_luong":30.0}]},{"id":17,"ten":"Xương Khủng Long Size nhỏ","gia_ban":110000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Xương cổ","dvt_nvl":"kg","dinh_luong":350.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Ớt xiêm xanh","dvt_nvl":"kg","dinh_luong":20.0},{"ten":"Tỏi xay","dvt_nvl":"kg","dinh_luong":5.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":2000.0},{"ten":"Bún tươi","dvt_nvl":"kg","dinh_luong":120.0}]},{"id":18,"ten":"Xương Khủng Long Size lớn","gia_ban":204000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Xương cổ","dvt_nvl":"kg","dinh_luong":500.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":50.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":140.0},{"ten":"Ớt xiêm xanh","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tỏi xay","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":2000.0},{"ten":"Bún tươi","dvt_nvl":"kg","dinh_luong":150.0}]},{"id":19,"ten":"Xôi Xoài","gia_ban":46000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Xôi lá dứa","dvt_nvl":"kg","dinh_luong":110.0},{"ten":"Btp - Cốt dừa","dvt_nvl":"lit","dinh_luong":35.0},{"ten":"Xoài cát","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":500.0},{"ten":"Mè Trắng","dvt_nvl":"kg","dinh_luong":2.0},{"ten":"Đậu phộng","dvt_nvl":"kg","dinh_luong":3.0}]},{"id":20,"ten":"Cơm Gà Nướng","gia_ban":68000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Đùi gà Nướng kiểu thái","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Bắp cải trắng","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1500.0},{"ten":"Bắp cải tím","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cơm trắng","dvt_nvl":"kg","dinh_luong":180.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":30.0},{"ten":"Dưa Leo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Cà chua bi","dvt_nvl":"kg","dinh_luong":20.0}]},{"id":21,"ten":"Suop tomyum Hải sản","gia_ban":89000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Riềng","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Sả cây","dvt_nvl":"kg","dinh_luong":20.0},{"ten":"Lá chanh","dvt_nvl":"kg","dinh_luong":2.0},{"ten":"Cà chua bi","dvt_nvl":"kg","dinh_luong":20.0},{"ten":"Nấm hải sản","dvt_nvl":"kg","dinh_luong":20.0},{"ten":"Nấm đùi gà","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Cá basa file","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Lèo Xương","dvt_nvl":"lit","dinh_luong":350.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":25.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":70.0},{"ten":"Cốt Dừa","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":1000.0}]},{"id":22,"ten":"Trà Tắc Thái Xanh","gia_ban":25000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"BTP - Trà Thái Xanh","dvt_nvl":"lit","dinh_luong":200.0},{"ten":"Tắc trái","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":300.0}]},{"id":23,"ten":"Trà Tắc Thái Đỏ","gia_ban":25000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Btp - Trà Thái Đỏ","dvt_nvl":"lit","dinh_luong":200.0},{"ten":"Tắc trái","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":300.0}]},{"id":24,"ten":"Trà Tắc Olong","gia_ban":25000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Btp - Trà Olong","dvt_nvl":"lit","dinh_luong":200.0},{"ten":"Đường cát","dvt_nvl":"kg","dinh_luong":400.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":300.0}]},{"id":25,"ten":"Gà Nướng Yang Gai","gia_ban":68000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Đùi gà góc 4","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Btp - Sốt Gà Nướng Yang Gai","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Cơm trắng","dvt_nvl":"kg","dinh_luong":200.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":500.0},{"ten":"Dưa Leo","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Bắp cải tím","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Bắp cải trắng","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Btp -  Mắm Gỏi","dvt_nvl":"Kg","dinh_luong":30.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":300.0}]},{"id":26,"ten":"Gỏi Đu Đủ Somtam Tôm Khô","gia_ban":59000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Đu đủ xanh","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Cà rốt","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà xanh thái","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Đậu đũa","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà chua bi","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Tỏi xay","dvt_nvl":"kg","dinh_luong":3.0},{"ten":"Đậu phộng","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Tôm khô","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":20.0},{"ten":"Ớt xiêm xanh","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Ớt hiểm đỏ","dvt_nvl":"kg","dinh_luong":10.0}]},{"id":27,"ten":"Gỏi Đu Đủ Mắm Cá","gia_ban":69000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Đu đủ xanh","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Cà rốt","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà xanh thái","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Đậu đũa","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà chua bi","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Tỏi xay","dvt_nvl":"kg","dinh_luong":3.0},{"ten":"Đậu phộng","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Tôm khô","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Btp - Mắm Cá Thái","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":20.0},{"ten":"Ớt xiêm xanh","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Ớt hiểm đỏ","dvt_nvl":"kg","dinh_luong":10.0}]},{"id":28,"ten":"Gỏi Somtam Hải Sản","gia_ban":79000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Đu đủ xanh","dvt_nvl":"kg","dinh_luong":100.0},{"ten":"Cà rốt","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà xanh thái","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Đậu đũa","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Cà chua bi","dvt_nvl":"kg","dinh_luong":25.0},{"ten":"Tỏi xay","dvt_nvl":"kg","dinh_luong":3.0},{"ten":"Đậu phộng","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Tôm tươi","dvt_nvl":"kg","dinh_luong":50.0},{"ten":"Btp - somtam","dvt_nvl":"lit","dinh_luong":60.0},{"ten":"Btp - cốt chanh","dvt_nvl":"lit","dinh_luong":20.0},{"ten":"Ớt xiêm xanh","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Ớt hiểm đỏ","dvt_nvl":"kg","dinh_luong":10.0},{"ten":"Mực ống","dvt_nvl":"kg","dinh_luong":30.0},{"ten":"Cá viên","dvt_nvl":"kg","dinh_luong":15.0},{"ten":"Nghêu","dvt_nvl":"kg","dinh_luong":15.0}]},{"id":29,"ten":"Trà Sữa Thái Xanh","gia_ban":25000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Btp - Trà Sữa Thái Xanh","dvt_nvl":"lit","dinh_luong":200.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":600.0}]},{"id":30,"ten":"Trà Sữa Thái Đỏ","gia_ban":25000.0,"pct_san":0.295,"so_ban":0,"nguyen_lieu":[{"ten":"Btp - Trà Sữa Thái Đỏ","dvt_nvl":"lit","dinh_luong":200.0},{"ten":"Gia vị phụ thêm","dvt_nvl":"kg","dinh_luong":600.0}]}];
@@ -1541,7 +1543,9 @@ const INITIAL_STAFF = [{"id":1,"ten":"Nguyễn Văn A","chuc_vu":"Đầu Bếp C
 
 const INITIAL_CHI_PHI = [{"ten":"Tiền Thuê Mặt Bằng","nhom":"Mặt Bằng","so_tien":8000000,"loai":"co_dinh"},{"ten":"Phí Quản Lý / Dịch Vụ Tòa","nhom":"Mặt Bằng","so_tien":500000,"loai":"co_dinh"},{"ten":"Khấu Hao Thiết Bị / TSCĐ","nhom":"Khấu Hao","so_tien":0,"loai":"co_dinh"},{"ten":"Sửa Chữa Bảo Trì","nhom":"Khấu Hao","so_tien":0,"loai":"co_dinh"},{"ten":"Tiền Điện","nhom":"Điện Nước Gas","so_tien":1500000,"loai":"bien_phi"},{"ten":"Tiền Nước","nhom":"Điện Nước Gas","so_tien":300000,"loai":"bien_phi"},{"ten":"Gas / Nhiên Liệu","nhom":"Điện Nước Gas","so_tien":600000,"loai":"bien_phi"},{"ten":"Quảng Cáo Mạng Xã Hội","nhom":"Marketing","so_tien":0,"loai":"bien_phi"},{"ten":"In Ấn / Tờ Rơi","nhom":"Marketing","so_tien":0,"loai":"bien_phi"},{"ten":"Vệ Sinh & Tiêu Hao Phẩm","nhom":"Vận Hành","so_tien":300000,"loai":"bien_phi"},{"ten":"Chi Phí Phát Sinh Khác","nhom":"Vận Hành","so_tien":0,"loai":"bien_phi"}];
 
+// ═══════════════════════════════════════════════════════════════
 // STATE
+// ═══════════════════════════════════════════════════════════════
 let S = {
   nvl: [], menu: [], menu_taicho: [], hao_hut: {}, staff: [], chi_phi: [],
   combos: [],      // [{id,ten,nhom,mon_ids[],gia_combo,ghi_chu}]
@@ -1557,6 +1561,7 @@ let S = {
   nam: new Date().getFullYear()
 };
 
+// ── Chuẩn hoá tên NVL để so khớp (bỏ khoảng trắng dư, không phân biệt hoa/thường) ──
 function normName(s){ return (s||'').replace(/\s+/g,' ').trim().toLowerCase(); }
 
 function getInputUnit(dvt){
@@ -1593,8 +1598,11 @@ function refreshNVLDatalist(){
   if(dl3) dl3.innerHTML=opts;
 }
 
+// ── Nhận diện món Hủ Tiếu (để cộng thêm tuỳ chọn "Khô +5.000đ") ──
 function isHuTieu(ten){ return (ten||'').toLowerCase().includes('hủ tiếu'); }
 
+/** Đảm bảo mọi nguyên liệu dùng trong công thức (App & Tại Chỗ) đều có trong Danh Mục NVL.
+ * Nếu thiếu, tự thêm NVL mới (nhóm mặc định "📦 Nhóm Hàng Khô", giá 0 — cần cập nhật lại giá thật). */
 function ensureNVLForIngredients(){
   const allMon=[...(S.menu||[]), ...(S.menu_taicho||[])];
   let maxId=Math.max(0,...S.nvl.map(n=>n.id||0));
@@ -1609,6 +1617,9 @@ function ensureNVLForIngredients(){
   }
 }
 
+/** Đồng bộ Tỷ Lệ Hao Hụt với Danh Mục NVL:
+ * - Mỗi NVL đều có 1 dòng hao hụt (mặc định 5% nếu chưa có)
+ * - Xoá các dòng hao hụt "rác" không khớp với NVL nào (kể cả lệch khoảng trắng/hoa-thường) */
 function syncNVLHaoHut(){
   const hhMap={};
   for(const [k,v] of Object.entries(S.hao_hut||{})) hhMap[normName(k)]=v;
@@ -1620,6 +1631,7 @@ function syncNVLHaoHut(){
   S.hao_hut=newHH;
 }
 
+/** Khởi tạo / di chuyển Menu Tại Chỗ (lần đầu chạy: copy từ Menu App + giá tại chỗ cũ nếu có) */
 function ensureMenuTaiCho(){
   if(!S.menu_taicho) S.menu_taicho=[];
   if(S.menu_taicho.length===0 && S.menu && S.menu.length>0){
@@ -1636,6 +1648,7 @@ function ensureMenuTaiCho(){
   for(const m of S.menu_taicho) if(!m.nhom_mon) m.nhom_mon=getMonNhom(m.ten);
 }
 
+// ── Menu group detection (auto A-Z sorted) ───────────────
 function getMonNhom(ten){
   const t=(ten||'').toLowerCase();
   if(t.startsWith('thêm ')||t.startsWith('+ ')||t.includes('topping')||t.includes('đồ thêm')) return '🍢 Đồ Thêm';
@@ -1685,7 +1698,10 @@ const NVL_NHOM_BG={
   '🍢 Nhóm Món Thêm':'#E0F2F1'
 };
 
+
+// ═══════════════════════════════════════════════════════════════
 // INVENTORY — Nhập Hàng Theo Ngày
+// ═══════════════════════════════════════════════════════════════
 
 function getInvMK(){
   const t=parseInt(document.getElementById('inv-thang')?.value)||S.thang;
@@ -1739,7 +1755,8 @@ function addInventoryQuick(){
   if(!S.inventory) S.inventory={};
   if(!S.inventory[mk]) S.inventory[mk]=[];
 
-    const giaChuan=nvl?.gia_chuan||nvl?.gia||0;
+  // ── Quy tắc 2: So sánh với giá chuẩn ────────────────────
+  const giaChuan=nvl?.gia_chuan||nvl?.gia||0;
   const pctVsChuan=giaChuan>0?(gia-giaChuan)/giaChuan:0;
   const warnLevel=pctVsChuan>0?getPriceWarnLevel(pctVsChuan):null;
 
@@ -1765,7 +1782,8 @@ function addInventoryQuick(){
   // Update NVL gia hiện tại
   if(nvl){ S.nvl[S.nvl.indexOf(nvl)].gia=gia; }
 
-    autoUpdateGiaChuan();
+  // ── Quy tắc 3: Kiểm tra 14-ngày auto-update ──────────────
+  autoUpdateGiaChuan();
 
   ['inv-q-ten','inv-q-sl','inv-q-ghichu'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['inv-q-gia','inv-q-dvt'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
@@ -1782,6 +1800,7 @@ function addInventoryQuick(){
   saveData();
   renderInventory();
 }
+
 
 function renderInventory(){
   const mk=getInvMK();
@@ -1904,6 +1923,7 @@ function renderInventory(){
   renderBaoCaoGia();
 }
 
+
 function editInventoryRow(mk,idx){
   const item=(S.inventory[mk]||[])[idx];
   if(!item) return;
@@ -2016,8 +2036,19 @@ function exportInventory(){
   a.click();
 }
 
-// QUẢN LÝ GIÁ CHUẨN NVL  (5 quy tắc)
+// ─── END INVENTORY ───────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════════════════
+// QUẢN LÝ GIÁ CHUẨN NVL  (5 quy tắc)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Trả về mức cảnh báo và màu cho chênh lệch giá so với giá chuẩn:
+ *   0–5%   → không cảnh báo
+ *   5–15%  → XANH DƯƠNG (tăng nhẹ)
+ *   15–30% → VÀNG (chú ý)
+ *   >30%   → ĐỎ (cảnh báo)
+ */
 function getPriceWarnLevel(pct){
   if(pct<0.05) return null;
   if(pct<0.15) return {label:'TĂNG NHẸ', color:'var(--blue)', bg:'#EFF6FF', icon:'🔵'};
@@ -2025,6 +2056,11 @@ function getPriceWarnLevel(pct){
   return          {label:'CẢNH BÁO',   color:'var(--red)', bg:'#FFF0F0', icon:'🔴'};
 }
 
+/**
+ * Quy tắc 3: Nếu giá nhập cao hơn giá chuẩn liên tục ≥14 ngày
+ * → tự động cập nhật giá chuẩn mới, ghi log.
+ * Gọi mỗi lần load + mỗi lần nhập hàng mới.
+ */
 function autoUpdateGiaChuan(){
   if(!S.price_log) S.price_log={};
   const today=new Date().toISOString().slice(0,10);
@@ -2078,6 +2114,7 @@ function autoUpdateGiaChuan(){
   }
 }
 
+/** Thiết lập giá chuẩn thủ công cho một NVL */
 function setGiaChuan(nvlIdx){
   const nvl=S.nvl[nvlIdx];
   if(!nvl) return;
@@ -2098,6 +2135,7 @@ function setGiaChuan(nvlIdx){
   saveData(); renderNVL();
 }
 
+/** Quy tắc 2: So sánh giá nhập với giá chuẩn khi nhập hàng */
 function comparePriceWithChuan(ten, gia){
   const nvl=S.nvl.find(x=>x.ten===ten);
   if(!nvl||!nvl.gia_chuan||nvl.gia_chuan<=0) return null;
@@ -2106,6 +2144,7 @@ function comparePriceWithChuan(ten, gia){
   return {pct, nvl, warn: getPriceWarnLevel(pct)};
 }
 
+/** Quy tắc 4 & 5: Báo cáo tổng hợp biến động giá trong tháng */
 function renderBaoCaoGia(){
   const mk=getInvMK();
   const el=document.getElementById('price-report-content');
@@ -2255,6 +2294,7 @@ function renderBaoCaoGia(){
   el.innerHTML=html;
 }
 
+/** Gọi khi chọn NVL trong ô nhập — show giá chuẩn ngay lập tức */
 function showGiaChuanHint(){
   const ten=(document.getElementById('inv-q-ten')?.value||'').trim();
   const hint=document.getElementById('inv-gia-chuan-hint');
@@ -2266,6 +2306,7 @@ function showGiaChuanHint(){
   </span>`;
 }
 
+/** Gọi khi nhập giá — preview cảnh báo real-time */
 function previewGiaAlert(){
   const ten=(document.getElementById('inv-q-ten')?.value||'').trim();
   const gia=parseFloat(document.getElementById('inv-q-gia')?.value)||0;
@@ -2287,7 +2328,11 @@ function previewGiaAlert(){
   </span>`;
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════
 // AUTH & CLOUD SYNC — nhiều người dùng cùng lúc
+// ═══════════════════════════════════════════════════════════════
 const API_BASE = ''; // chung domain voi frontend
 let authToken = localStorage.getItem('kk_token') || null;
 let currentUser = JSON.parse(localStorage.getItem('kk_user') || 'null');
@@ -2355,6 +2400,7 @@ function doLogout(){
   document.getElementById('login-password').value='';
 }
 
+// ─── Phân quyền tab theo vai trò ────────────────────────────────
 // Danh sách tất cả tab có thể phân quyền
 const ALL_TABS = [
   {id:'dashboard',    label:'📊 Dashboard'},
@@ -2377,7 +2423,7 @@ const ROLE_LABELS = { admin:'⭐ Quản Lý' };
 // Preset nhanh
 const TAB_PRESETS = {
   basic: ['dashboard','banhang','bantaicho'],
-  full: ALL_TAB_IDS,
+  full:  ALL_TAB_IDS,
 };
 
 function setTabPreset(p){
@@ -2457,7 +2503,9 @@ function connectSocket(){
   });
 }
 
+// ═══════════════════════════════════════════════════════════════
 // TÊN APP — đổi tên quán trên giao diện
+// ═══════════════════════════════════════════════════════════════
 function applyAppName(){
   const name = S.app_name || '';
   const inp = document.getElementById('app-name-input');
@@ -2479,12 +2527,14 @@ function saveAppName(){
   alert('✓ Đã lưu tên: ' + name);
 }
 
+// ═══════════════════════════════════════════════════════════════
 // NGƯỜI DÙNG (chỉ Quản lý)
+// ═══════════════════════════════════════════════════════════════
 const ROLE_BADGE = {
-  admin: '<span class="badge b-blue">⭐ Quản Lý</span>',
-  staff: '<span class="badge b-gray">👁 Giám Sát</span>',
-  bep: '<span class="badge" style="background:#fff3e0;color:#b85c00">👨‍🍳 Bếp</span>',
-  phucvu: '<span class="badge" style="background:#e8f5e9;color:#1b5e20">🛎 Phục Vụ</span>',
+  admin:   '<span class="badge b-blue">⭐ Quản Lý</span>',
+  staff:   '<span class="badge b-gray">👁 Giám Sát</span>',
+  bep:     '<span class="badge" style="background:#fff3e0;color:#b85c00">👨‍🍳 Bếp</span>',
+  phucvu:  '<span class="badge" style="background:#e8f5e9;color:#1b5e20">🛎 Phục Vụ</span>',
   thungan: '<span class="badge" style="background:#f3e5f5;color:#6a1b9a">💰 Thu Ngân</span>',
 };
 
@@ -2595,6 +2645,7 @@ async function createUser(){
   }
 }
 
+/** Mở modal sửa quyền tab cho 1 user */
 function openEditTabs(userId, userName){
   document.getElementById('edit-tabs-userid').value=userId;
   document.getElementById('modal-user-tabs-title').textContent=`⚙️ Phân Quyền Tab — ${userName}`;
@@ -2604,6 +2655,7 @@ function openEditTabs(userId, userName){
   openModal('modal-user-tabs');
 }
 
+/** Lưu quyền tab đã chỉnh sửa */
 function saveUserTabs(){
   const userId=parseInt(document.getElementById('edit-tabs-userid').value);
   const selected=[...document.querySelectorAll('.tab-edit-cb:checked')].map(c=>c.value);
@@ -2639,7 +2691,9 @@ async function doChangePassword(){
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
 // STORAGE — lưu lên server dùng chung (thay cho localStorage)
+// ═══════════════════════════════════════════════════════════════
 let _saveTimer = null;
 
 function saveData(){
@@ -2701,27 +2755,38 @@ async function loadData(){
     S.staff = JSON.parse(JSON.stringify(INITIAL_STAFF));
     S.chi_phi = JSON.parse(JSON.stringify(INITIAL_CHI_PHI));
   }
-    for(const m of S.menu) if(!m.nhom_mon) m.nhom_mon=getMonNhom(m.ten);
-    if(!S.combos) S.combos=[];
-    if(!S.price_log) S.price_log={};
-    for(const n of S.nvl){
+  // ── Ensure nhom_mon on every menu item ──────────────
+  for(const m of S.menu) if(!m.nhom_mon) m.nhom_mon=getMonNhom(m.ten);
+  // ── Ensure combos array exists ──────────────────────
+  if(!S.combos) S.combos=[];
+  // ── Ensure price log exists ──────────────────────────
+  if(!S.price_log) S.price_log={};
+  // ── Migrate: set gia_chuan = gia nếu chưa có ─────────
+  for(const n of S.nvl){
     if(!n.gia_chuan && n.gia>0) n.gia_chuan=n.gia;
     if(!n.gia_chuan_ngay) n.gia_chuan_ngay=new Date().toISOString().slice(0,10);
   }
-    S.nvl = sortAZ(S.nvl);
-    S.menu = sortAZ(S.menu);
-    ensureMenuTaiCho();
-    ensureNVLForIngredients();
+  // ── Sort NVL A-Z ────────────────────────────────────
+  S.nvl = sortAZ(S.nvl);
+  // ── Sort Menu A-Z within each group ─────────────────
+  S.menu = sortAZ(S.menu);
+  // ── Khởi tạo / đồng bộ Menu Tại Chỗ ──────────────────
+  ensureMenuTaiCho();
+  // ── Đồng bộ NVL ↔ Công thức ↔ Hao Hụt ────────────────
+  ensureNVLForIngredients();
   syncNVLHaoHut();
-    for(const mk of Object.keys(S.ban_hang||{})){
+  // ── Migrate: combo sale keys 'c123' -> 'c_123' ───────
+  for(const mk of Object.keys(S.ban_hang||{})){
     const bh=S.ban_hang[mk];
     for(const combo of (S.combos||[])){
       const oldKey='c'+combo.id, newKey='c_'+combo.id;
       if(bh[oldKey] && !bh[newKey]){ bh[newKey]=bh[oldKey]; delete bh[oldKey]; }
     }
   }
-    if(!S.ton_data) S.ton_data = {};
-    {
+  // ── Khởi tạo ton_data nếu chưa có ────────────────────
+  if(!S.ton_data) S.ton_data = {};
+  // ── Migrate: NVL cũ có ton_dau/nhap_thang flat → chuyển sang ton_data theo tháng hiện tại
+  {
     const curMk = mkey(S.thang, S.nam);
     if(!S.ton_data[curMk]) S.ton_data[curMk] = {};
     for(const n of S.nvl){
@@ -2734,13 +2799,17 @@ async function loadData(){
       delete n.nhap_thang;
     }
   }
-    autoUpdateGiaChuan();
+  // ── Auto-check 14-day rule on load ─────────────────
+  autoUpdateGiaChuan();
 
   // Neu server chua co du lieu (lan dau tien) thi day du lieu khoi tao len ngay
   if(!loaded) pushStateToServer();
 }
 
+
+// ═══════════════════════════════════════════════════════════════
 // UTILS
+// ═══════════════════════════════════════════════════════════════
 function fmt(n){
   if(isNaN(n)||n===null||n===undefined) return '0đ';
   return Math.round(n).toLocaleString('vi-VN')+'đ';
@@ -2875,7 +2944,9 @@ function nhomTag(nhom){
   return `<span class="badge b-gray">${nhom}</span>`;
 }
 
+// ═══════════════════════════════════════════════════════════════
 // NAVIGATION
+// ═══════════════════════════════════════════════════════════════
 function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
@@ -2909,7 +2980,9 @@ function renderPage(id){
   else if(id==='nguoidung') renderNguoiDung();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // DASHBOARD
+// ═══════════════════════════════════════════════════════════════
 function renderDashboard(){
   const mk = mkey(S.thang, S.nam);
   document.getElementById('db-thang-label').textContent = `${S.thang}/${S.nam}`;
@@ -2982,6 +3055,7 @@ function renderDashboard(){
       <div class="fs10 txt-gray mt8">${fmtN(m.sl)} suất</div>
     </div>`).join('') || '<div class="txt-gray fs11">Chưa có dữ liệu bán hàng</div>';
 
+
   // Chi phi breakdown
   const cpItems = [
     {label:'Lương', val:luong, cls:'pb-teal'},
@@ -3015,8 +3089,11 @@ function renderDashboard(){
   document.getElementById('db-ghichu').onchange = e=>{S.ghi_chu=e.target.value;saveData()};
 }
 
+// ═══════════════════════════════════════════════════════════════
 // BÁN HÀNG
+// ═══════════════════════════════════════════════════════════════
 
+/** Render 1 dòng món trong sheet bán hàng (+ dòng "Khô +5k" nếu là Hủ Tiếu) */
 function buildBHRow(mon, mk, ngay, idKey, pctSan, pctMkt){
   const gv=calcGiaVon(mon);
   const lnSuat=mon.gia_ban-gv-mon.gia_ban*pctSan-mon.gia_ban*pctMkt;
@@ -3053,6 +3130,7 @@ function buildBHRow(mon, mk, ngay, idKey, pctSan, pctMkt){
   return {html, qty:qtyTotal, dt:dtTotal, ln:lnTotal};
 }
 
+/** Render dòng header nhóm + bảng con của 1 nhóm món trong sheet bán hàng */
 function groupHeaderHtml(grp, count, grpSL, grpDT, grpLN, grpRows){
   return `<tr style="background:#F0EDE8;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
     <td colspan="7" class="sticky-col fw700" style="font-size:11px;color:var(--text2);padding:5px 10px">
@@ -3138,7 +3216,8 @@ function renderBanHang(){
     }
   }
 
-    if(S.menu_taicho && S.menu_taicho.length>0){
+  // ── Món Tại Chỗ ──
+  if(S.menu_taicho && S.menu_taicho.length>0){
     rows+=`<tr style="background:#FFF3E0"><td colspan="7" class="fw700" style="font-size:11px;color:var(--orange);padding:5px 10px">🏠 MÓN TẠI CHỖ</td></tr>`;
     const tc_groups = groupBy(sortAZ(S.menu_taicho), m=>m.nhom_mon||getMonNhom(m.ten));
     const tc_sorted = Object.keys(tc_groups).sort((a,b)=>a.localeCompare(b,'vi'));
@@ -3168,6 +3247,7 @@ function renderBanHang(){
   document.getElementById('bh-avg').textContent=fmt(Math.round(getTotalDTThang(mk)/days));
 }
 
+/** Tổng SL bán trong tháng (gồm App + Tại Chỗ + Khô + Combo) */
 function getTotalSLThang(mk){
   let sl=0;
   for(const mon of S.menu){
@@ -3182,6 +3262,7 @@ function getTotalSLThang(mk){
   return sl;
 }
 
+// ── setBanHang: called when user types quantity in banhang table ──
 function setBanHang(mk,key,day,val){
   if(!S.ban_hang[mk]) S.ban_hang[mk]={};
   const k=String(key);
@@ -3193,6 +3274,7 @@ function setBanHang(mk,key,day,val){
 
 function saveBanHangNgay(){saveData();alert('✓ Đã lưu dữ liệu bán hàng!');}
 
+/** Doanh thu trong 1 ngày (gồm App + Tại Chỗ + Khô) */
 function getDayRevenue(mk,d){
   let dt=0;
   for(const mon of S.menu){
@@ -3230,7 +3312,9 @@ function renderCalBH(thang,nam,mk){
   cal.innerHTML=html;
 }
 
+// ═══════════════════════════════════════════════════════════════
 // NVL
+// ═══════════════════════════════════════════════════════════════
 function renderNVL(){
   const q=(document.getElementById('nvl-search')?.value||'').toLowerCase();
   const nhomFilter=document.getElementById('nvl-filter-nhom')?.value||'';
@@ -3329,6 +3413,7 @@ function renderNVL(){
   document.getElementById('nvl-tbody').innerHTML=html||'<div class="txt-center txt-gray" style="padding:24px">Không tìm thấy NVL</div>';
 }
 
+
 function addNVL(){
   const ten=document.getElementById('nvl-new-ten').value.trim();
   if(!ten){alert('Vui lòng nhập tên NVL');return;}
@@ -3410,9 +3495,13 @@ function exportNVL(){
   a.download='NVL_KhapKhun.csv'; a.click();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // MENU
+// ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
 // COMBO FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
 function openComboModal(){
   // Populate checkbox list of all menu items sorted A-Z
   const list = document.getElementById('combo-mon-list');
@@ -3757,6 +3846,7 @@ function saveComboEdit(){
   saveData(); renderMenu();
 }
 
+
 function setPhiSan(idx,val){
   S.menu[idx].pct_san=(parseFloat(val)||29.5)/100;
   saveData();
@@ -4006,7 +4096,9 @@ function addMonMoi(){
   saveData(); renderMenu();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // CHẤM CÔNG
+// ═══════════════════════════════════════════════════════════════
 function renderChamCong(){
   const thang=parseInt(document.getElementById('cc-thang').value);
   const nam=parseInt(document.getElementById('cc-nam').value);
@@ -4186,7 +4278,9 @@ function setThuong(nvIdx,val,mk){
   document.getElementById('cc-total-luong').textContent=fmt(total);
 }
 
+// ═══════════════════════════════════════════════════════════════
 // CHI PHÍ
+// ═══════════════════════════════════════════════════════════════
 function renderChiPhi(){
   const thang=parseInt(document.getElementById('cp-thang').value);
   const nam=parseInt(document.getElementById('cp-nam').value);
@@ -4257,7 +4351,9 @@ function addChiPhi(){
   closeModal('modal-cp-add'); saveData(); renderChiPhi();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // HAO HỤT
+// ═══════════════════════════════════════════════════════════════
 function renderHaoHut(){
   const q=(document.getElementById('hh-search')?.value||'').toLowerCase();
   const filter=document.getElementById('hh-filter')?.value||'';
@@ -4297,8 +4393,12 @@ function setHaoHut(ten,val){
   renderMenu(); // recalc gia von
 }
 
+// ═══════════════════════════════════════════════════════════════
 // TỒN KHO
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // TỒN KHO — Logic tính toán (không đệ quy)
+// ═══════════════════════════════════════════════════════════════
 
 // Tồn đầu đã được chốt/sửa tay trong ton_data — trả về 0 nếu chưa có
 function _storedTonDau(nvlTen, mk){
@@ -4351,18 +4451,21 @@ function _tonDauHienThi(nvlTen, thang, nam){
   return Math.max(0, prevTonDau + prevNhap - prevXuat);
 }
 
+// ── Trả về month-key của tháng trước ────────────────────────
 function getPrevMK(thang, nam){
   thang = parseInt(thang); nam = parseInt(nam);
   if(thang === 1) return mkey(12, nam - 1);
   return mkey(thang - 1, nam);
 }
 
+// ── Trả về month-key của tháng sau ──────────────────────────
 function getNextMK(thang, nam){
   thang = parseInt(thang); nam = parseInt(nam);
   if(thang === 12) return mkey(1, nam + 1);
   return mkey(thang + 1, nam);
 }
 
+// ── Sửa tay tồn đầu cho 1 NVL trong 1 tháng cụ thể ─────────
 function setTonDauThang(nvlTen, mk, val){
   if(!S.ton_data) S.ton_data = {};
   if(!S.ton_data[mk]) S.ton_data[mk] = {};
@@ -4370,6 +4473,7 @@ function setTonDauThang(nvlTen, mk, val){
   // saveData sẽ được gọi khi user bấm nút Lưu hoặc tự lưu
 }
 
+// ── Render bảng tồn kho ──────────────────────────────────────
 function renderTonKho(){
   const thang = parseInt(document.getElementById('tk-thang')?.value || S.thang);
   const nam   = parseInt(document.getElementById('tk-nam')?.value   || S.nam);
@@ -4438,6 +4542,7 @@ function renderTonKho(){
   document.getElementById('tk-ok-count').textContent  = okCount  + ' mục';
 }
 
+// ── Chốt Tháng: tính tồn cuối → gán làm tồn đầu tháng sau ──
 function chotThang(){
   const thang  = parseInt(document.getElementById('tk-thang')?.value || S.thang);
   const nam    = parseInt(document.getElementById('tk-nam')?.value   || S.nam);
@@ -4472,18 +4577,22 @@ function chotThang(){
   renderTonKho();
 }
 
+// ── Làm mới + lưu ───────────────────────────────────────────
 function autoCalcTon(){
   saveData();
   renderTonKho();
 }
 
+// ── Backward-compat stubs ────────────────────────────────────
 function setTonDau(idx, val){
   const n = S.nvl[idx]; if(!n) return;
   setTonDauThang(n.ten, mkey(S.thang, S.nam), val);
 }
 function setNhapThang(){ /* deprecated */ }
 
+// ═══════════════════════════════════════════════════════════════
 // BÁO CÁO
+// ═══════════════════════════════════════════════════════════════
 function drawPieChart(mk, gv, luong, cpKhac){
   const canvas = document.getElementById('bc-pie-canvas');
   if(!canvas) return;
@@ -4657,7 +4766,9 @@ function renderBaoCao(){
   }</div>`;
 }
 
+// ═══════════════════════════════════════════════════════════════
 // MODALS
+// ═══════════════════════════════════════════════════════════════
 function openModal(id){
   if(['modal-menu-add','modal-tc-add','modal-menu-edit','modal-tc-edit'].includes(id)){ refreshNVLDatalist(); refreshNhomDatalist(); }
   document.getElementById(id).classList.add('open');
@@ -4666,7 +4777,9 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-bg.open').forEach(m=>m.classList.remove('open'));});
 
+// ═══════════════════════════════════════════════════════════════
 // HỦY HÀNG
+// ═══════════════════════════════════════════════════════════════
 function renderHuyHang(){
   const thang=parseInt(document.getElementById('hh2-thang')?.value)||S.thang;
   const nam=parseInt(document.getElementById('hh2-nam')?.value)||S.nam;
@@ -4775,7 +4888,9 @@ function delHuyHang(mk,idx){
   S.huy_hang[mk].splice(idx,1); saveData(); renderHuyHang();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // DỰ BÁO DOANH THU THEO KỊCH BẢN
+// ═══════════════════════════════════════════════════════════════
 
 const DUBAO_STEPS = [-50,-40,-30,-20,-10,0,10,20,30,40,50]; // % thay đổi
 
@@ -5099,7 +5214,9 @@ function exportDuBaoCSV(){
   a.click();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // IMPORT JSON TỪ FILE NHÂN VIÊN
+// ═══════════════════════════════════════════════════════════════
 let _pendingNvData=null;
 
 function importNhanVienJSON(input){
@@ -5208,9 +5325,12 @@ function doMergeNhanVienJSON(){
   if(document.getElementById('page-huyhang')?.classList.contains('on')) renderHuyHang();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // MENU BÁN TẠI CHỖ — Danh sách món & công thức RIÊNG cho tại chỗ
 // (S.menu_taicho — độc lập với S.menu, CRUD đầy đủ)
+// ═══════════════════════════════════════════════════════════════
 
+/** Đồng bộ thêm món mới từ App vào Menu Tại Chỗ (không ghi đè món đã có) */
 function copyGiaFromApp(){
   if(!confirm('Đồng bộ thêm các món MỚI từ App vào Menu Tại Chỗ?\n(Các món đã có trong Menu Tại Chỗ sẽ KHÔNG bị thay đổi)')) return;
   const existIds=new Set((S.menu_taicho||[]).map(m=>m.id));
@@ -5358,12 +5478,14 @@ function renderTaiCho(){
   document.getElementById('tc-foot-dt').textContent=fmt(Math.round(totalDT));
 }
 
+/** Cập nhật giá bán tại chỗ của 1 món (theo idx trong S.menu_taicho) */
 function setGiaTaiChoMon(idx, val){
   const v=parseFloat(val)||0;
   if(S.menu_taicho[idx]) S.menu_taicho[idx].gia_ban=v;
   saveData();
 }
 
+/** Re-tính real-time khi thay đổi giá tại chỗ inline */
 function renderTaiChoRow(inputEl){
   const idx=parseInt(inputEl.dataset.idx);
   const giaMoi=parseFloat(inputEl.value)||0;
@@ -5396,6 +5518,7 @@ function delMonTC(id){
   if(i>=0){ S.menu_taicho.splice(i,1); saveData(); renderTaiCho(); }
 }
 
+// ── Modal Sửa Món Tại Chỗ ─────────────────────────────────
 let editIngrCountTC=0;
 function addEditIngrTC(ten='', dvt='kg', dl=0){
   editIngrCountTC++;
@@ -5500,6 +5623,7 @@ function saveMonTCEdit(){
   saveData(); renderTaiCho();
 }
 
+// ── Modal Thêm Món Tại Chỗ ─────────────────────────────────
 let tcNewIngrCount=0;
 function addTCNewIngr(){
   tcNewIngrCount++;
@@ -5619,7 +5743,12 @@ function showCThucTaiCho(id){
   openModal('modal-cthuc');
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
 // QUẢN LÝ NHÓM MÓN
+// ═══════════════════════════════════════════════════════════
 const NHOM_COLORS={
   'Hủ Tiếu Nước Trong':'#1A5FAB','Hủ Tiếu Nước Đục':'#0D47A1',
   'Bún':'#2E7D32','Bún Nước Đục':'#1B5E20',
@@ -5757,7 +5886,9 @@ function saveNhomMon(){
 ✓ Bán Hàng đã cập nhật`);
 }
 
+// ═══════════════════════════════════════════════════════════
 // ĐỒNG BỘ 2 CHIỀU APP ↔ TẠI CHỖ
+// ═══════════════════════════════════════════════════════════
 function copyGiaFromApp(){ openSyncModal('app_to_tc'); }
 
 function openSyncModal(dir){
@@ -5886,6 +6017,7 @@ function doSync(dir){
 🔄 Cập nhật CT: ${updated} món`);
 }
 
+// ── Tìm kiếm trong bảng Bán Hàng ────────────────────────────
 function filterBHTable(q){
   const kw=(q||'').toLowerCase().trim();
   const rows=document.querySelectorAll('#bh-tbody tr');
@@ -5923,7 +6055,9 @@ function filterBHTable(q){
 
 setInterval(saveData, 120000);
 
+// ═══════════════════════════════════════════════════════════════
 // INIT
+// ═══════════════════════════════════════════════════════════════
 async function init(){
   await loadData();
   refreshNVLDatalist();
@@ -5950,7 +6084,9 @@ async function init(){
   renderDashboard();
 }
 
+// ═══════════════════════════════════════════════════════════════
 // BOOTSTRAP — kiểm tra đăng nhập trước khi vào app
+// ═══════════════════════════════════════════════════════════════
 (async function bootstrap(){
   if(authToken && currentUser){
     try{
