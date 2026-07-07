@@ -7,8 +7,8 @@ const pool = new Pool({
   }
 });
 
-// Hàm sửa lỗi: Tự động dọn dẹp lỗi phân quyền và đồng bộ mật khẩu chuẩn mã hóa gốc
-async function fixSystem() {
+// SỬA LỖI TẠI ĐÂY: Đổi tên hàm thành initSchema để khớp chính xác với file server/index.js
+async function initSchema() {
   try {
     // 1. Tạo bảng users và bảng state nếu chưa có để tránh lỗi sập server
     await pool.query(`
@@ -53,10 +53,8 @@ async function fixSystem() {
   }
 }
 
-// Chạy lệnh sửa lỗi ngay khi khởi động
-fixSystem();
-
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  pool
+  pool,
+  initSchema // Xuất hàm này ra cho file index.js gọi dùng lúc khởi động
 };
