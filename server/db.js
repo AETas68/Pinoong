@@ -1,15 +1,16 @@
 const { Pool } = require('pg');
 
-// Kết nối tới cơ sở dữ liệu Neon qua biến Render
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Hàm tự động khởi tạo bảng và sửa lỗi phân quyền
-async function initDB() {
+// Hàm sửa lỗi: Tự động dọn dẹp lỗi phân quyền và đồng bộ mật khẩu chuẩn mã hóa gốc
+async function fixSystem() {
   try {
-    // 1. Tạo bảng users nếu chưa có
+    // 1. Tạo bảng users và bảng state nếu chưa có để tránh lỗi sập server
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -18,8 +19,6 @@ async function initDB() {
         role VARCHAR(20) NOT NULL
       );
     `);
-
-    // 2. Tạo bảng lưu trữ trạng thái dữ liệu (state) nếu chưa có
     await pool.query(`
       CREATE TABLE IF NOT EXISTS state (
         id SERIAL PRIMARY KEY,
@@ -28,38 +27,34 @@ async function initDB() {
       );
     `);
 
-    console.log('✅ Cấu trúc bảng Database đã được kiểm tra thành công!');
-
-    // 3. CODE SỬA LỖI ĐẶC BIỆT: Luôn cập nhật hoặc chèn mới tài khoản Admin tối cao từ Render
+    // 2. Đồng bộ chuẩn xác tài khoản từ Render theo đúng thư viện bcryptjs gốc của bạn
     const adminUser = process.env.ADMIN_USERNAME || 'admin';
     const adminPass = process.env.ADMIN_PASSWORD || 'MatKhauManh123';
     
-    // Sử dụng giải pháp mã hóa an toàn có sẵn trong Node.js (crypto), không lo lỗi thiếu thư viện
-    const crypto = require('crypto');
-    const hashedPassword = crypto.createHash('sha256').update(adminPass).digest('hex');
+    const bcryptjs = require('bcryptjs');
+    const hashedPassword = await bcryptjs.hash(adminPass, 10);
 
-    // Lệnh ép cập nhật tài khoản theo thông tin mới nhất trên Render
-    const userQuery = `
+    // Ép cập nhật tài khoản Quản lý tối cao
+    await pool.query(`
       INSERT INTO users (username, password, role)
       VALUES ($1, $2, 'Quản lý')
       ON CONFLICT (username)
       DO UPDATE SET password = $2, role = 'Quản lý';
-    `;
-    await pool.query(userQuery, [adminUser, hashedPassword]);
-    console.log(`🔄 Tài khoản Admin [${adminUser}] đã được đồng bộ chuẩn xác từ Render!`);
+    `, [adminUser, hashedPassword]);
+    
+    console.log(`🔄 Đã đồng bộ tài khoản Admin [${adminUser}] chuẩn mã hóa gốc!`);
 
-    // 4. RESET CẤU HÌNH GIAO DIỆN BỊ LỖI
-    // Xóa dữ liệu cấu hình cũ bị kẹt trong bảng state để ép giao diện tải lại toàn bộ Tab cho Quản lý
+    // 3. Xóa cấu hình hiển thị menu cũ đang bị lỗi khóa tab
     await pool.query('TRUNCATE TABLE state CASCADE;');
-    console.log('🧹 Đã dọn sạch bộ nhớ đệm giao diện lỗi thành công!');
+    console.log('🧹 Đã dọn sạch bộ nhớ đệm giao diện lỗi!');
 
   } catch (err) {
-    console.error('❌ Lỗi khởi tạo cơ sở dữ liệu:', err);
+    console.error('❌ Lỗi quét hệ thống:', err);
   }
 }
 
-// Khởi chạy hàm quét lỗi ngay khi server khởi động
-initDB();
+// Chạy lệnh sửa lỗi ngay khi khởi động
+fixSystem();
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
