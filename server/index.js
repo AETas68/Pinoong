@@ -21,7 +21,7 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.json({ limit: '15mb' })); // du lieu S co the kha lon (menu + ban hang nhieu thang)
+app.use(express.json({ limit: '15mb' }));
 
 // ------------------- API -------------------
 app.use('/api/auth', authRouter);
@@ -41,42 +41,38 @@ io.use((socket, next) => {
   });
 });
 
-io.on('connection', async (socket) => {
+io.on('connection', (socket) => {
   console.log(`🔌 ${socket.user?.name || 'unknown'} đã kết nối (${socket.id})`);
 
-  // 🚪 HÀM ĐỒNG BỘ CỨU HỘ MỞ KHÓA 14 TAB:
-  // Nếu tài khoản kết nối mang quyền quản trị cao nhất, server chủ động ép gửi dữ liệu 14 Tab xuống giao diện
-  if (socket.user?.role === 'admin' || socket.user?.role === 'Super Admin') {
-    try {
-      const fullTabs = [
-        "Dashboard", "Bán Hàng", "Danh Mục NVL", "Nhập Hàng", "Menu & Công Thức", 
-        "Menu Tại Chỗ", "Chấm Công", "Chi Phí", "Hao Hụt", "Hủy Hàng", "Tồn Kho", 
-        "Báo Cáo", "Dự Báo DT", "Người Dùng", "dashboard", "banhang", "nvl", 
-        "inventory", "menu", "bantaicho", "chamcong", "chiphi", "haohut", "huyhang", 
-        "tonkho", "baocao", "dubaodoanhthu", "users"
-      ];
-      
-      // Đọc dữ liệu thô từ database để bảo vệ cấu hình quán của bạn
-      const { rows } = await pool.query('SELECT data FROM app_state WHERE id = 1');
-      let currentData = {};
-      if (rows[0]?.data) {
-        try { currentData = JSON.parse(rows[0].data); } catch(e) {}
-      }
+  // 🎯 KHÓA CỨNG QUYỀN LỰC TẠI ĐÂY:
+  // Định nghĩa sẵn dải 14 Tab chuẩn chỉnh viết cả chữ hoa lẫn chữ thường để Front-end nhận diện 100%
+  const fullTabs = [
+    "Dashboard", "Bán Hàng", "Danh Mục NVL", "Nhập Hàng", "Menu & Công Thức", 
+    "Menu Tại Chỗ", "Chấm Công", "Chi Phí", "Hao Hụt", "Hủy Hàng", "Tồn Kho", 
+    "Báo Cáo", "Dự Báo DT", "Người Dùng", "dashboard", "banhang", "nvl", 
+    "inventory", "menu", "bantaicho", "chamcong", "chiphi", "haohut", "huyhang", 
+    "tonkho", "baocao", "dubaodoanhthu", "users"
+  ];
 
-      // Ép danh sách allowedTabs luôn đầy đủ 14 Tab, không cho phép bị trống dữ liệu
-      currentData.allowedTabs = fullTabs;
-      if (!currentData.activeTab) currentData.activeTab = "Dashboard";
-
-      // Bắn tín hiệu real-time giữ chặt 14 Tab cố định trên màn hình trình duyệt của bạn
+  // Bắt bất kỳ lệnh đòi đồng bộ (sync, get-state, load) nào từ Front-end gửi lên
+  socket.onAny((eventName, ...args) => {
+    if (socket.user?.role === 'admin' || socket.user?.role === 'Super Admin') {
+      // Nếu Front-end gửi tín hiệu lên đòi lấy trạng thái, Server chặn lại và ép trả về 14 Tab
       socket.emit('state-updated', {
-        data: currentData,
+        data: { activeTab: "Dashboard", allowedTabs: fullTabs },
         updated_at: new Date(),
-        updated_by: 'Hệ thống Cứu hộ'
+        updated_by: 'Hệ thống Cứu hộ tối cao'
       });
-      console.log(`🎯 Đã kích hoạt cố định vĩnh viễn 14 Tab cho Admin: ${socket.user?.username}`);
-    } catch (err) {
-      console.error('❌ Lỗi đồng bộ Tab qua Socket:', err.message);
     }
+  });
+
+  // Gửi ngay lập tức khi vừa kết nối thành công để giao diện đứng im luôn
+  if (socket.user?.role === 'admin' || socket.user?.role === 'Super Admin') {
+    socket.emit('state-updated', {
+      data: { activeTab: "Dashboard", allowedTabs: fullTabs },
+      updated_at: new Date(),
+      updated_by: 'Hệ thống Cứu hộ tối cao'
+    });
   }
 
   socket.on('disconnect', () => {
