@@ -532,7 +532,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 </div>
 <!-- TAB GIAO DIỆN 1: BTP KHẠP KHUN CHẠY TRỰC TUYẾN CHUNG HỆ ĐIỀU HÀNH -->
 <!-- ════════════════════════════════════════════ BTP KHẠP KHUN ══ -->
-<div class="page" id="page-btp-khapkhun" style="display:none;">
+<div class="page" id="page-btp-khapkhun">
  <div class="sec-label">📋 Nhật Ký Nấu BTP Theo Mẻ — Xưởng Khạp Khun</div>
  <div class="card mb12">
  <div class="card-title">➕ Nhập Mẻ Sản Xuất Hằng Ngày</div>
@@ -582,7 +582,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 </div>
 
 <!-- ════════════════════════════════════════════ BTP PINOONG ══ -->
-<div class="page" id="page-btp-pinoong" style="display:none;">
+<div class="page" id="page-btp-pinoong">
  <div class="sec-label">📦 Nhật Ký Nấu BTP Theo Mẻ — Xưởng Pinoong</div>
  <div class="card mb12">
  <div class="card-title">➕ Nhập Mẻ Sản Xuất Hằng Ngày</div>
@@ -3080,19 +3080,53 @@ function nhomTag(nhom){
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════════
 function goPage(id){
+  // 1. Gỡ bỏ Class trạng thái cũ của toàn bộ các trang và nút bấm
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.getElementById('page-'+id).classList.add('on');
-  event?.target?.classList.add('on');
-  // Sync month pickers
-  const t=S.thang, n=S.nam;
+  
+  // 2. Định vị trang mục tiêu và kích hoạt hiển thị bằng Class .on
+  const targetPage = document.getElementById('page-' + id);
+  if (targetPage) {
+    targetPage.classList.add('on');
+  } else {
+    console.error("Không tìm thấy thẻ trang ứng với ID: page-" + id);
+  }
+  
+  // 3. Định vị và làm sáng nút bấm Menu vừa được click chuột
+  if (id === 'btp-khapkhun' || id === 'khapkhun') {
+    const btn = document.getElementById('nb-btp-khapkhun');
+    if(btn) btn.classList.add('on');
+  } else if (id === 'btp-pinoong' || id === 'pinoong') {
+    const btn = document.getElementById('nb-btp-pinoong');
+    if(btn) btn.classList.add('on');
+  } else if (event && event.target && event.target.classList.contains('nb')) {
+    event.target.classList.add('on');
+  }
+  
+  // 4. Đồng bộ hóa bộ chọn Tháng/Năm trên thanh công cụ của toàn bộ hệ thống
+  const t = S.thang, n = S.nam;
   ['bh','cc','cp','tk','bc','inv'].forEach(prefix=>{
     const ts = document.getElementById(prefix+'-thang');
     const tn = document.getElementById(prefix+'-nam');
     if(ts) ts.value = t;
     if(tn) tn.value = n;
   });
-  renderPage(id);
+  
+  // 5. Kích hoạt gọi hàm nạp và vẽ dữ liệu bảng biểu tương ứng cho từng trang
+  if (id === 'btp-khapkhun' || id === 'khapkhun') {
+    if (typeof renderBtpOnline === 'function') renderBtpOnline('khapkhun');
+  } else if (id === 'btp-pinoong' || id === 'pinoong') {
+    if (typeof renderBtpOnline === 'function') renderBtpOnline('pinoong');
+  } else {
+    // Chạy hàm render các trang mặc định cũ của bạn
+    if (typeof renderPage === 'function') {
+      try {
+        renderPage(id);
+      } catch(errPage) {
+        console.log("Lỗi thực thi renderPage gốc:", errPage);
+      }
+    }
+  }
 }
 
 function renderPage(id){
