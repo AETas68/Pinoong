@@ -204,6 +204,8 @@ tr:hover .sticky-col{background:#F7F4F0}
   <button class="nb" onclick="goPage('banhang')">🛒 Bán Hàng</button>
   <button class="nb" onclick="goPage('nvl')">📦 Danh Mục NVL</button>
   <button class="nb" onclick="goPage('inventory')">🚚 Nhập Hàng</button>
+  <button class="nb" id="nb-btp-khapkhun" onclick="goPage('btp-khapkhun'); taiDanhSachBtpTruyenTuServer('khapkhun');">📋 BTP Khạp Khun</button>
+<button class="nb" id="nb-btp-pinoong" onclick="goPage('btp-pinoong'); taiDanhSachBtpTruyenTuServer('pinoong');">📦 BTP Pinoong</button>
   <button class="nb" onclick="goPage('menu')">🍽 Menu & Công Thức</button>
   <button class="nb" onclick="goPage('bantaicho')" style="border-color:var(--orange);color:var(--orange)">🏠 Menu Tại Chỗ</button>
   <button class="nb" onclick="goPage('chamcong')">👥 Chấm Công</button>
@@ -527,6 +529,23 @@ tr:hover .sticky-col{background:#F7F4F0}
       <div class="txt-center txt-gray" style="padding:24px">Đang tải báo cáo...</div>
     </div>
   </div>
+</div>
+<!-- TAB GIAO DIỆN 1: BTP KHẠP KHUN CHẠY TRỰC TUYẾN CHUNG HỆ ĐIỀU HÀNH -->
+<div class="page" id="page-btp-khapkhun">
+    <div class="card">
+        <div class="card-title">📋 Quản Lý & Tính Giá BTP — Xưởng Khạp Khun</div>
+        <p style="font-size:11px; color:var(--text2); margin-top:-5px; margin-bottom:15px;">Giao diện hoạt động trực tuyến liên thông 100% với kho NVL hệ thống App chính.</p>
+        <div id="container-list-btp-khapkhun"></div>
+    </div>
+</div>
+
+<!-- TAB GIAO DIỆN 2: BTP PINOONG CHẠY TRỰC TUYẾN CHUNG HỆ ĐIỀU HÀNH -->
+<div class="page" id="page-btp-pinoong">
+    <div class="card">
+        <div class="card-title">📦 Quản Lý & Tính Giá BTP — Xưởng Pinoong</div>
+        <p style="font-size:11px; color:var(--text2); margin-top:-5px; margin-bottom:15px;">Giao diện hoạt động trực tuyến liên thông 100% với kho NVL hệ thống App chính.</p>
+        <div id="container-list-btp-pinoong"></div>
+    </div>
 </div>
 
 <!-- ════════════════════════════════════════════ MENU ══ -->
@@ -6131,6 +6150,39 @@ async function init(){
   document.getElementById('login-overlay').classList.remove('hidden');
   document.getElementById('login-username')?.focus();
 })();
+  function taiDanhSachBtpTruyenTuServer(branchName) {
+    fetch('/api/btp/list?branch=' + branchName)
+    .then(function(res) { return res.json(); })
+    .then(function(data) { if(data.success) veGiaoDienDanhSachBtp(branchName, data.dishes); });
+}
+
+function veGiaoDienDanhSachBtp(branchName, danhSachDishes) {
+    const container = document.getElementById('container-list-btp-' + branchName);
+    if(!danhSachDishes || danhSachDishes.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:15px; color:var(--text2);">Chưa có món BTP trực tuyến.</div>`;
+        return;
+    }
+    let html = `<table class="table-sm" style="width:100%; border-collapse:collapse;">
+        <thead><tr style="background:var(--bg2);"><th>Tên món BTP</th><th>ĐVT mẻ</th><th>Vốn NVL</th><th>Thao tác</th></tr></thead><tbody>`;
+    danhSachDishes.forEach(function(dish) {
+        html += `<tr><td><b>${dish.name}</b></td><td><span class="badge b-gray">${dish.output_unit}</span></td><td class="mono">${parseFloat(dish.cost_price).toLocaleString()} đ</td>
+        <td><button class="btn btn-teal btn-sm" onclick="ghiDonXuatBtpOnline('${branchName}', ${dish.id})">📦 Xuất Bán</button></td></tr>`;
+    });
+    container.innerHTML = html + `</tbody></table>`;
+}
+
+function ghiDonXuatBtpOnline(branchName, dishId) {
+    const qty = prompt("Nhập số lượng mẻ xuất:");
+    if(!qty || isNaN(qty) || parseFloat(qty) <= 0) return;
+    fetch('/api/btp/submit-export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ branch: branchName, orderData: { btp_dish_id: dishId, qty: parseFloat(qty), date: new Date().toISOString().split('T')[0] } })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) { if(data.success) { alert(data.message); if(typeof renderNVL === 'function') renderNVL(); } });
+}
+
 </script>
 </body>
 </html>
