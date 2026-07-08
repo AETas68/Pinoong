@@ -79,28 +79,8 @@ router.post('/change-password', requireAuth, async (req, res) => {
   }
 });
 
-module.exports = { router, requireAuth, requireAdmin, requireSuperAdmin };
 // =====================================================================================
 // [BỔ SUNG] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
-// =====================================================================================
-
-// 1. Cấu hình mật khẩu gốc ban đầu cho 2 quán (Mật khẩu mặc định, Admin có thể đổi trên web)
-// =====================================================================================
-// [ĐÃ FIX LỖI] API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHUẨN JSON
-// =====================================================================================
-
-// Mật khẩu cố định dự phòng ban đầu nếu admin chưa cấu hình trên giao diện
-let matKhauHeThongBtp = {
-    khapkhun: "khapkhun2026",
-    pinoong: "pinoong2026"
-};
-
-/**
- * [ĐÃ FIX LỖI] API 1: Xác thực mật khẩu chi nhánh 
- * Nhận cả phương thức gửi dữ liệu Query và Body từ các trình duyệt
- */
-// =====================================================================================
-// [ĐÃ CHUẨN HÓA FIXED] API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP PHƯƠNG THỨC POST
 // =====================================================================================
 
 // Mật khẩu tĩnh mặc định ban đầu dự phòng nếu bạn chưa cài đặt trên Render Environment
@@ -111,7 +91,7 @@ let matKhauHeThongBtp = {
 
 /**
  * [FIXED 100%] API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
- * Đối chiếu đồng thời cả Biến môi trường Render Env và Mật khẩu bộ nhớ RAM hệ thống
+ * POST /api/btp/secure-check
  */
 router.post('/api/btp/secure-check', function(req, res) {
     const chiNhanh = req.body.branch;
@@ -126,7 +106,6 @@ router.post('/api/btp/secure-check', function(req, res) {
         return res.json({ success: false, message: "Chi nhánh không hợp lệ!" });
     }
     
-    // So khớp mật khẩu nhập vào từ giao diện web với mật khẩu hệ thống
     if (matKhauNhapVao && matKhauNhapVao.trim() === matKhauChuan.trim()) {
         res.json({ success: true, message: "Xác thực tài khoản chi nhánh thành công!" });
     } else {
@@ -136,6 +115,7 @@ router.post('/api/btp/secure-check', function(req, res) {
 
 /**
  * [FIXED 100%] API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
+ * POST /api/btp/secure-update
  */
 router.post('/api/btp/secure-update', function(req, res) {
     const passMoiKhapKhun = req.body.passKhapKhun;
@@ -147,9 +127,9 @@ router.post('/api/btp/secure-update', function(req, res) {
     res.json({ success: true, message: "Hệ thống trung tâm đã lưu mật khẩu file BTP mới thành công!" });
 });
 
-
 /**
- * [ĐÃ FIX LỖI] API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
+ * [FIXED 100%] API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
+ * GET /api/btp/get-nvl-shared
  */
 router.get('/api/btp/get-nvl-shared', function(req, res) {
     let databaseKhoNVL = [];
@@ -165,7 +145,5 @@ router.get('/api/btp/get-nvl-shared', function(req, res) {
     res.json({ success: true, nvlList: databaseKhoNVL });
 });
 
-    res.json({ success: true, message: "Hệ thống trung tâm Render đã ghi nhận đơn bán BTP và tự động khấu trừ kho thành công!" });
-});
-// =====================================================================================
-
+// LỆNH XUẤT MODULE BẮT BUỘC LUÔN NẰM Ở CUỐI CÙNG CỦA FILE AUTH.JS
+module.exports = { router, requireAuth, requireAdmin, requireSuperAdmin };
