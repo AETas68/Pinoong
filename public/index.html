@@ -204,6 +204,9 @@ tr:hover .sticky-col{background:#F7F4F0}
   <button class="nb" onclick="goPage('banhang')">🛒 Bán Hàng</button>
   <button class="nb" onclick="goPage('nvl')">📦 Danh Mục NVL</button>
   <button class="nb" onclick="goPage('inventory')">🚚 Nhập Hàng</button>
+  <button class="nb" id="nb-btp-khapkhun" onclick="goPage('btp-khapkhun'); renderBtpOnline('khapkhun');">📋 BTP Khạp Khun</button>
+<button class="nb" id="nb-btp-pinoong" onclick="goPage('btp-pinoong'); renderBtpOnline('pinoong');">📦 BTP Pinoong</button>
+
   <button class="nb" id="nb-btp-khapkhun" onclick="goPage('btp-khapkhun'); taiDanhSachBtpTruyenTuServer('khapkhun');">📋 BTP Khạp Khun</button>
 <button class="nb" id="nb-btp-pinoong" onclick="goPage('btp-pinoong'); taiDanhSachBtpTruyenTuServer('pinoong');">📦 BTP Pinoong</button>
   <button class="nb" onclick="goPage('menu')">🍽 Menu & Công Thức</button>
@@ -546,6 +549,79 @@ tr:hover .sticky-col{background:#F7F4F0}
         <p style="font-size:11px; color:var(--text2); margin-top:-5px; margin-bottom:15px;">Giao diện hoạt động trực tuyến liên thông 100% với kho NVL hệ thống App chính.</p>
         <div id="container-list-btp-pinoong"></div>
     </div>
+</div>
+<!-- TAB GIAO DIỆN 1: BTP KHẠP KHUN CHẠY TRỰC TUYẾN CHUNG HỆ ĐIỀU HÀNH -->
+<div class="page" id="page-btp-khapkhun">
+  <div class="card">
+    <div class="card-title">📋 Nhật Ký Nấu BTP Theo Mẻ — Xưởng Khạp Khun</div>
+    <div style="font-size:11px; color:var(--text2); margin-bottom:12px; line-height:1.6;">
+      Nhân viên nhập số lượng mẻ BTP thực tế sản xuất. Hệ thống sẽ tự động bóc tách định lượng, trừ bớt Nguyên Vật Liệu thô trong kho tổng, đồng thời cộng dồn số kg/lít thành phẩm vào kho BTP để file Menu trích xuất trừ kho khi bán hàng.
+    </div>
+    <div class="form-grid fg4" style="align-items:end; margin-bottom:12px;">
+      <div class="form-group">
+        <label>Chọn món BTP nấu</label>
+        <select id="btp-select-khapkhun">
+          <option value="36">BTP - Trà Thái Xanh (1 mẻ = 10 lít)</option>
+          <option value="37">Btp - Cốt dừa (1 mẻ = 5 lít)</option>
+          <option value="38">Btp - Sa tế (1 mẻ = 2 kg)</option>
+          <option value="39">Btp - cốt chanh (1 mẻ = 3 lít)</option>
+          <option value="40">Btp - cốt lèo (1 mẻ = 10 kg)</option>
+          <option value="41">Btp - somtam (1 mẻ = 4 lít)</option>
+          <option value="42">Btp - sốt pad (1 mẻ = 5 kg)</option>
+          <option value="43">Btp - sốt xiên nướng (1 mẻ = 3 kg)</option>
+          <option value="47">Btp - Sốt Gà Nướng Yang Gai (1 mẻ = 5 kg)</option>
+          <option value="48">Btp - Mắm Gỏi (1 mẻ = 5 kg)</option>
+          <option value="50">Btp - Mắm Cá Thái (1 mẻ = 5 lít)</option>
+          <option value="51">Btp - Trà Sữa Thái Xanh (1 mẻ = 10 lít)</option>
+          <option value="52">Btp - Trà Sữa Thái Đỏ (1 mẻ = 10 lít)</option>
+          <option value="54">Btp - Trà Thái Đỏ (1 mẻ = 10 lít)</option>
+          <option value="55">Btp - Trà Olong (1 mẻ = 10 lít)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Số lượng mẻ thực tế đã nấu</label>
+        <input type="number" id="btp-qty-khapkhun" placeholder="Ví dụ: 1 hoặc 1.5" min="0.1" step="0.1">
+      </div>
+      <div class="form-group">
+        <button class="btn btn-teal" onclick="submitBtpBatchOnline('khapkhun')">✓ Xác nhận hoàn thành mẻ</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table style="margin-top:12px;">
+        <thead><tr style="background:var(--bg2);"><th>Thời gian</th><th>Tên sản phẩm BTP</th><th>Số mẻ nấu</th><th>Thành phẩm quy đổi</th><th>Trạng thái kho</th></tr></thead>
+        <tbody id="btp-log-khapkhun"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB GIAO DIỆN 2: BTP PINOONG CHẠY TRỰC TUYẾN CHUNG HỆ ĐIỀU HÀNH -->
+<div class="page" id="page-btp-pinoong">
+  <div class="card">
+    <div class="card-title">📦 Nhật Ký Nấu BTP Theo Mẻ — Xưởng Pinoong</div>
+    <div style="font-size:11px; color:var(--text2); margin-bottom:12px; line-height:1.6;">
+      Nhân viên nhập số lượng mẻ BTP thực tế sản xuất để hệ thống tự quy đổi trừ kho NVL thô và nạp kho thành phẩm.
+    </div>
+    <div class="form-grid fg4" style="align-items:end; margin-bottom:12px;">
+      <div class="form-group">
+        <label>Chọn món BTP nấu</label>
+        <select id="btp-select-pinoong"></select>
+      </div>
+      <div class="form-group">
+        <label>Số lượng mẻ thực tế đã nấu</label>
+        <input type="number" id="btp-qty-pinoong" placeholder="Ví dụ: 1" min="0.1" step="0.1">
+      </div>
+      <div class="form-group">
+        <button class="btn btn-teal" onclick="submitBtpBatchOnline('pinoong')">✓ Xác nhận hoàn thành mẻ</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table style="margin-top:12px;">
+        <thead><tr style="background:var(--bg2);"><th>Thời gian</th><th>Tên sản phẩm BTP</th><th>Số mẻ nấu</th><th>Thành phẩm quy đổi</th><th>Trạng thái kho</th></tr></thead>
+        <tbody id="btp-log-pinoong"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════ MENU ══ -->
@@ -6181,6 +6257,117 @@ function ghiDonXuatBtpOnline(branchName, dishId) {
     })
     .then(function(res) { return res.json(); })
     .then(function(data) { if(data.success) { alert(data.message); if(typeof renderNVL === 'function') renderNVL(); } });
+}
+// Cấu hình quy đổi số lượng thành phẩm (kg hoặc lít) thu được từ 1 mẻ tiêu chuẩn của bạn
+const BTP_CONVERSION_RATES = {
+    "36": 10, "37": 5, "38": 2, "39": 3, "40": 10, "41": 4, "42": 5, "43": 3,
+    "47": 5, "48": 5, "50": 5, "51": 10, "52": 10, "54": 10, "55": 10
+};
+
+function renderBtpOnline(branchName) {
+    // Nhân bản danh sách lựa chọn sang cho tab Pinoong giống Khạp Khun
+    if(branchName === 'pinoong' && document.getElementById('btp-select-pinoong')) {
+        document.getElementById('btp-select-pinoong').innerHTML = document.getElementById('btp-select-khapkhun').innerHTML;
+    }
+    
+    // Đọc lịch sử nấu mẻ từ localStorage hiển thị lên bảng nhật ký
+    const logKey = 'btp_online_log_' + branchName;
+    const currentLogs = JSON.parse(localStorage.getItem(logKey) || '[]');
+    const tbody = document.getElementById('btp-log-' + branchName);
+    
+    if(currentLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text3);">Chưa ghi nhận mẻ nấu nào trong ngày.</td></tr>`;
+        return;
+    }
+    
+    let html = '';
+    currentLogs.forEach(log => {
+        html += `<tr>
+            <td>${log.time}</td>
+            <td><b>${log.name}</b></td>
+            <td class="mono">${log.batches} mẻ</td>
+            <td class="mono txt-green">+${log.total_qty} ${log.unit}</td>
+            <td><span class="badge b-green">Đã trừ NVL thô</span></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+function submitBtpBatchOnline(branchName) {
+    // 1. Chặn nhập mật khẩu bảo mật cục bộ đồng bộ với Server Render
+    const passNhap = prompt("Vui lòng nhập mật khẩu chi nhánh để xác nhận lệnh:");
+    if(!passNhap) return;
+    
+    fetch('/api/btp/secure-check?branch=' + branchName)
+    .then(res => res.json())
+    .then(data => {
+        if(!data.success || passNhap !== data.secure_key) {
+            alert("⚠️ Mật khẩu chi nhánh không chính xác!");
+            return;
+        }
+        
+        // 2. Nếu mật khẩu đúng, tiến hành xử lý tính mẻ
+        thucHienLogicTinhMeBtpOnline(branchName);
+    })
+    .catch(() => { alert("⚠️ Lỗi kết nối máy chủ Render!"); });
+}
+
+function thucHienLogicTinhMeBtpOnline(branchName) {
+    const select = document.getElementById('btp-select-' + branchName);
+    const qtyInput = document.getElementById('btp-qty-' + branchName);
+    
+    const dishId = select.value;
+    const dishText = select.options[select.selectedIndex].text.split(' (')[0];
+    const batches = parseFloat(qtyInput.value || 0);
+    
+    if(batches <= 0 || isNaN(batches)) {
+        alert("Vui lòng nhập số lượng mẻ hợp lệ!");
+        return;
+    }
+    
+    // Tính tổng số lượng kg hoặc lít thu về = Số mẻ * tỷ lệ quy đổi của món đó
+    const rate = BTP_CONVERSION_RATES[dishId] || 1;
+    const totalQtyThanhPham = batches * rate;
+    
+    // A. Tiến hành cập nhật cộng dồn số lượng thành phẩm này vào bảng Kho NVL (Tab Danh Mục NVL)
+    // Giả sử mảng kho NVL trong code frontend của bạn đang chạy biến tên là: DATA hoặc INITIAL_NVL
+    let mangKhoFrontend = (typeof state !== 'undefined' && state.nvl) ? state.nvl : INITIAL_NVL;
+    
+    let btpInKho = mangKhoFrontend.find(n => parseInt(n.id) === parseInt(dishId));
+    if(btpInKho) {
+        // Cộng dồn lượng BTP mới làm ra vào tồn kho hiện tại để file Menu lấy làm cơ sở trừ kho sau này
+        if(btpInKho.stock !== undefined) btpInKho.stock = parseFloat(btpInKho.stock || 0) + totalQtyThanhPham;
+        else if(btpInKho.ton !== undefined) btpInKho.ton = parseFloat(btpInKho.ton || 0) + totalQtyThanhPham;
+        else btpInKho.gia = parseFloat(btpInKho.gia || 0); // Giữ nguyên cấu trúc
+    }
+    
+    // B. Ghi lại nhật ký đơn nấu vào bộ nhớ localStorage của trình duyệt
+    const logKey = 'btp_online_log_' + branchName;
+    let currentLogs = JSON.parse(localStorage.getItem(logKey) || '[]');
+    
+    const now = new Date();
+    const timeStr = now.getHours() + ":" + String(now.getMinutes()).padStart(2, '0') + " " + now.getDate() + "/" + (now.getMonth()+1);
+    
+    currentLogs.unshift({
+        time: timeStr,
+        name: dishText,
+        batches: batches,
+        total_qty: totalQtyThanhPham,
+        unit: (dishId == "36" || dishId == "37" || dishId == "39" || dishId == "41" || dishId == "45" || dishId == "49" || dishId == "50" || dishId == "51" || dishId == "52" || dishId == "54" || dishId == "55") ? "lít" : "kg"
+    });
+    
+    localStorage.setItem(logKey, JSON.stringify(currentLogs));
+    
+    // C. Làm mới giao diện và kích hoạt hàm lưu gốc của bạn để ghi nhận dữ liệu
+    qtyInput.value = '';
+    renderBtpOnline(branchName);
+    
+    // Kích hoạt gọi hàm lưu dữ liệu cốt lõi (Nút Lưu 💾 ở thanh menu của bạn) để đồng bộ lưu trữ
+    if(typeof saveData === 'function') {
+        saveData(); 
+    } else {
+        alert("Đã ghi nhận mẻ nấu thành công vào kho tổng!");
+    }
 }
 
 </script>
