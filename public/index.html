@@ -6390,18 +6390,26 @@ function hienThiCongThucBtpSẵnCo(branchName) {
     if(wInput) wInput.value = r.waste;
   });
 }
-
 function luuCongThucVaXuatMeBtpOnline(branchName) {
   const dishId = document.getElementById('sel-btp-' + branchName).value;
   const batches = parseFloat(document.getElementById('qty-btp-' + branchName).value || 0);
   const configMon = DANH_SACH_MON_BTP.find(m => m.id == dishId);
+  
+  // SỬA LỖI TẠI ĐÂY: Nếu không tìm thấy món ăn, dừng lại ngay lập tức không cho chạy tiếp
+  if (!configMon) {
+    alert("⚠️ Không tìm thấy thông tin cấu hình món BTP này. Vui lòng chọn lại món!");
+    return;
+  }
   
   // 1. Thu thập dữ liệu công thức định lượng từ các ô nhập liệu giao diện
   let congThucMonNay = [];
   document.querySelectorAll('.ing-qty-' + branchName).forEach(input => {
     const nvlId = input.getAttribute('data-nvl-id');
     const qtyVal = parseFloat(input.value || 0);
-    const wasteVal = parseFloat(document.querySelector(`.ing-waste-${branchName}[data-nvl-id="${nvlId}"]`).value || 0);
+    
+    // SỬA LỖI TẠI ĐÂY: Thêm giá trị mặc định tránh lỗi nếu không tìm thấy ô hao hụt
+    const wasteInput = document.querySelector(`.ing-waste-${branchName}[data-nvl-id="${nvlId}"]`);
+    const wasteVal = wasteInput ? parseFloat(wasteInput.value || 0) : 0;
     
     if(qtyVal > 0) {
       congThucMonNay.push({ nvlId: nvlId, qty: qtyVal, waste: wasteVal });
@@ -6420,6 +6428,12 @@ function luuCongThucVaXuatMeBtpOnline(branchName) {
   
   // 2. Nếu có nhập Số lượng mẻ nấu, chạy logic tự động trừ kho NVL thô liên thông
   if (batches > 0) {
+    // Kiểm tra an toàn biến kho tổng S trước khi chạy vòng lặp
+    if (typeof S === 'undefined' || !S.nvl) {
+      alert("⚠️ Không tìm thấy dữ liệu kho hàng (Biến S.nvl chưa sẵn sàng)!");
+      return;
+    }
+
     congThucMonNay.forEach(item => {
       let nvlGocTrongKho = S.nvl.find(n => parseInt(n.id) === parseInt(item.nvlId));
       if (nvlGocTrongKho) {
@@ -6441,12 +6455,16 @@ function luuCongThucVaXuatMeBtpOnline(branchName) {
     
     // 3. Cập nhật cộng dồn số lượng thành phẩm ngược lại vào chính mục BTP đó trong kho tổng
     let btpTrongKhoTổng = S.nvl.find(n => parseInt(n.id) === parseInt(dishId));
-    const totalThanhPham = batches * configMon.rate; // Số mẻ nấu * tỷ lệ ra số kg/lít thành phẩm
+    
+    // ĐÃ SỬA AN TOÀN: Đảm bảo có rate (mặc định bằng 1 nếu thiếu) để không bao giờ lỗi dấu chấm
+    const tileQuyDoi = configMon.rate || 1; 
+    const donViTinh = configMon.unit || 'đơn vị';
+    const totalThanhPham = batches * tileQuyDoi; 
     
     if (btpTrongKhoTổng) {
       if (btpTrongKhoTổng.stock !== undefined) btpTrongKhoTổng.stock = parseFloat(btpTrongKhoTổng.stock || 0) + totalThanhPham;
       else if (btpTrongKhoTổng.ton !== undefined) btpTrongKhoTổng.ton = parseFloat(btpTrongKhoTổng.ton || 0) + totalThanhPham;
-      alert(`✓ Đã nấu thành công ${batches} mẻ BTP! Kho tổng đã tự động quy đổi cộng dồn +${totalThanhPham} ${configMon.unit} vào mục BTP và trừ bớt NVL thô tương ứng.`);
+      alert(`✓ Đã nấu thành công ${batches} mẻ BTP! Kho tổng đã tự động quy đổi cộng dồn +${totalThanhPham} ${donViTinh} vào mục BTP và trừ bớt NVL thô tương ứng.`);
     }
     
     document.getElementById('qty-btp-' + branchName).value = ''; // Reset ô nhập mẻ
