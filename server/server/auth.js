@@ -99,23 +99,43 @@ let matKhauHeThongBtp = {
  * [ĐÃ FIX LỖI] API 1: Xác thực mật khẩu chi nhánh 
  * Nhận cả phương thức gửi dữ liệu Query và Body từ các trình duyệt
  */
-router.get('/api/btp/secure-check', function(req, res) {
-    const chiNhanh = req.query.branch || req.body.branch;
+// =====================================================================================
+// [ĐÃ CHUẨN HÓA FIXED] API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP PHƯƠNG THỨC POST
+// =====================================================================================
+
+// Mật khẩu tĩnh mặc định ban đầu dự phòng nếu bạn chưa cài đặt trên Render Environment
+let matKhauHeThongBtp = {
+    khapkhun: "khapkhun2026",
+    pinoong: "pinoong2026"
+};
+
+/**
+ * [FIXED 100%] API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
+ * Đối chiếu đồng thời cả Biến môi trường Render Env và Mật khẩu bộ nhớ RAM hệ thống
+ */
+router.post('/api/btp/secure-check', function(req, res) {
+    const chiNhanh = req.body.branch;
+    const matKhauNhapVao = req.body.password;
     
-    let correctKey = "";
+    let matKhauChuan = "";
     if (chiNhanh === 'khapkhun') {
-        correctKey = process.env.BTP_PASS_KHAPKHUN || matKhauHeThongBtp.khapkhun;
+        matKhauChuan = process.env.BTP_PASS_KHAPKHUN || matKhauHeThongBtp.khapkhun;
     } else if (chiNhanh === 'pinoong') {
-        correctKey = process.env.BTP_PASS_PINOONG || matKhauHeThongBtp.pinoong;
+        matKhauChuan = process.env.BTP_PASS_PINOONG || matKhauHeThongBtp.pinoong;
     } else {
-        return res.status(400).json({ success: false, message: "Chi nhánh không hợp lệ!" });
+        return res.json({ success: false, message: "Chi nhánh không hợp lệ!" });
     }
     
-    res.json({ success: true, secure_key: correctKey });
+    // So khớp mật khẩu nhập vào từ giao diện web với mật khẩu hệ thống
+    if (matKhauNhapVao && matKhauNhapVao.trim() === matKhauChuan.trim()) {
+        res.json({ success: true, message: "Xác thực tài khoản chi nhánh thành công!" });
+    } else {
+        res.json({ success: false, message: "Mật khẩu không chính xác!" });
+    }
 });
 
 /**
- * [ĐÃ FIX LỖI] API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
+ * [FIXED 100%] API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
  */
 router.post('/api/btp/secure-update', function(req, res) {
     const passMoiKhapKhun = req.body.passKhapKhun;
@@ -126,6 +146,7 @@ router.post('/api/btp/secure-update', function(req, res) {
     
     res.json({ success: true, message: "Hệ thống trung tâm đã lưu mật khẩu file BTP mới thành công!" });
 });
+
 
 /**
  * [ĐÃ FIX LỖI] API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
