@@ -3078,7 +3078,7 @@ function goPage(id){
     // Gọi API đối chiếu trực tuyến mã hóa với Biến môi trường Render
         // [ĐÃ FIXED] Bổ sung cấu hình Headers để truyền dữ liệu chi nhánh đồng bộ sang Backend
         // [ĐÃ FIX 100%] Chuyển sang phương thức POST đồng bộ dữ liệu bảo mật mã hóa trực tuyến với Backend
-    fetch('/api/btp/secure-check', {
+   fetch('/api/auth/api/btp/secure-check', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
