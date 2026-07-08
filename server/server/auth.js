@@ -80,3 +80,125 @@ router.post('/change-password', requireAuth, async (req, res) => {
 });
 
 module.exports = { router, requireAuth, requireAdmin, requireSuperAdmin };
+// =====================================================================================
+// [BỔ SUNG] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
+// =====================================================================================
+
+// 1. Cấu hình mật khẩu gốc ban đầu cho 2 quán (Mật khẩu mặc định, Admin có thể đổi trên web)
+let matKhauHeThongBtp = {
+    khapkhun: "khapkhun2026",
+    pinoong: "pinoong2026"
+};
+
+// Mảng lưu trữ lịch sử xuất bán BTP của các quán truyền về để làm báo cáo P&L gom chung
+if (!global.btpExportLogs) {
+    global.btpExportLogs = [];
+}
+
+/**
+ * API 1: Kiểm tra và trả mật khẩu chuẩn về cho các file BTP dưới ổ C đối chiếu xác thực
+ * Đường dẫn gọi: GET https://onrender.com
+ */
+app.get('/api/btp/secure-check', function(req, res) {
+    const chiNhanh = req.query.branch;
+    if (!chiNhanh || !matKhauHeThongBtp[chiNhanh]) {
+        return res.status(400).json({ success: false, message: "Chi nhánh không hợp lệ hoặc chưa cấu hình mật khẩu!" });
+    }
+    // Trả mật khẩu chính xác về trình duyệt để file ổ C chạy logic so khớp
+    res.json({ success: true, secure_key: matKhauHeThongBtp[chiNhanh] });
+});
+
+/**
+ * API 2: Nhận mật khẩu mới do Super Admin thay đổi từ giao diện Dashboard trên Render
+ * Đường dẫn gọi: POST https://onrender.com
+ */
+app.post('/api/btp/secure-update', function(req, res) {
+    const passMoiKhapKhun = req.body.passKhapKhun;
+    const passMoiPinoong = req.body.passPinoong;
+    
+    // Cập nhật đè lên cấu hình bảo mật cũ nếu Admin có nhập mật khẩu mới
+    if (passMoiKhapKhun && passMoiKhapKhun.trim() !== "") matKhauHeThongBtp.khapkhun = passMoiKhapKhun.trim();
+    if (passMoiPinoong && passMoiPinoong.trim() !== "") matKhauHeThongBtp.pinoong = passMoiPinoong.trim();
+    
+    res.json({ success: true, message: "Hệ thống trung tâm đã lưu mật khẩu file BTP mới thành công!" });
+});
+
+/**
+ * API 3: Xuất toàn bộ bảng giá và số lượng tồn kho NVL dùng chung truyền về cho file BTP ở ổ C
+ * Đường dẫn gọi: GET https://onrender.com
+ */
+app.get('/api/btp/get-nvl-shared', function(req, res) {
+    // Đọc danh sách NVL hiện tại của bạn từ bộ nhớ Server hoặc Database
+    let danhSachKhoNvlTongHop = [];
+    
+    if (typeof global.nvlList !== 'undefined') {
+        danhSachKhoNvlTongHop = global.nvlList;
+    } else if (typeof state !== 'undefined' && state.nvl) {
+        danhSachKhoNvlTongHop = state.nvl;
+    } else {
+        // Nếu server khởi động lại chưa có dữ liệu, trả về mảng rỗng để không bị sập file dưới máy
+        danhSachKhoNvlTongHop = [];
+    }
+    
+    res.json({ success: true, nvlList: danhSachKhoNvlTongHop });
+});
+
+/**
+ * API 4: Nhận hóa đơn xuất bán BTP từ dưới máy và chạy logic tự động khấu trừ kho tổng thực tế
+ * Đường dẫn gọi: POST https://onrender.com
+ */
+app.post('/api/btp/export-sync', function(req, res) {
+    const chiNhanhGui = req.body.branch;
+    const donHang = req.body.orderData;
+    
+    // Lấy mảng dữ liệu kho gốc đang vận hành trên server Render của bạn
+    let mangKhoNvlThucTe = [];
+    if (typeof global.nvlList !== 'undefined') mangKhoNvlThucTe = global.nvlList;
+    else if (typeof state !== 'undefined' && state.nvl) mangKhoNvlThucTe = state.nvl;
+
+    // Tiến hành chạy thuật toán bóc tách công thức và trừ kho liên thông
+    if (donHang && Array.isArray(donHang.congThuc) && mangKhoNvlThucTe.length > 0) {
+        donHang.congThuc.forEach(function(itemNvlDung) {
+            // Tìm nguyên liệu trong kho tổng dựa trên tên gọi trùng khớp hoàn toàn
+            let nvlGocTrongKho = mangKhoNvlThucTe.find(function(n) { return n.name === itemNvlDung.name; });
+            
+            if (nvlGocTrongKho) {
+                let dinhLuongSuDung = parseFloat(itemNvlDung.qty || 0);
+                
+                // Quy đổi đơn vị: Nếu đơn vị tính là kg hoặc lít thì chia cho 1000 theo đúng công thức gốc tại file BTP của bạn
+                let donViTinh = (nvlGocTrongKho.unit || '').trim().toLowerCase();
+                if (donViTinh === 'kg' || donViTinh === 'lít' || donViTinh === 'lit' || donViTinh === 'l') {
+                    dinhLuongSuDung = dinhLuongSuDung / 1000;
+                }
+                
+                // Công thức tính lượng hao hụt thực tế = Định lượng dùng * (1 + % hao hụt) * số lượng mẻ xuất bán
+                let luongHaoHutMoiMe = dinhLuongSuDung * (1 + parseFloat(itemNvlDung.waste || 0));
+                let tongKhoiLuongTruKho = luongHaoHutMoiMe * parseFloat(donHang.qty || 1);
+                
+                // Khấu trừ thẳng vào tồn kho tổng hợp, khống chế mức sàn bằng 0 để không bị lỗi âm kho
+                nvlGocTrongKho.stock = Math.max(0, parseFloat(nvlGocTrongKho.stock || 0) - tongKhoiLuongTruKho);
+            }
+        });
+
+        // Ghi lại mảng kho mới sau khi trừ vào bộ lưu trữ cốt lõi của hệ thống Render
+        if (typeof global.nvlList !== 'undefined') global.nvlList = mangKhoNvlThucTe;
+        else if (typeof state !== 'undefined' && state.nvl) state.nvl = mangKhoNvlThucTe;
+        
+        // Đẩy hóa đơn này vào danh sách lịch sử gộp chung để phục vụ báo cáo tài chính P&L tổng
+        global.btpExportLogs.unshift({
+            branch: chiNhanhGui,
+            date: donHang.date,
+            dish_name: donHang.dish_name,
+            qty: donHang.qty,
+            unit: donHang.unit,
+            von_nvl: donHang.von_nvl,
+            doanh_thu: donHang.doanh_thu,
+            ln: donHang.ln,
+            note: donHang.note
+        });
+    }
+    
+    res.json({ success: true, message: "Hệ thống trung tâm Render đã ghi nhận đơn bán BTP và tự động khấu trừ kho thành công!" });
+});
+// =====================================================================================
+
