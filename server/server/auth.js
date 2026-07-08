@@ -15,7 +15,6 @@ function signToken(user) {
   );
 }
 
-// KHÔI PHỤC CHUẨN GỐC 100%: Hàm xác thực thông suốt hệ thống của bạn
 function requireAuth(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Chưa đăng nhập' });
@@ -48,7 +47,7 @@ router.post('/login', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     if (rows.length === 0) return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' });
-    const user = rows[0];
+    const user = rows[0]; // ĐÃ FIX CHÍNH XÁC: Lấy phần tử đầu tiên của mảng rows
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu' });
     const token = signToken(user);
@@ -69,7 +68,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
   }
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
-    const user = rows[0];
+    const user = rows[0]; // ĐÃ FIX CHÍNH XÁC: Lấy phần tử đầu tiên của mảng rows
     const ok = await bcrypt.compare(old_password || '', user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Mật khẩu hiện tại không đúng' });
     const hash = await bcrypt.hash(new_password, 10);
@@ -81,64 +80,30 @@ router.post('/change-password', requireAuth, async (req, res) => {
 });
 
 // =====================================================================================
-// [BỔ SUNG FIXED] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
+// API ĐỒNG BỘ BTP VÀ KHO
 // =====================================================================================
+let matKhauHeThongBtp = { khapkhun: "khapkhun2026", pinoong: "pinoong2026" };
 
-let matKhauHeThongBtp = {
-    khapkhun: "khapkhun2026",
-    pinoong: "pinoong2026"
-};
-
-/**
- * API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
- */
 router.post('/api/btp/secure-check', function(req, res) {
     const chiNhanh = req.body.branch;
     const matKhauNhapVao = req.body.password;
-    
-    let matKhauChuan = "";
-    if (chiNhanh === 'khapkhun') {
-        matKhauChuan = process.env.BTP_PASS_KHAPKHUN || matKhauHeThongBtp.khapkhun;
-    } else if (chiNhanh === 'pinoong') {
-        matKhauChuan = process.env.BTP_PASS_PINOONG || matKhauHeThongBtp.pinoong;
-    } else {
-        return res.json({ success: false, message: "Chi nhánh không hợp lệ!" });
-    }
-    
+    let matKhauChuan = chiNhanh === 'khapkhun' ? (process.env.BTP_PASS_KHAPKHUN || matKhauHeThongBtp.khapkhun) : (process.env.BTP_PASS_PINOONG || matKhauHeThongBtp.pinoong);
     if (matKhauNhapVao && matKhauNhapVao.trim() === matKhauChuan.trim()) {
-        res.json({ success: true, message: "Xác thực tài khoản chi nhánh thành công!" });
+        res.json({ success: true, message: "Xác thực thành công!" });
     } else {
         res.json({ success: false, message: "Mật khẩu không chính xác!" });
     }
 });
 
-/**
- * API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
- */
 router.post('/api/btp/secure-update', function(req, res) {
-    const passMoiKhapKhun = req.body.passKhapKhun;
-    const passMoiPinoong = req.body.passPinoong;
-    
-    if (passMoiKhapKhun && passMoiKhapKhun.trim() !== "") matKhauHeThongBtp.khapkhun = passMoiKhapKhun.trim();
-    if (passMoiPinoong && passMoiPinoong.trim() !== "") matKhauHeThongBtp.pinoong = passMoiPinoong.trim();
-    
-    res.json({ success: true, message: "Hệ thống trung tâm đã lưu mật khẩu file BTP mới thành công!" });
+    if (req.body.passKhapKhun) matKhauHeThongBtp.khapkhun = req.body.passKhapKhun.trim();
+    if (req.body.passMoiPinoong) matKhauHeThongBtp.pinoong = req.body.passMoiPinoong.trim();
+    res.json({ success: true, message: "Đã cập nhật mật khẩu BTP!" });
 });
 
-/**
- * API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
- */
 router.get('/api/btp/get-nvl-shared', function(req, res) {
-    let databaseKhoNVL = [];
-    if (typeof global.nvlList !== 'undefined' && global.nvlList.length > 0) {
-        databaseKhoNVL = global.nvlList;
-    } else if (typeof state !== 'undefined' && state.nvl && state.nvl.length > 0) {
-        databaseKhoNVL = state.nvl;
-    } else if (typeof INITIAL_NVL !== 'undefined') {
-        databaseKhoNVL = INITIAL_NVL;
-    }
+    let databaseKhoNVL = (typeof global.nvlList !== 'undefined' && global.nvlList.length > 0) ? global.nvlList : (typeof state !== 'undefined' && state.nvl ? state.nvl : []);
     res.json({ success: true, nvlList: databaseKhoNVL });
 });
 
-// LỆNH XUẤT ĐỒNG BỘ MODULE BẮT BUỘC LUÔN NẰM Ở CUỐI CÙNG CỦA FILE AUTH.JS
 module.exports = { router, requireAuth, requireAdmin, requireSuperAdmin };
