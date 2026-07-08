@@ -3077,13 +3077,26 @@ function goPage(id){
 
     // Gọi API đối chiếu trực tuyến mã hóa với Biến môi trường Render
         // [ĐÃ FIXED] Bổ sung cấu hình Headers để truyền dữ liệu chi nhánh đồng bộ sang Backend
-    fetch('/api/btp/secure-check?branch=' + branchName, {
-        method: 'GET',
+        // [ĐÃ FIX 100%] Chuyển sang phương thức POST đồng bộ dữ liệu bảo mật mã hóa trực tuyến với Backend
+    fetch('/api/btp/secure-check', {
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
+        },
+        body: JSON.stringify({ branch: branchName, password: passInput })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // Mật khẩu hoàn toàn chính xác -> Cho phép hiển thị nội dung xưởng BTP
+            thucHienChuyenTrangThucTe(id);
+        } else {
+            alert("⚠️ Mật khẩu chi nhánh không chính xác!");
         }
     })
+    .catch(function() { alert("⚠️ Không thể kết nối tới máy chủ Render để xác thực!"); });
+
     .then(function(res) { return res.json(); })
 
     .then(data => {
