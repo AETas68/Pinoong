@@ -18,7 +18,13 @@ function signToken(user) {
 function requireAuth(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Chưa đăng nhập' });
-  const token = header.split(' ')[1];
+  
+  const parts = header.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return res.status(401).json({ error: 'Định dạng token không hợp lệ' });
+  }
+  
+  const token = parts[1];
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại' });
     req.user = decoded;
