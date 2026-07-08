@@ -3076,8 +3076,16 @@ function goPage(id){
     if (!passInput) return; // Nhân viên hủy bỏ không cho vào
 
     // Gọi API đối chiếu trực tuyến mã hóa với Biến môi trường Render
-    fetch('/api/btp/secure-check?branch=' + branchName)
-    .then(res => res.json())
+        // [ĐÃ FIXED] Bổ sung cấu hình Headers để truyền dữ liệu chi nhánh đồng bộ sang Backend
+    fetch('/api/btp/secure-check?branch=' + branchName, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(res) { return res.json(); })
+
     .then(data => {
         if (data.success && passInput === data.secure_key) {
             // Mật khẩu đúng -> Tiến hành mở trang BTP
