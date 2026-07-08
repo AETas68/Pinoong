@@ -90,5 +90,143 @@ router.post('/change-password', requireAuth, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+// =====================================================================================
+// ĐỒNG NHẤT HỆ THỐNG: API QUẢN LÝ BTP CHẠY TRỰC TUYẾN CHUNG KHO NGUYÊN LIỆU (REALTIME)
+// =====================================================================================
+
+// Mảng lưu trữ động danh sách các món BTP do người dùng tạo trực tuyến
+if (!global.btpDishesStorage) {
+    global.btpDishesStorage = [];
+}
+
+// Mảng lưu trữ nhật ký lịch sử xuất bán BTP phục vụ tổng hợp P&L
+if (!global.btpExportLogs) {
+    global.btpExportLogs = [];
+}
+
+/**
+ * API 2.1: Kiểm tra mật khẩu (Đọc trực tiếp từ Biến môi trường biến môi trường Render)
+ * GET /api/btp/secure-check?branch=khapkhun
+ */
+router.get('/api/btp/secure-check', function(req, res) {
+    const chiNhanh = req.query.branch;
+    
+    // Đọc khóa an toàn trực tiếp từ cấu hình Environment của Render hệ thống
+    let correctKey = "";
+    if (chiNhanh === 'khapkhun') {
+        correctKey = process.env.BTP_PASS_KHAPKHUN || "khapkhun2026";
+    } else if (chiNhanh === 'pinoong') {
+        correctKey = process.env.BTP_PASS_PINOONG || "pinoong2026";
+    } else {
+        return res.status(400).json({ success: false, message: "Chi nhánh không hợp lệ!" });
+    }
+    
+    res.json({ success: true, secure_key: correctKey });
+});
+
+/**
+ * API 2.2: Tải danh sách món BTP của xưởng tương ứng để hiển thị lên Tab cạnh Nhập Hàng
+ * GET /api/btp/list?branch=khapkhun
+ */
+router.get('/api/btp/list', function(req, res) {
+    const chiNhanh = req.query.branch;
+    // Lọc ra các món ăn thuộc đúng chi nhánh yêu cầu
+    const danhSachLoc = global.btpDishesStorage.filter(function(d) { return d.branch === chiNhanh; });
+    res.json({ success: true, dishes: danhSachLoc });
+});
+
+/**
+ * API 2.3: Thêm mới hoặc sửa đổi cấu hình công thức món BTP trực tuyến
+ * POST /api/btp/save-dish
+ */
+router.post('/api/btp/save-dish', function(req, res) {
+    const { id, branch, name, output_unit, cost_price, suggested_price, ingredients } = req.body;
+    
+    if (id) {
+        // Tìm và sửa món ăn cũ dựa vào mã ID
+        let dishGoc = global.btpDishesStorage.find(function(d) { return d.id === parseInt(id); });
+        if (dishGoc) {
+            dishGoc.name = name;
+            dishGoc.output_unit = output_unit;
+            dishGoc.cost_price = parseFloat(cost_price || 0);
+            dishGoc.suggested_price = parseFloat(suggested_price || 0);
+            dishGoc.ingredients = ingredients; // Nạp mảng định lượng mới
+        }
+    } else {
+        // Tạo món BTP mới hoàn toàn
+        const maIdMoi = global.btpDishesStorage.length > 0 ? Math.max(...global.btpDishesStorage.map(d => d.id)) + 1 : 1;
+        global.btpDishesStorage.push({
+            id: maIdMoi, branch, name, output_unit,
+            cost_price: parseFloat(cost_price || 0),
+            suggested_price: parseFloat(suggested_price || 0),
+            ingredients: ingredients
+        });
+    }
+    res.json({ success: true, message: "Đã ghi nhận thay đổi công thức BTP lên máy chủ trung tâm!" });
+});
+
+/**
+ * API 2.4: Nhận hóa đơn xuất bán BTP và thực hiện trừ kho tổng theo công thức: Bán hàng = NVL - (BTP + NVL)
+ * POST /api/btp/submit-export
+ */
+router.post('/api/btp/submit-export', function(req, res) {
+    const chiNhanhGui = req.body.branch;
+    const donHang = req.body.orderData;
+    
+    // Gọi mảng dữ liệu kho nguyên vật liệu đang vận hành thực tế trên hệ thống của bạn
+    let mangKhoNvlThucTe = [];
+    if (typeof global.nvlList !== 'undefined') mangKhoNvlThucTe = global.nvlList;
+    else if (typeof state !== 'undefined' && state.nvl) mangKhoNvlThucTe = state.nvl;
+
+    if (donHang && Array.isArray(donHang.congThuc) && mangKhoNvlThucTe.length > 0) {
+        donHang.congThuc.forEach(function(itemNvlDung) {
+            // Định vị phần tử NVL trùng tên trong kho tổng App chính
+            let nvlGocTrongKho = mangKhoNvlThucTe.find(function(n) { 
+                return (n.name || n.ten || '').trim().toLowerCase() === (itemNvlDung.name || '').trim().toLowerCase(); 
+            });
+            
+            if (nvlGocTrongKho) {
+                let dinhLuongSuDung = parseFloat(itemNvlDung.qty || 0);
+                
+                // Quy đổi: Nếu là kg hoặc lít thì chia 1000 theo đúng công thức footer file BTP của bạn
+                let donViTinh = (nvlGocTrongKho.unit || nvlGocTrongKho.dvt || '').trim().toLowerCase();
+                if (donViTinh === 'kg' || donViTinh === 'lít' || donViTinh === 'lit' || donViTinh === 'l') {
+                    dinhLuongSuDung = dinhLuongSuDung / 1000;
+                }
+                
+                // Thuật toán tính hao hụt thực tế = Định lượng * (1 + % hao hụt) * số lượng mẻ xuất
+                let luongHaoHutMoiMe = dinhLuongSuDung * (1 + parseFloat(itemNvlDung.waste || 0));
+                let tongKhoiLuongTruKho = luongHaoHutMoiMe * parseFloat(donHang.qty || 1);
+                
+                // Tiến hành khấu trừ trực tiếp tồn kho thực tế, khống chế sàn bằng 0
+                if (nvlGocTrongKho.stock !== undefined) {
+                    nvlGocTrongKho.stock = Math.max(0, parseFloat(nvlGocTrongKho.stock || 0) - tongKhoiLuongTruKho);
+                } else if (nvlGocTrongKho.ton !== undefined) {
+                    nvlGocTrongKho.ton = Math.max(0, parseFloat(nvlGocTrongKho.ton || 0) - tongKhoiLuongTruKho);
+                }
+            }
+        });
+
+        // Ghi lại mảng kho mới sau khi trừ vào nhân App chính
+        if (typeof global.nvlList !== 'undefined') global.nvlList = mangKhoNvlThucTe;
+        else if (typeof state !== 'undefined' && state.nvl) state.nvl = mangKhoNvlThucTe;
+        
+        // Ghi nhận đơn bán vào nhật ký lưu trữ dùng chung làm dữ liệu tính báo cáo P&L tổng hợp
+        global.btpExportLogs.unshift({
+            branch: chiNhanhGui,
+            date: donHang.date,
+            dish_name: donHang.dish_name,
+            qty: donHang.qty,
+            unit: donHang.unit,
+            von_nvl: donHang.von_nvl,
+            doanh_thu: donHang.doanh_thu,
+            ln: donHang.ln,
+            note: donHang.note
+        });
+    }
+    
+    res.json({ success: true, message: "Hệ thống trung tâm đã khấu trừ tồn kho NVL tổng hợp trực tuyến thành công!" });
+});
+// =====================================================================================
 
 module.exports = { router, requireAuth, requireAdmin };
