@@ -15,16 +15,11 @@ function signToken(user) {
   );
 }
 
+// PHỤC HỒI CHUẨN: Hàm xác thực gốc thông suốt hệ thống của bạn
 function requireAuth(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Chưa đăng nhập' });
-  
-  const parts = header.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return res.status(401).json({ error: 'Định dạng token không hợp lệ' });
-  }
-  
-  const token = parts[1]; // ĐÃ FIX CHUẨN: Lấy chính xác chuỗi mã hóa Token mã số 1
+  const token = header.split(' ')[1];
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại' });
     req.user = decoded;
@@ -89,7 +84,6 @@ router.post('/change-password', requireAuth, async (req, res) => {
 // [BỔ SUNG] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
 // =====================================================================================
 
-// Mật khẩu tĩnh mặc định ban đầu dự phòng nếu bạn chưa cài đặt trên Render Environment
 let matKhauHeThongBtp = {
     khapkhun: "khapkhun2026",
     pinoong: "pinoong2026"
@@ -97,7 +91,6 @@ let matKhauHeThongBtp = {
 
 /**
  * API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
- * POST /api/btp/secure-check
  */
 router.post('/api/btp/secure-check', function(req, res) {
     const chiNhanh = req.body.branch;
@@ -121,7 +114,6 @@ router.post('/api/btp/secure-check', function(req, res) {
 
 /**
  * API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
- * POST /api/btp/secure-update
  */
 router.post('/api/btp/secure-update', function(req, res) {
     const passMoiKhapKhun = req.body.passKhapKhun;
@@ -135,11 +127,9 @@ router.post('/api/btp/secure-update', function(req, res) {
 
 /**
  * API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
- * GET /api/btp/get-nvl-shared
  */
 router.get('/api/btp/get-nvl-shared', function(req, res) {
     let databaseKhoNVL = [];
-    
     if (typeof global.nvlList !== 'undefined' && global.nvlList.length > 0) {
         databaseKhoNVL = global.nvlList;
     } else if (typeof state !== 'undefined' && state.nvl && state.nvl.length > 0) {
@@ -147,7 +137,6 @@ router.get('/api/btp/get-nvl-shared', function(req, res) {
     } else if (typeof INITIAL_NVL !== 'undefined') {
         databaseKhoNVL = INITIAL_NVL;
     }
-    
     res.json({ success: true, nvlList: databaseKhoNVL });
 });
 
