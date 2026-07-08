@@ -24,7 +24,7 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Định dạng token không hợp lệ' });
   }
   
-  const token = parts[1];
+  const token = parts[1]; // ĐÃ FIX CHUẨN: Lấy chính xác chuỗi mã hóa Token mã số 1
   jwt.verify(token, SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại' });
     req.user = decoded;
@@ -96,7 +96,7 @@ let matKhauHeThongBtp = {
 };
 
 /**
- * [FIXED 100%] API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
+ * API 1: Xác thực mật khẩu chi nhánh bằng phương thức POST an toàn
  * POST /api/btp/secure-check
  */
 router.post('/api/btp/secure-check', function(req, res) {
@@ -120,7 +120,7 @@ router.post('/api/btp/secure-check', function(req, res) {
 });
 
 /**
- * [FIXED 100%] API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
+ * API 2: Nhận cập nhật mật khẩu mới từ Super Admin trên giao diện Web Render
  * POST /api/btp/secure-update
  */
 router.post('/api/btp/secure-update', function(req, res) {
@@ -134,7 +134,7 @@ router.post('/api/btp/secure-update', function(req, res) {
 });
 
 /**
- * [FIXED 100%] API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
+ * API 3: Truy xuất kho nguyên vật liệu tổng hợp chuyển về cho file BTP
  * GET /api/btp/get-nvl-shared
  */
 router.get('/api/btp/get-nvl-shared', function(req, res) {
