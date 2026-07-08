@@ -6296,11 +6296,12 @@ function ghiDonXuatBtpOnline(branchName, dishId) {
     .then(function(data) { if(data.success) { alert(data.message); if(typeof renderNVL === 'function') renderNVL(); } });
 }
 // Danh sách cấu hình ID món BTP đồng bộ với danh mục mặt hàng trong hệ thống S.nvl của bạn
+// [ĐÃ FIXED] Cấu hình mảng danh sách món BTP chuẩn cú pháp JavaScript
 const DANH_SACH_MON_BTP = [
   { id: 36, name: "BTP - Trà Thái Xanh", unit: "lít", rate: 10 },
   { id: 37, name: "Btp - Cốt dừa", unit: "lít", rate: 5 },
   { id: 38, name: "Btp - Sa tế", unit: "kg", rate: 2 },
-  { id: 39: name: "Btp - cốt chanh", unit: "lít", rate: 3 },
+  { id: 39, name: "Btp - cốt chanh", unit: "lít", rate: 3 },
   { id: 40, name: "Btp - cốt lèo", unit: "kg", rate: 10 },
   { id: 41, name: "Btp - somtam", unit: "lít", rate: 4 },
   { id: 42, name: "Btp - sốt pad", unit: "kg", rate: 5 },
@@ -6313,6 +6314,7 @@ const DANH_SACH_MON_BTP = [
   { id: 54, name: "Btp - Trà Thái Đỏ", unit: "lít", rate: 10 },
   { id: 55, name: "Btp - Trà Olong", unit: "lít", rate: 10 }
 ];
+
 
 function renderGiaoDienBtpTichHopCongThuc(branchName) {
   // 1. Nạp danh sách món BTP vào ô Select
