@@ -9,13 +9,13 @@ const SECRET = process.env.JWT_SECRET || 'doi-secret-nay-trong-file-.env';
 
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, name: user.name, role: user.role, is_superadmin: !!user.is_superadmin },
+    { id: user.id, username: user.username, name: user.ten || user.name, role: user.role, is_superadmin: !!user.is_superadmin },
     SECRET,
     { expiresIn: '30d' }
   );
 }
 
-// PHỤC HỒI CHUẨN: Hàm xác thực gốc thông suốt hệ thống của bạn
+// KHÔI PHỤC CHUẨN GỐC 100%: Hàm xác thực thông suốt hệ thống của bạn
 function requireAuth(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Chưa đăng nhập' });
@@ -54,7 +54,7 @@ router.post('/login', async (req, res) => {
     const token = signToken(user);
     res.json({
       token,
-      user: { id: user.id, username: user.username, name: user.name, role: user.role, is_superadmin: !!user.is_superadmin }
+      user: { id: user.id, username: user.username, name: user.ten || user.name, role: user.role, is_superadmin: !!user.is_superadmin }
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -81,7 +81,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
 });
 
 // =====================================================================================
-// [BỔ SUNG] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
+// [BỔ SUNG FIXED] CÁC API LIÊN THÔNG DỮ LIỆU KHO VÀ ĐIỀU KHIỂN BẢO MẬT FILE BTP CHO 2 CƠ SỞ
 // =====================================================================================
 
 let matKhauHeThongBtp = {
@@ -140,5 +140,5 @@ router.get('/api/btp/get-nvl-shared', function(req, res) {
     res.json({ success: true, nvlList: databaseKhoNVL });
 });
 
-// LỆNH XUẤT MODULE BẮT BUỘC LUÔN NẰM Ở CUỐI CÙNG CỦA FILE AUTH.JS
+// LỆNH XUẤT ĐỒNG BỘ MODULE BẮT BUỘC LUÔN NẰM Ở CUỐI CÙNG CỦA FILE AUTH.JS
 module.exports = { router, requireAuth, requireAdmin, requireSuperAdmin };
