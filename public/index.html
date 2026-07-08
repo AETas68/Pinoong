@@ -1047,6 +1047,42 @@ tr:hover .sticky-col{background:#F7F4F0}
     </div>
   </div>
 
+   <!-- BẢNG ĐIỀU KHIỂN MẬT KHẨU FILE BTP DÀNH RIÊNG CHO SUPER ADMIN -->
+ <div class="card">
+ <div class="card-title">🔒 Quản Lý Bảo Mật File BTP Cơ Sở</div>
+ <div style="font-size:11px; color:var(--text2); margin-bottom:12px; line-height:1.6;">
+ Thiết lập mật khẩu cho nhân viên mở file dưới máy cục bộ (Ổ C). Khi đổi tại đây, file dưới máy bắt buộc phải nhập mật khẩu mới mới có thể vào làm việc và tải giá kho nguyên liệu.
+ </div>
+ <div class="form-grid fg2" style="margin-bottom: 12px;">
+ <div class="form-group">
+ <label>Mật khẩu quán Khạp Khun</label>
+ <input type="password" id="sysPassKhapKhun" placeholder="Nhập mật khẩu mới...">
+ </div>
+ <div class="form-group">
+ <label>Mật khẩu quán Pinoong</label>
+ <input type="password" id="sysPassPinoong" placeholder="Nhập mật khẩu mới...">
+ </div>
+ </div>
+ <button class="btn btn-teal btn-sm" onclick="guiYeuCauDoiMatKhauBtp()">✓ Cập nhật cấu hình bảo mật</button>
+ </div>
+
+ <script>
+ function guiYeuCauDoiMatKhauBtp() {
+ const passKK = document.getElementById('sysPassKhapKhun').value.trim();
+ const passPN = document.getElementById('sysPassPinoong').value.trim();
+ if(!passKK || !passPN) { alert('Vui lòng điền đầy đủ mật khẩu cho cả 2 cơ sở!'); return; }
+ 
+ fetch('/api/btp/secure-update', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
+ })
+ .then(function(res) { return res.json(); })
+ .then(function(data) { if(data.success) alert(data.message); })
+ .catch(function() { alert('⚠️ Lỗi kết nối, không thể cập nhật mật khẩu lên Render!'); });
+ }
+ </script>
+
   <!-- Đổi mật khẩu -->
   <div class="card">
     <div class="card-title">🔑 Đổi Mật Khẩu Của Tôi</div>
