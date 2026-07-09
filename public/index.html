@@ -1163,13 +1163,11 @@ tr:hover .sticky-col{background:#F7F4F0}
  const passPN = document.getElementById('sysPassPinoong').value.trim();
  if(!passKK || !passPN) { alert('Vui lòng điền đầy đủ mật khẩu cho cả 2 cơ sở!'); return; }
  
- fetch('/api/btp/secure-update', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
- })
- .then(function(res) { return res.json(); })
- .then(function(data) { if(data.success) alert(data.message); })
+apiFetch('/api/btp/secure-update', {
+method: 'POST',
+body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
+})
+.then(function(data) { if(data.success) alert(data.message); })
  .catch(function() { alert('⚠️ Lỗi kết nối, không thể cập nhật mật khẩu lên Render!'); });
  }
  </script>
@@ -3078,16 +3076,11 @@ function goPage(id){
     // Gọi API đối chiếu trực tuyến mã hóa với Biến môi trường Render
         // [ĐÃ FIXED] Bổ sung cấu hình Headers để truyền dữ liệu chi nhánh đồng bộ sang Backend
         // [ĐÃ FIX 100%] Chuyển sang phương thức POST đồng bộ dữ liệu bảo mật mã hóa trực tuyến với Backend
-   fetch('/api/auth/api/btp/secure-check', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ branch: branchName, password: passInput })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
+  apiFetch('/api/btp/secure-check', {
+    method: 'POST',
+    body: JSON.stringify({ branch: branchName, password: passInput })
+})
+.then(function(data) {
         if (data.success) {
             // Mật khẩu hoàn toàn chính xác -> Cho phép hiển thị nội dung xưởng BTP
             thucHienChuyenTrangThucTe(id);
@@ -6285,9 +6278,8 @@ async function init(){
   document.getElementById('login-username')?.focus();
 })();
   function taiDanhSachBtpTruyenTuServer(branchName) {
-    fetch('/api/btp/list?branch=' + branchName)
-    .then(function(res) { return res.json(); })
-    .then(function(data) { if(data.success) veGiaoDienDanhSachBtp(branchName, data.dishes); });
+   apiFetch('/api/btp/list?branch=' + branchName)
+.then(function(data) { if(data.success) veGiaoDienDanhSachBtp(branchName, data.dishes); });
 }
 
 function veGiaoDienDanhSachBtp(branchName, danhSachDishes) {
@@ -6308,13 +6300,11 @@ function veGiaoDienDanhSachBtp(branchName, danhSachDishes) {
 function ghiDonXuatBtpOnline(branchName, dishId) {
     const qty = prompt("Nhập số lượng mẻ xuất:");
     if(!qty || isNaN(qty) || parseFloat(qty) <= 0) return;
-    fetch('/api/btp/submit-export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ branch: branchName, orderData: { btp_dish_id: dishId, qty: parseFloat(qty), date: new Date().toISOString().split('T')[0] } })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) { if(data.success) { alert(data.message); if(typeof renderNVL === 'function') renderNVL(); } });
+    apiFetch('/api/btp/submit-export', {
+    method: 'POST',
+    body: JSON.stringify({ branch: branchName, orderData: { btp_dish_id: dishId, qty: parseFloat(qty), date: new Date().toISOString().split('T')[0] } })
+})
+.then(function(data) { if(data.success) { alert(data.message); if(typeof renderNVL === 'function') renderNVL(); } });
 }
 // Danh sách cấu hình ID món BTP đồng bộ với danh mục mặt hàng trong hệ thống S.nvl của bạn
 // [ĐÃ FIXED] Cấu hình mảng danh sách món BTP chuẩn cú pháp JavaScript
