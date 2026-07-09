@@ -3089,18 +3089,6 @@ function goPage(id){
         }
     })
     .catch(function() { alert("⚠️ Không thể kết nối tới máy chủ Render để xác thực!"); });
-
-    .then(function(res) { return res.json(); })
-
-    .then(data => {
-        if (data.success && passInput === data.secure_key) {
-            // Mật khẩu đúng -> Tiến hành mở trang BTP
-            thucHienChuyenTrangThucTe(id);
-        } else {
-            alert("⚠️ Mật khẩu chi nhánh không chính xác!");
-        }
-    })
-    .catch(() => { alert("⚠️ Không thể kết nối tới máy chủ Render để xác thực!"); });
   } else {
     // Nếu vào các tab bình thường khác, chuyển trang lập tức
     thucHienChuyenTrangThucTe(id);
@@ -4588,7 +4576,7 @@ function _nhapThangMK(nvlTen, mk){
     .reduce((s, e) => s + (parseFloat(e.sl) || 0), 0);
 }
 
-// Tổng xuất một tháng tính từ bán hàng + hao hụt
+// Tổng xuất một tháng tính từ bán hàng + hao hụt + sản xuất BTP nội bộ
 function _xuatThangMK(nvlTen, mk){
   let total = 0;
   for(const mon of (S.menu || [])){
@@ -4602,6 +4590,11 @@ function _xuatThangMK(nvlTen, mk){
     const nl = (mon.nguyen_lieu || []).find(x => x.ten === nvlTen);
     if(nl && sl > 0) total += sl * (nl.dinh_luong / 1000) * (1 + (S.hao_hut[nvlTen] || 0) / 100);
   }
+  // Xuất do sản xuất BTP nội bộ (2 quán dùng chung nguồn NVL này) —
+  // các dòng này do server ghi vào khi bấm "Sản xuất mẻ BTP" (xem server/btp.js)
+  total += (S.btp_production?.[mk] || [])
+    .filter(e => e.ten === nvlTen)
+    .reduce((s, e) => s + (parseFloat(e.sl) || 0), 0);
   return total;
 }
 
@@ -6356,115 +6349,117 @@ function renderGiaoDienBtpTichHopCongThuc(branchName) {
   hienThiCongThucBtpSẵnCo(branchName);
 }
 
-function hienThiCongThucBtpSẵnCo(branchName) {
+async function hienThiCongThucBtpSẵnCo(branchName) {
   const select = document.getElementById('sel-btp-' + branchName);
   const dishId = select.value;
   const configMon = DANH_SACH_MON_BTP.find(m => m.id == dishId);
   if(configMon) {
     document.getElementById('unit-btp-' + branchName).value = configMon.rate + " " + configMon.unit;
   }
-  
-  // Tải lại các số định lượng cũ đã lưu trong cấu hình hệ thống (nếu có)
-  const savedRecipes = JSON.parse(localStorage.getItem('btp_recipes_' + branchName) || '{}');
-  const recipeMon = savedRecipes[dishId] || [];
-  
+
   // Reset xóa trắng toàn bộ các ô nhập định lượng trước
   document.querySelectorAll('.ing-qty-' + branchName).forEach(input => input.value = '');
   document.querySelectorAll('.ing-waste-' + branchName).forEach(input => input.value = '');
-  
-  // Điền số định lượng cũ vào ô nhập liệu
-  recipeMon.forEach(r => {
-    const qInput = document.querySelector(`.ing-qty-${branchName}[data-nvl-id="${r.nvlId}"]`);
-    const wInput = document.querySelector(`.ing-waste-${branchName}[data-nvl-id="${r.nvlId}"]`);
-    if(qInput) qInput.value = r.qty;
-    if(wInput) wInput.value = r.waste;
-  });
+
+  // Tải công thức từ SERVER (dùng chung nhiều máy/nhân viên) thay vì localStorage cục bộ
+  try {
+    const res = await apiFetch('/api/btp/recipes?branch=' + branchName);
+    const recipe = (res.dishes || []).find(d => d.name === configMon?.name);
+    if (recipe) {
+      (recipe.ingredients || []).forEach(ing => {
+        const nvlItem = S.nvl.find(n => n.ten === ing.ten);
+        if (!nvlItem) return;
+        const qInput = document.querySelector(`.ing-qty-${branchName}[data-nvl-id="${nvlItem.id}"]`);
+        const wInput = document.querySelector(`.ing-waste-${branchName}[data-nvl-id="${nvlItem.id}"]`);
+        if(qInput) qInput.value = ing.dinh_luong;
+        if(wInput) wInput.value = ing.hao_hut;
+      });
+    }
+  } catch (e) {
+    console.error('Không tải được công thức BTP từ server:', e.message);
+  }
 }
-function luuCongThucVaXuatMeBtpOnline(branchName) {
+async function luuCongThucVaXuatMeBtpOnline(branchName) {
   const dishId = document.getElementById('sel-btp-' + branchName).value;
   const batches = parseFloat(document.getElementById('qty-btp-' + branchName).value || 0);
   const configMon = DANH_SACH_MON_BTP.find(m => m.id == dishId);
-  
-  // SỬA LỖI TẠI ĐÂY: Nếu không tìm thấy món ăn, dừng lại ngay lập tức không cho chạy tiếp
+
   if (!configMon) {
     alert("⚠️ Không tìm thấy thông tin cấu hình món BTP này. Vui lòng chọn lại món!");
     return;
   }
-  
+
   // 1. Thu thập dữ liệu công thức định lượng từ các ô nhập liệu giao diện
+  //    (định lượng nhập theo GAM/ML cho 1 mẻ, giống hệt cách nhập công thức
+  //    món ăn hoàn chỉnh trong "Menu & Công Thức" — để bạn quen tay dùng)
   let congThucMonNay = [];
   document.querySelectorAll('.ing-qty-' + branchName).forEach(input => {
     const nvlId = input.getAttribute('data-nvl-id');
     const qtyVal = parseFloat(input.value || 0);
-    
-    // SỬA LỖI TẠI ĐÂY: Thêm giá trị mặc định tránh lỗi nếu không tìm thấy ô hao hụt
     const wasteInput = document.querySelector(`.ing-waste-${branchName}[data-nvl-id="${nvlId}"]`);
     const wasteVal = wasteInput ? parseFloat(wasteInput.value || 0) : 0;
-    
-    if(qtyVal > 0) {
-      congThucMonNay.push({ nvlId: nvlId, qty: qtyVal, waste: wasteVal });
+    const nvlItem = S.nvl.find(n => parseInt(n.id) === parseInt(nvlId));
+    if (qtyVal > 0 && nvlItem) {
+      congThucMonNay.push({ ten: nvlItem.ten, dinh_luong: qtyVal, hao_hut: wasteVal });
     }
   });
-  
-  if(congThucMonNay.length === 0) {
+
+  if (congThucMonNay.length === 0) {
     alert("⚠️ Vui lòng nhập định lượng nguyên vật liệu cho công thức món BTP này!");
     return;
   }
-  
-  // Lưu cứng công thức vào bộ nhớ để lần sau nhân viên mở ra tự hiện số định lượng sẵn
-  const savedRecipes = JSON.parse(localStorage.getItem('btp_recipes_' + branchName) || '{}');
-  savedRecipes[dishId] = congThucMonNay;
-  localStorage.setItem('btp_recipes_' + branchName, JSON.stringify(savedRecipes));
-  
-  // 2. Nếu có nhập Số lượng mẻ nấu, chạy logic tự động trừ kho NVL thô liên thông
-  if (batches > 0) {
-    // Kiểm tra an toàn biến kho tổng S trước khi chạy vòng lặp
-    if (typeof S === 'undefined' || !S.nvl) {
-      alert("⚠️ Không tìm thấy dữ liệu kho hàng (Biến S.nvl chưa sẵn sàng)!");
-      return;
-    }
 
-    congThucMonNay.forEach(item => {
-      let nvlGocTrongKho = S.nvl.find(n => parseInt(n.id) === parseInt(item.nvlId));
-      if (nvlGocTrongKho) {
-        let dinhLuongDung = item.qty;
-        let dvt = (nvlGocTrongKho.dvt || nvlGocTrongKho.unit || '').trim().toLowerCase();
-        
-        // Quy đổi: Nếu đơn vị tính là kg hoặc lít thì chia 1000 để đổi ra gram/ml
-        if (dvt === 'kg' || dvt === 'lít' || dvt === 'lit' || dvt === 'l') {
-            dinhLuongDung = dinhLuongDung / 1000;
+  // 2. Lưu công thức LÊN SERVER (dùng chung cho mọi thiết bị, được bảo vệ
+  //    bằng mật khẩu riêng của chi nhánh) — không còn chỉ lưu localStorage nữa.
+  let luuThanhCong = false;
+  try {
+    await apiFetch('/api/btp/save-dish', {
+      method: 'POST',
+      body: JSON.stringify({
+        branch: branchName,
+        dish: {
+          id: undefined, // để server tự tạo/khớp theo tên nếu bạn muốn sửa công thức đã có, thay bằng đúng id đã lưu
+          name: configMon.name,
+          output_unit: configMon.unit,
+          output_qty: configMon.rate,
+          ingredients: congThucMonNay
         }
-        
-        // Khấu trừ tồn kho NVL thô: Lượng trừ = Định lượng * số mẻ * (1 + % hao hụt)
-        let tongLuongTruKho = dinhLuongDung * batches * (1 + (item.waste / 100));
-        
-        if (nvlGocTrongKho.stock !== undefined) nvlGocTrongKho.stock = Math.max(0, parseFloat(nvlGocTrongKho.stock || 0) - tongLuongTruKho);
-        else if (nvlGocTrongKho.ton !== undefined) nvlGocTrongKho.ton = Math.max(0, parseFloat(nvlGocTrongKho.ton || 0) - tongLuongTruKho);
-      }
+      })
     });
-    
-    // 3. Cập nhật cộng dồn số lượng thành phẩm ngược lại vào chính mục BTP đó trong kho tổng
-    let btpTrongKhoTổng = S.nvl.find(n => parseInt(n.id) === parseInt(dishId));
-    
-    // ĐÃ SỬA AN TOÀN: Đảm bảo có rate (mặc định bằng 1 nếu thiếu) để không bao giờ lỗi dấu chấm
-    const tileQuyDoi = configMon.rate || 1; 
-    const donViTinh = configMon.unit || 'đơn vị';
-    const totalThanhPham = batches * tileQuyDoi; 
-    
-    if (btpTrongKhoTổng) {
-      if (btpTrongKhoTổng.stock !== undefined) btpTrongKhoTổng.stock = parseFloat(btpTrongKhoTổng.stock || 0) + totalThanhPham;
-      else if (btpTrongKhoTổng.ton !== undefined) btpTrongKhoTổng.ton = parseFloat(btpTrongKhoTổng.ton || 0) + totalThanhPham;
-      alert(`✓ Đã nấu thành công ${batches} mẻ BTP! Kho tổng đã tự động quy đổi cộng dồn +${totalThanhPham} ${donViTinh} vào mục BTP và trừ bớt NVL thô tương ứng.`);
-    }
-    
-    document.getElementById('qty-btp-' + branchName).value = ''; // Reset ô nhập mẻ
-  } else {
-    alert("✓ Đã lưu cấu hình công thức định lượng thành công (Chưa chạy lệnh trừ kho vì số mẻ nấu bằng 0).");
+    luuThanhCong = true;
+  } catch (e) {
+    alert("⚠️ Không lưu được công thức lên server: " + e.message);
+    return;
   }
-  
-  // Kích hoạt gọi hàm lưu gốc cốt lõi của App bạn (Nút Lưu 💾) để đồng bộ lưu dữ liệu vĩnh viễn
-  if (typeof saveData === 'function') saveData();
-  else if (typeof saveState === 'function') saveState();
+
+  // 3. Nếu có nhập số mẻ nấu (> 0) -> gọi server SẢN XUẤT thật sự:
+  //    server sẽ tự trừ đúng NVL thô và tự "nhập kho" đúng món BTP này
+  //    (qua data.inventory) — không tính tay ở trình duyệt nữa, để tránh
+  //    sai lệch giữa các máy/nhân viên khác nhau.
+  if (batches > 0) {
+    try {
+      // Lấy lại danh sách công thức mới nhất để biết đúng id vừa lưu
+      const recipesRes = await apiFetch('/api/btp/recipes?branch=' + branchName);
+      const recipe = (recipesRes.dishes || []).find(d => d.name === configMon.name);
+      if (!recipe) {
+        alert("⚠️ Đã lưu công thức nhưng chưa tìm lại được để sản xuất, hãy thử lại lần nữa.");
+        return;
+      }
+      const prodRes = await apiFetch('/api/btp/produce', {
+        method: 'POST',
+        body: JSON.stringify({ branch: branchName, dish_id: recipe.id, qty: batches, thang: S.thang, nam: S.nam })
+      });
+      alert("✓ " + prodRes.message);
+      document.getElementById('qty-btp-' + branchName).value = '';
+      await loadData(); // tải lại dữ liệu mới nhất từ server (đã có kết quả trừ/nhập kho)
+      if (typeof renderTonKho === 'function') renderTonKho();
+      if (typeof renderNVL === 'function') renderNVL();
+    } catch (e) {
+      alert("⚠️ Lỗi khi sản xuất mẻ BTP: " + e.message);
+    }
+  } else if (luuThanhCong) {
+    alert("✓ Đã lưu cấu hình công thức định lượng thành công lên server (chưa sản xuất vì số mẻ = 0).");
+  }
 }
 
 
