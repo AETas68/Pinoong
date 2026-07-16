@@ -7469,11 +7469,10 @@ async function renderBtpOnline(branchName) {
     }
   }
 }
-
+<script>
 // Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ khi đang gõ dở
-let timerLuuBtp = null;
-let timerCapNhatBtp = null;
-</script>
+var timerLuuBtp = null;
+var timerCapNhatBtp = null;
 
 // ==========================================================================
 // 1. HÀM ĐIỀU HƯỚNG CHUYỂN TAB VÀ TỰ ĐỘNG NẠP DỮ LIỆU (FIX TRẮNG TRANG)
@@ -7522,9 +7521,6 @@ function goPage(pageId) {
 // ==========================================================================
 // 2. CÁC HÀM TỐI ƯU DEBOUNCE CHO XƯỞNG BTP (ĐÃ KHỬ TRÙNG LẶP)
 // ==========================================================================
-var timerLuuBtp;
-var timerCapNhatBtp;
-
 function debounceLuuBtp(coSo) {
     const statusLabel = document.getElementById(`btp-save-status-${coSo}`);
     if (statusLabel) statusLabel.innerText = "⏳ Đang gõ...";
@@ -7544,3 +7540,4 @@ function debounceCapNhatVaLuu(coSo) {
 </script>
 </body>
 </html>
+
