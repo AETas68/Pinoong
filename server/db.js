@@ -337,12 +337,21 @@ async function seedBtpRecipes() {
       addedNvl++;
     }
 
-    // ---- 10b. Thêm công thức BTP còn thiếu, cho CẢ 2 chi nhánh ----
+   // ---- 10b. Thêm công thức BTP còn thiếu, cho CẢ 2 chi nhánh — BỎ QUA
+    //           món nào người dùng đã CHỦ ĐỘNG XÓA khỏi chi nhánh đó (xem
+    //           data.btp_recipes_deleted), để 2 file BTP thật sự tách biệt,
+    //           không còn bị "hồi sinh" giống nhau mỗi lần server khởi động
+    //           lại / deploy lại — dùng đúng cơ chế "bia mộ" giống hệt
+    //           data.nvl_deleted ở bước 10a phía trên.
+    // ------------------------------------------------------------------
+    if (!data.btp_recipes_deleted) data.btp_recipes_deleted = { khapkhun: [], pinoong: [] };
     for (const branch of ['khapkhun', 'pinoong']) {
       const list = data.btp_recipes[branch];
       const existingNames = new Set(list.map(d => normName(d.name)));
+      const deletedNames = new Set((data.btp_recipes_deleted[branch] || []).map(normName));
       for (const dish of (BTP_SEED.recipes[branch] || [])) {
         if (existingNames.has(normName(dish.name))) continue;
+        if (deletedNames.has(normName(dish.name))) continue;
         const maxId = Math.max(0, ...list.map(d => d.id || 0));
         list.push({
           id: maxId + 1,
