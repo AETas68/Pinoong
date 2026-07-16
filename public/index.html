@@ -7474,16 +7474,17 @@ async function renderBtpOnline(branchName) {
 let timerLuuBtp = null;
 let timerCapNhatBtp = null;
 </script>
+
 // ==========================================================================
 // 1. HÀM ĐIỀU HƯỚNG CHUYỂN TAB VÀ TỰ ĐỘNG NẠP DỮ LIỆU (FIX TRẮNG TRANG)
 // ==========================================================================
 function goPage(pageId) {
-    // Ẩn toàn bộ các trang nội dung
+    // Ẩn toàn bộ các trang nội dung bằng cách gỡ bỏ class 'on'
     document.querySelectorAll('.page').forEach(function(page) {
         page.classList.remove('on');
     });
     
-    // Tìm trang mục tiêu dựa vào ID
+    // Tìm trang mục tiêu dựa vào ID tương ứng
     var targetPage = document.getElementById('page-' + pageId);
     if (targetPage) {
         targetPage.classList.add('on');
@@ -7491,7 +7492,7 @@ function goPage(pageId) {
         console.error("Không tìm thấy thẻ trang tương ứng: #page-" + pageId);
     }
 
-    // Đổi trạng thái active (làm sáng) nút bấm trên thanh Menu
+    // Đổi trạng thái active (làm sáng) nút bấm trên thanh Menu điều hướng
     document.querySelectorAll('.nav .nb').forEach(function(btn) {
         btn.classList.remove('on');
     });
@@ -7540,6 +7541,6 @@ function debounceCapNhatVaLuu(coSo) {
         if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
     }, 600);
 }
-
+</script>
 </body>
 </html>
