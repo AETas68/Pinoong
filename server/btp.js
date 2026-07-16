@@ -279,7 +279,7 @@ module.exports = function (io) {
     }
   });
 
-  router.delete('/dish/:id', requireAuth, async (req, res) => {
+ router.delete('/dish/:id', requireAuth, async (req, res) => {
     const { branch } = req.query;
     if (!validBranch(branch)) {
       return res.status(400).json({ success: false, message: 'Chi nhánh không hợp lệ!' });
@@ -290,6 +290,18 @@ module.exports = function (io) {
       await client.query('BEGIN');
       const data = await loadState(client);
       if (data.btp_recipes?.[branch]) {
+        // Ghi "bia mộ" TRƯỚC khi xóa, để lần server khởi động lại tiếp theo,
+        // seedBtpRecipes() (server/db.js) KHÔNG tự thêm lại đúng món vừa xóa
+        // cho đúng chi nhánh này — 2 file BTP giờ tách biệt thật sự.
+        const dishBiXoa = data.btp_recipes[branch].find(d => d.id === id);
+        if (dishBiXoa) {
+          if (!data.btp_recipes_deleted) data.btp_recipes_deleted = { khapkhun: [], pinoong: [] };
+          if (!Array.isArray(data.btp_recipes_deleted[branch])) data.btp_recipes_deleted[branch] = [];
+          const key = normName(dishBiXoa.name);
+          if (!data.btp_recipes_deleted[branch].includes(key)) {
+            data.btp_recipes_deleted[branch].push(key);
+          }
+        }
         data.btp_recipes[branch] = data.btp_recipes[branch].filter(d => d.id !== id);
       }
       // saveState() sẽ tự đưa dòng NVL tương ứng ra khỏi "🍲 Nhóm BTP" (nếu
