@@ -7479,13 +7479,15 @@ var timerCapNhatBtp = null;
 // 2. Hàm điều hướng chuyển tab an toàn
 function goPage(pageId) {
     try {
-        // 1. Nếu là tab BTP Khạp Khun, nhường quyền kiểm tra cho hàm hệ thống của bạn
+        // 1. Nhường quyền xử lý hoàn toàn cho hàm gốc của hai tab BTP
         if (pageId === 'btp-khapkhun') {
             if (typeof renderBtpOnline === 'function') {
-                renderBtpOnline('khapkhun');
-                // Lưu ý: Không chạy tiếp lệnh dưới nếu hàm renderBtpOnline của bạn tự có cơ chế chặn pass và chuyển trang
+                try {
+                    renderBtpOnline('khapkhun');
+                } catch (errBtp) {
+                    console.error("Lỗi khi gọi renderBtpOnline Khạp Khun:", errBtp);
+                }
                 if (document.getElementById('page-btp-khapkhun') && !document.getElementById('page-btp-khapkhun').classList.contains('on')) {
-                    // Đồng bộ sáng nút menu điều hướng
                     document.querySelectorAll('.nav .nb').forEach(b => b.classList.remove('on'));
                     if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('on');
                 }
@@ -7493,10 +7495,13 @@ function goPage(pageId) {
             return;
         }
 
-        // 2. Nếu là tab BTP Pinoong, nhường quyền kiểm tra cho hàm hệ thống của bạn
         if (pageId === 'btp-pinoong') {
             if (typeof renderBtpOnline === 'function') {
-                renderBtpOnline('pinoong');
+                try {
+                    renderBtpOnline('pinoong');
+                } catch (errBtp) {
+                    console.error("Lỗi khi gọi renderBtpOnline Pinoong:", errBtp);
+                }
                 if (document.getElementById('page-btp-pinoong') && !document.getElementById('page-btp-pinoong').classList.contains('on')) {
                     document.querySelectorAll('.nav .nb').forEach(b => b.classList.remove('on'));
                     if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('on');
@@ -7505,7 +7510,7 @@ function goPage(pageId) {
             return;
         }
 
-        // 3. Xử lý chuyển tab bình thường cho các trang còn lại (Menu, Chi phí, Chấm công...)
+        // 2. Chuyển tab bình thường cho các trang khác
         document.querySelectorAll('.page').forEach(function(page) {
             page.classList.remove('on');
         });
@@ -7522,22 +7527,22 @@ function goPage(pageId) {
             window.event.currentTarget.classList.add('on');
         }
 
-        // TỰ ĐỘNG KÍCH HOẠT HÀM RENDER ĐỂ ĐỔ DỮ LIỆU LÊN BẢNG
-        if (pageId === 'banhang' && typeof renderBanHang === 'function') renderBanHang();
-        if (pageId === 'nvl' && typeof renderNVL === 'function') renderNVL();
-        if (pageId === 'inventory' && typeof renderInventory === 'function') renderInventory();
-        if (pageId === 'menu' && typeof renderMenu === 'function') renderMenu();
-        if (pageId === 'bantaicho' && typeof renderTaiCho === 'function') renderTaiCho();
-        if (pageId === 'chamcong' && typeof renderChamCong === 'function') renderChamCong();
-        if (pageId === 'chiphi' && typeof renderChiPhi === 'function') renderChiPhi();
-        if (pageId === 'haohut' && typeof renderHaoHut === 'function') renderHaoHut();
-        if (pageId === 'huyhang' && typeof renderHuyHang === 'function') renderHuyHang();
-        if (pageId === 'tonkho' && typeof renderTonKho === 'function') renderTonKho();
-        if (pageId === 'baocao' && typeof renderBaoCao === 'function') renderBaoCao();
-        if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') renderDuBao();
+        // 3. BỌC TRY-CATCH RIÊNG CHO TỪNG HÀM RENDER ĐỂ CHỐNG SẬP ỨNG DỤNG
+        if (pageId === 'banhang' && typeof renderBanHang === 'function') { try { renderBanHang(); } catch(e) { console.error(e); } }
+        if (pageId === 'nvl' && typeof renderNVL === 'function') { try { renderNVL(); } catch(e) { console.error(e); } }
+        if (pageId === 'inventory' && typeof renderInventory === 'function') { try { renderInventory(); } catch(e) { console.error(e); } }
+        if (pageId === 'menu' && typeof renderMenu === 'function') { try { renderMenu(); } catch(e) { console.error(e); } }
+        if (pageId === 'bantaicho' && typeof renderTaiCho === 'function') { try { renderTaiCho(); } catch(e) { console.error(e); } }
+        if (pageId === 'chamcong' && typeof renderChamCong === 'function') { try { renderChamCong(); } catch(e) { console.error(e); } }
+        if (pageId === 'chiphi' && typeof renderChiPhi === 'function') { try { renderChiPhi(); } catch(e) { console.error(e); } }
+        if (pageId === 'haohut' && typeof renderHaoHut === 'function') { try { renderHaoHut(); } catch(e) { console.error(e); } }
+        if (pageId === 'huyhang' && typeof renderHuyHang === 'function') { try { renderHuyHang(); } catch(e) { console.error(e); } }
+        if (pageId === 'tonkho' && typeof renderTonKho === 'function') { try { renderTonKho(); } catch(e) { console.error(e); } }
+        if (pageId === 'baocao' && typeof renderBaoCao === 'function') { try { renderBaoCao(); } catch(e) { console.error(e); } }
+        if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') { try { renderDuBao(); } catch(e) { console.error(e); } }
 
     } catch (e) {
-        console.error("Lỗi điều hướng:", e);
+        console.error("Lỗi tổng điều hướng:", e);
     }
 }
 
