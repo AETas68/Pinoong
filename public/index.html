@@ -5082,9 +5082,11 @@ function showTonKhoDetail(nvlTen, thang, nam){
 
 function _xuatThangMK(nvlTen, mk){
   // ĐIỀU KIỆN SỬA LỖI CHÍ MẠNG:
-  // Nếu tên NVL là "Gia Vị Phụ Thêm", ép số lượng xuất kho luôn bằng 0.
-  // Món này chỉ chạy ở phần tính Food Cost trên giao diện, tuyệt đối không tính xuất kho để tránh bị ÂM KHO.
-  if (nvlTen === "Gia Vị Phụ Thêm") {
+  // Ép toàn bộ chữ về dạng viết thường và xóa khoảng cách thừa ở hai đầu để tránh lỗi gõ sai của nhân viên
+  const tenChuan = (nvlTen || "").trim().toLowerCase();
+  
+  // Nếu là món ảo "gia vị phụ thêm", ép số lượng xuất kho luôn bằng 0 để bảo vệ báo cáo tồn kho
+  if (tenChuan === "gia vị phụ thêm") {
     return 0; 
   }
 
@@ -5106,8 +5108,6 @@ function _xuatThangMK(nvlTen, mk){
     .reduce((s, e) => s + (parseFloat(e.sl) || 0), 0);
   return total;
 }
-
-
 // Tồn cuối = tonDau + nhap - xuat cho một tháng cụ thể (KHÔNG đệ quy)
 // LƯU Ý: không còn ép về 0 — nếu bán/xuất nhiều hơn tồn thực có (vì chưa
 // từng nhập NVL đó, hoặc quên chốt tồn đầu...), tồn sẽ hiện ÂM để cảnh báo
@@ -7412,7 +7412,65 @@ async function doiMatKhauFileBtp(branchName) {
     alert("⚠️ " + e.message);
   }
 }
+// =========================================================================
+// Đoạn mã bổ sung khôi phục hàm renderBtpOnline và các bộ hoãn thời gian gõ
+// ĐẶT TRƯỚC THẺ ĐÓNG </script> KHÔNG ĐƯỢC ĐẶT NGOÀI
+// =========================================================================
 
+/** Hàm nạp dữ liệu và vẽ lại toàn bộ danh sách công thức BTP từ server lên màn hình */
+async function renderBtpOnline(branchName) {
+  const statusEl = document.getElementById('btp-save-status-' + branchName);
+  if (statusEl) { 
+    statusEl.textContent = '⏳ Đang tải dữ liệu xưởng...'; 
+    statusEl.style.color = 'var(--gray)'; 
+  }
+
+  try {
+    // Gọi hàm lấy dữ liệu danh sách BTP cập nhật mới từ server của bạn
+    if (typeof loadData === 'function') {
+      await loadData();
+    }
+    
+    // Kích hoạt hàm vẽ danh sách món ăn lên thẻ select và danh sách rút gọn
+    if (typeof taiVaVeDanhSachMonBtp === 'function') {
+      const select = document.getElementById('sel-btp-' + branchName);
+      const dishId = select && select.value ? parseInt(select.value) : null;
+      await taiVaVeDanhSachMonBtp(branchName, dishId);
+    }
+
+    if (statusEl) { 
+      statusEl.textContent = '✓ Đã đồng bộ dữ liệu mới nhất'; 
+      statusEl.style.color = 'var(--teal)'; 
+    }
+  } catch (e) {
+    console.error("Lỗi khi tải dữ liệu tab BTP: ", e);
+    if (statusEl) { 
+      statusEl.textContent = '⚠ Lỗi tải danh sách từ server'; 
+      statusEl.style.color = 'var(--red)'; 
+    }
+  }
+}
+
+// Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ
+let timerLuuBtp = null;
+let timerCapNhatBtp = null;
+
+function debounceLuuBtp(coSo) {
+    const statusLabel = document.getElementById(`btp-save-status-${coSo}`);
+    if (statusLabel) statusLabel.innerText = "⏳ Đang gõ...";
+    clearTimeout(timerLuuBtp);
+    timerLuuBtp = setTimeout(() => {
+        if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
+    }, 700); 
+}
+
+function debounceCapNhatVaLuu(coSo) {
+    clearTimeout(timerCapNhatBtp);
+    timerCapNhatBtp = setTimeout(() => {
+        if (typeof capNhatUocTinhBtp === "function") capNhatUocTinhBtp(coSo);
+        if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
+    }, 600);
+}
 
 </script>
 </body>
