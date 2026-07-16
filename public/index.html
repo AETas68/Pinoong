@@ -7412,11 +7412,6 @@ async function doiMatKhauFileBtp(branchName) {
     alert("⚠️ " + e.message);
   }
 }
-<!-- ========================================================================= -->
-<!-- KHỐI SCRIPT PHỤ ĐỘC LẬP - ÉP CHẠY LỆNH HỆ THỐNG VÀ FIX TRẮNG TRANG -->
-<!-- ========================================================================= -->
-<script type="text/javascript">
-
 /** Hàm nạp dữ liệu và vẽ lại toàn bộ danh sách công thức BTP từ server lên màn hình */
 async function renderBtpOnline(branchName) {
   const statusEl = document.getElementById('btp-save-status-' + branchName);
@@ -7468,6 +7463,10 @@ function debounceCapNhatVaLuu(coSo) {
         if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
     }, 600);
 }
+
+</script>
+</body>
+</html>
 
 </script>
 </body>
