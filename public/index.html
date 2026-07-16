@@ -7473,6 +7473,56 @@ async function renderBtpOnline(branchName) {
 // Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ khi đang gõ dở
 let timerLuuBtp = null;
 let timerCapNhatBtp = null;
+</script>
+// ==========================================================================
+// 1. HÀM ĐIỀU HƯỚNG CHUYỂN TAB VÀ TỰ ĐỘNG NẠP DỮ LIỆU (FIX TRẮNG TRANG)
+// ==========================================================================
+function goPage(pageId) {
+    // Ẩn toàn bộ các trang nội dung
+    document.querySelectorAll('.page').forEach(function(page) {
+        page.classList.remove('on');
+    });
+    
+    // Tìm trang mục tiêu dựa vào ID
+    var targetPage = document.getElementById('page-' + pageId);
+    if (targetPage) {
+        targetPage.classList.add('on');
+    } else {
+        console.error("Không tìm thấy thẻ trang tương ứng: #page-" + pageId);
+    }
+
+    // Đổi trạng thái active (làm sáng) nút bấm trên thanh Menu
+    document.querySelectorAll('.nav .nb').forEach(function(btn) {
+        btn.classList.remove('on');
+    });
+    if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('on');
+    }
+
+    // TỰ ĐỘNG KÍCH HOẠT HÀM RENDER ĐỂ ĐỔ DỮ LIỆU LÊN BẢNG
+    try {
+        if (pageId === 'banhang' && typeof renderBanHang === 'function') renderBanHang();
+        if (pageId === 'nvl' && typeof renderNVL === 'function') renderNVL();
+        if (pageId === 'inventory' && typeof renderInventory === 'function') renderInventory();
+        if (pageId === 'menu' && typeof renderMenu === 'function') renderMenu();
+        if (pageId === 'bantaicho' && typeof renderTaiCho === 'function') renderTaiCho();
+        if (pageId === 'chamcong' && typeof renderChamCong === 'function') renderChamCong();
+        if (pageId === 'chiphi' && typeof renderChiPhi === 'function') renderChiPhi();
+        if (pageId === 'haohut' && typeof renderHaoHut === 'function') renderHaoHut();
+        if (pageId === 'huyhang' && typeof renderHuyHang === 'function') renderHuyHang();
+        if (pageId === 'tonkho' && typeof renderTonKho === 'function') renderTonKho();
+        if (pageId === 'baocao' && typeof renderBaoCao === 'function') renderBaoCao();
+        if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') renderDuBao();
+    } catch (error) {
+        console.error("Lỗi logic hệ thống khi render dữ liệu tab " + pageId + ":", error);
+    }
+}
+
+// ==========================================================================
+// 2. CÁC HÀM TỐI ƯU DEBOUNCE CHO XƯỞNG BTP (ĐÃ KHỬ TRÙNG LẶP)
+// ==========================================================================
+var timerLuuBtp;
+var timerCapNhatBtp;
 
 function debounceLuuBtp(coSo) {
     const statusLabel = document.getElementById(`btp-save-status-${coSo}`);
@@ -7491,6 +7541,5 @@ function debounceCapNhatVaLuu(coSo) {
     }, 600);
 }
 
-</script>
 </body>
 </html>
