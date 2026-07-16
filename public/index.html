@@ -7151,8 +7151,8 @@ function hienThiCongThucBtpSẵnCo(branchName) {
     return;
   }
 
-  if (nomQtyEl) nomQtyEl.value = recipe.output_qty;
-  if (unitEl) unitEl.value = recipe.output_unit;
+ if (nomQtyEl) nomQtyEl.value = (recipe.output_qty !== undefined && recipe.output_qty !== null) ? recipe.output_qty : '';
+  if (unitEl) unitEl.value = recipe.output_unit || 'kg';
   if (nameEl) nameEl.value = recipe.name;
   if (metaEl) {
     metaEl.textContent = 'Giá hệ thống tự tính theo giá NVL hiện tại — tự lưu khi bạn gõ.';
