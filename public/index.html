@@ -638,10 +638,6 @@ tr:hover .sticky-col{background:#F7F4F0}
         <label>SL danh nghĩa / mẻ *</label>
         <input type="number" id="nominal-qty-btp-pinoong" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="capNhatUocTinhBtp('pinoong');tuDongLuuBtp('pinoong')">
       </div>
-      <div class="form-group">
-  <label>SL danh nghĩa / mẻ *</label>
-  <input type="number" id="nominal-qty-btp-pinoong" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="debounceCapNhatVaLuu('pinoong')">
-</div>
 <div class="form-group">
   <label>ĐVT của 1 mẻ tiêu chuẩn</label>
   <select id="unit-btp-pinoong" onchange="debounceCapNhatVaLuu('pinoong')">
@@ -1255,6 +1251,12 @@ body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
       <div class="form-group"><label>% Hao Hụt (0-100)</label><input type="number" id="nvl-new-hh" placeholder="5" min="0" max="100"></div>
       <div class="form-group"><label>Tồn Đầu Kỳ</label><input type="number" id="nvl-new-ton" placeholder="0"></div>
     </div>
+   <div class="form-group" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+          <input type="checkbox" id="nvl-new-khong-ton" style="width:16px;height:16px">
+          🚫 NVL này KHÔNG quản lý tồn kho
+        </label>
+      </div>
     <div class="mt12 flex-center" style="justify-content:flex-end;gap:8px">
       <button class="btn btn-outline" onclick="closeModal('modal-nvl-add')">Hủy</button>
       <button class="btn btn-teal" onclick="addNVL()">✓ Thêm NVL</button>
@@ -1583,6 +1585,14 @@ body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
           <option>🧂 Nhóm Gia Vị</option><option>🍢 Nhóm Món Thêm</option>
         </select>
         <div class="fs10 txt-gray mt4" id="nvl-edit-nhom-btp-hint" style="display:none">🍲 NVL này do file BTP tạo/quản lý giá tự động — đổi công thức trong file BTP thay vì sửa tay ở đây.</div>
+     <div class="form-group" style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+          <input type="checkbox" id="nvl-edit-khong-ton" style="width:16px;height:16px">
+          🚫 NVL này KHÔNG quản lý tồn kho (gia vị lặt vặt, ống hút, khăn giấy... không đếm chính xác theo suất)
+        </label>
+        <div class="fs10 txt-gray mt4">Vẫn tính vào giá vốn món & Chi Phí, nhưng KHÔNG hiện trong tab Tồn Kho và không cảnh báo tồn kho.</div>
+      </div>
+    </div>
       </div>
     </div>
     <div class="alert alert-warn fs11 mt8" style="padding:6px 10px">
@@ -3089,6 +3099,13 @@ async function loadData(){
     if(!n.gia_chuan && n.gia>0) n.gia_chuan=n.gia;
     if(!n.gia_chuan_ngay) n.gia_chuan_ngay=new Date().toISOString().slice(0,10);
   }
+  // Tự động đánh dấu "Gia vị phụ thêm" là NVL không quản lý tồn kho (chỉ set 1 lần,
+  // nếu bạn đã tự tick tắt cho nó thì sẽ không bị ép bật lại)
+  for(const n of S.nvl){
+    if(!('khong_quan_ly_ton' in n) && normName(n.ten)==='gia vị phụ thêm'){
+      n.khong_quan_ly_ton = true;
+    }
+  }
   // ── Migrate: gán tháng/năm cho khoản Chi Phí cũ chưa có (Mặt Bằng,
   //    Điện Nước... cần nhập RIÊNG theo từng tháng vì mỗi tháng khác nhau —
   //    khoản cũ chưa gắn tháng thì coi như của tháng hiện tại lúc này) ─
@@ -3296,7 +3313,8 @@ function getTotalNVLPurchase(mk){
 function getGiaTriTonKhoThang(mk){
   let total=0;
   for(const n of S.nvl){
-    if((n.nhom||'') === '🍲 Nhóm BTP') continue; // BTP không còn là tồn kho riêng — đã quy đổi về NVL thô
+    if((n.nhom||'') === '🍲 Nhóm BTP') continue;
+    if(n.khong_quan_ly_ton) continue;
     total += _tonCuoiMK(n.ten, mk) * (n.gia||0);
   }
   return total;
@@ -3552,7 +3570,8 @@ function renderDashboard(){
     const xu  = _xuatThangMK(nvlTen, mk);
     return td + nh - xu;
   }
-  const lowItems = S.nvl.filter(n => getTonHienTai(n.ten) < 2).sort((a,b)=>getTonHienTai(a.ten)-getTonHienTai(b.ten));
+  const lowItems = S.nvl.filter(n => !n.khong_quan_ly_ton && (n.nhom||'')!=='🍲 Nhóm BTP' && getTonHienTai(n.ten) < 2)
+    .sort((a,b)=>getTonHienTai(a.ten)-getTonHienTai(b.ten));
   document.getElementById('db-ton-canh-bao').innerHTML = lowItems.length === 0
     ? '<div class="alert alert-success fs11">✓ Tồn kho ổn định</div>'
     : lowItems.slice(0, 5).map(n => {
@@ -3820,13 +3839,16 @@ function renderNVL(){
       const hh=S.hao_hut[n.ten]||0;
       const hhCls=hh>=60?'b-red':hh>30?'b-amber':hh>15?'b-gray':'b-green';
       const isBtp = (n.nhom||'') === '🍲 Nhóm BTP';
+      const excludeTon = isBtp || n.khong_quan_ly_ton;
       const tonDauN = _tonDauHienThi(n.ten, S.thang, S.nam);
       const nhapN   = _nhapThangMK(n.ten, nvlMk);
       const xuatN   = _xuatThangMK(n.ten, nvlMk);
       const ton = tonDauN + nhapN - xuatN;
       const tonStatus = isBtp
         ? '<span class="badge b-gray" title="BTP không tồn kho riêng — đã quy đổi ra NVL thô, xem tồn ở tab Tồn Kho">— (quy đổi NVL thô)</span>'
-        : ton<0?'<span class="badge b-red" style="background:var(--red);color:#fff">⚠️ Âm</span>':ton<0.5?'<span class="badge b-red">Hết</span>':ton<2?'<span class="badge b-amber">Thấp</span>':'<span class="badge b-green">Đủ</span>';
+        : n.khong_quan_ly_ton
+          ? '<span class="badge b-gray" title="NVL này được đánh dấu KHÔNG quản lý tồn kho">🚫 Không quản lý tồn</span>'
+          : ton<0?'<span class="badge b-red" style="background:var(--red);color:#fff">⚠️ Âm</span>':ton<0.5?'<span class="badge b-red">Hết</span>':ton<2?'<span class="badge b-amber">Thấp</span>':'<span class="badge b-green">Đủ</span>';
       const idx=S.nvl.indexOf(n);
       // Giá chuẩn vs giá nhập hiện tại
       const giaChuan=n.gia_chuan||n.gia||0;
@@ -3850,8 +3872,8 @@ function renderNVL(){
         <td>${giaChuanCell}</td>
         <td>${diffCell}</td>
         <td><span class="badge ${hhCls}">${hh}%</span></td>
-        <td class="mono">${isBtp ? '<span class="txt-gray">— </span>' : fmtQty(ton) + ' ' + n.dvt}</td>
-        <td class="mono txt-amber">${isBtp ? '<span class="txt-gray">—</span>' : fmt(Math.round(ton*n.gia))}</td>
+        <td class="mono">${excludeTon ? '<span class="txt-gray">— </span>' : fmtQty(ton) + ' ' + n.dvt}</td>
+        <td class="mono txt-amber">${excludeTon ? '<span class="txt-gray">—</span>' : fmt(Math.round(ton*n.gia))}</td>
         <td>${tonStatus}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-outline btn-sm" onclick="editNVL(${idx})" style="padding:2px 5px" title="Sửa NVL">✏</button>
@@ -3908,11 +3930,12 @@ function addNVL(){
     S.nvl_deleted = S.nvl_deleted.filter(k=>k!==key);
   }
   const tonBanDau = parseFloat(document.getElementById('nvl-new-ton').value)||0;
-  S.nvl.push({id:newId, ten, dvt:document.getElementById('nvl-new-dvt').value||'kg',
+ S.nvl.push({id:newId, ten, dvt:document.getElementById('nvl-new-dvt').value||'kg',
     gia, gia_chuan: gia,
     gia_chuan_ngay: new Date().toISOString().slice(0,10),
     gia_chuan_auto: false,
-    nhom:document.getElementById('nvl-new-nhom').value});
+    nhom:document.getElementById('nvl-new-nhom').value,
+    khong_quan_ly_ton: document.getElementById('nvl-new-khong-ton')?.checked || false});
   // Lưu tồn đầu vào ton_data theo tháng hiện tại
   if(!S.ton_data) S.ton_data = {};
   const newNvlMk = mkey(S.thang, S.nam);
@@ -3931,6 +3954,7 @@ function editNVL(idx){
   document.getElementById('nvl-edit-ten').value=n.ten;
   document.getElementById('nvl-edit-dvt').value=n.dvt;
   document.getElementById('nvl-edit-gia').value=n.gia;
+  document.getElementById('nvl-edit-khong-ton').checked = !!n.khong_quan_ly_ton;
   const isBtp = (n.nhom||'') === '🍲 Nhóm BTP';
   const btpOpt = document.getElementById('nvl-edit-nhom-btp-opt');
   const btpHint = document.getElementById('nvl-edit-nhom-btp-hint');
@@ -3954,6 +3978,7 @@ function saveNVLEdit(){
   S.nvl[idx].dvt=document.getElementById('nvl-edit-dvt').value;
   S.nvl[idx].gia=newGia;
   S.nvl[idx].nhom=document.getElementById('nvl-edit-nhom').value;
+   S.nvl[idx].khong_quan_ly_ton = document.getElementById('nvl-edit-khong-ton')?.checked || false;
   if(newGiaChuan!==null && newGiaChuan>0){
     const old=S.nvl[idx].gia_chuan;
     if(newGiaChuan!==old){
@@ -5202,7 +5227,7 @@ function renderTonKho(){
   // (S.btp_raw_expansion) tự quy đổi mọi món BTP về NVL thô để trừ tồn,
   // nên bản thân dòng "NVL" đại diện cho BTP (dùng để tra giá) không còn
   // là một mục tồn kho thật sự — chỉ NVL thô mới có tồn kho.
-  const raw = filtered.filter(n => (n.nhom || 'Khác') !== BTP_KEY);
+  const raw = filtered.filter(n => (n.nhom || 'Khác') !== BTP_KEY && !n.khong_quan_ly_ton);
   const grouped = groupBy(raw, n => n.nhom || 'Khác');
   const orderedGroupKeys = Object.keys(grouped).sort((a,b)=>a.localeCompare(b,'vi'));
 
