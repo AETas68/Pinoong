@@ -7479,18 +7479,30 @@ var timerCapNhatBtp = null;
 // 2. Hàm điều hướng chuyển tab an toàn
 function goPage(pageId) {
     try {
-        // Ẩn toàn bộ các trang nội dung
+        // 1. Kiểm tra bảo mật mật khẩu cho 2 tab BTP trước khi chuyển trang
+        if (pageId === 'btp-khapkhun' || pageId === 'btp-pinoong') {
+            var coSo = pageId === 'btp-khapkhun' ? 'khapkhun' : 'pinoong';
+            var pw = prompt("Nhập mật khẩu truy cập BTP " + (coSo === 'khapkhun' ? "Khạp Khun" : "Pinoong") + ":");
+            
+            // Nếu không nhập hoặc nhập sai mật khẩu (Mật khẩu mặc định hệ thống của bạn là 123)
+            if (pw !== "123") { 
+                alert("Mật khẩu không chính xác! Quyền truy cập bị từ chối.");
+                return; // Chặn đứng không cho chuyển tab và không cho render dữ liệu
+            }
+        }
+
+        // 2. Ẩn toàn bộ các trang nội dung cũ
         document.querySelectorAll('.page').forEach(function(page) {
             page.classList.remove('on');
         });
         
-        // Hiển thị trang được chọn
+        // 3. Hiển thị trang được chọn
         var targetPage = document.getElementById('page-' + pageId);
         if (targetPage) {
             targetPage.classList.add('on');
         }
 
-        // Làm sáng nút bấm menu
+        // 4. Làm sáng nút bấm menu điều hướng tương ứng
         document.querySelectorAll('.nav .nb').forEach(function(btn) {
             btn.classList.remove('on');
         });
@@ -7498,7 +7510,7 @@ function goPage(pageId) {
             window.event.currentTarget.classList.add('on');
         }
 
-        // Tự động gọi hàm render dữ liệu nếu có tồn tại
+        // 5. Tự động kích hoạt hàm render dữ liệu an toàn cho các tab
         if (pageId === 'banhang' && typeof renderBanHang === 'function') renderBanHang();
         if (pageId === 'nvl' && typeof renderNVL === 'function') renderNVL();
         if (pageId === 'inventory' && typeof renderInventory === 'function') renderInventory();
@@ -7511,8 +7523,13 @@ function goPage(pageId) {
         if (pageId === 'tonkho' && typeof renderTonKho === 'function') renderTonKho();
         if (pageId === 'baocao' && typeof renderBaoCao === 'function') renderBaoCao();
         if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') renderDuBao();
+        
+        // Kích hoạt nạp dữ liệu BTP sau khi đã vượt qua vòng check pass ở trên
+        if (pageId === 'btp-khapkhun' && typeof renderBtpOnline === 'function') renderBtpOnline('khapkhun');
+        if (pageId === 'btp-pinoong' && typeof renderBtpOnline === 'function') renderBtpOnline('pinoong');
+
     } catch (e) {
-        console.error("Lỗi chuyển tab:", e);
+        console.error("Lỗi hệ thống điều hướng bảo mật:", e);
     }
 }
 
