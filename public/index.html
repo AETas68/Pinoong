@@ -5081,6 +5081,13 @@ function showTonKhoDetail(nvlTen, thang, nam){
 }
 
 function _xuatThangMK(nvlTen, mk){
+  // ĐIỀU KIỆN SỬA LỖI CHÍ MẠNG:
+  // Nếu tên NVL là "Gia Vị Phụ Thêm", ép số lượng xuất kho luôn bằng 0.
+  // Món này chỉ chạy ở phần tính Food Cost trên giao diện, tuyệt đối không tính xuất kho để tránh bị ÂM KHO.
+  if (nvlTen === "Gia Vị Phụ Thêm") {
+    return 0; 
+  }
+
   let total = 0;
   const targetKey = normName(nvlTen);
   for(const mon of (S.menu || [])){
@@ -5099,6 +5106,7 @@ function _xuatThangMK(nvlTen, mk){
     .reduce((s, e) => s + (parseFloat(e.sl) || 0), 0);
   return total;
 }
+
 
 // Tồn cuối = tonDau + nhap - xuat cho một tháng cụ thể (KHÔNG đệ quy)
 // LƯU Ý: không còn ép về 0 — nếu bán/xuất nhiều hơn tồn thực có (vì chưa
