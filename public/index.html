@@ -201,21 +201,21 @@ tr:hover .sticky-col{background:#F7F4F0}
   <span class="logo">🍜 <span>Khạp</span>Khun</span>
   <span class="ver">v13</span>
   <button class="nb on" onclick="goPage('dashboard')">📊 Dashboard</button>
-  <button class="nb" onclick="goPage('banhang')">🛒 Bán Hàng</button>
-  <button class="nb" onclick="goPage('nvl')">📦 Danh Mục NVL</button>
-  <button class="nb" onclick="goPage('inventory')">🚚 Nhập Hàng</button>
+  <button class="nb" onclick="goPage('banhang'); renderBanHang();">🛒 Bán Hàng</button>
+  <button class="nb" onclick="goPage('nvl'); renderNVL();">📦 Danh Mục NVL</button>
+  <button class="nb" onclick="goPage('inventory'); renderInventory();">🚚 Nhập Hàng</button>
   <button class="nb" id="nb-btp-khapkhun" onclick="goPage('btp-khapkhun'); renderBtpOnline('khapkhun');">📋 BTP Khạp Khun</button>
-<button class="nb" id="nb-btp-pinoong" onclick="goPage('btp-pinoong'); renderBtpOnline('pinoong');">📦 BTP Pinoong</button>
-  <button class="nb" onclick="goPage('menu')">🍽 Menu & Công Thức</button>
-  <button class="nb" onclick="goPage('bantaicho')" style="border-color:var(--orange);color:var(--orange)">🏠 Menu Tại Chỗ</button>
-  <button class="nb" onclick="goPage('chamcong')">👥 Chấm Công</button>
-  <button class="nb" onclick="goPage('chiphi')">💸 Chi Phí</button>
-  <button class="nb" onclick="goPage('haohut')">📉 Hao Hụt</button>
-  <button class="nb" onclick="goPage('huyhang')">🗑 Hủy Hàng</button>
-  <button class="nb" onclick="goPage('tonkho')">🗄 Tồn Kho</button>
-  <button class="nb" onclick="goPage('baocao')">📈 Báo Cáo</button>
-  <button class="nb" onclick="goPage('dubaodoanhthu')" style="border-color:var(--teal);color:var(--teal)">📐 Dự Báo DT</button>
-  <button class="nb hidden" id="nb-nguoidung" onclick="goPage('nguoidung')">👤 Người Dùng</button>
+  <button class="nb" id="nb-btp-pinoong" onclick="goPage('btp-pinoong'); renderBtpOnline('pinoong');">📦 BTP Pinoong</button>
+  <button class="nb" onclick="goPage('menu'); renderMenu();">🍽 Menu & Công Thức</button>
+  <button class="nb" onclick="goPage('bantaicho'); renderTaiCho();" style="border-color:var(--orange);color:var(--orange)">🏠 Menu Tại Chỗ</button>
+  <button class="nb" onclick="goPage('chamcong'); renderChamCong();">👥 Chấm Công</button>
+  <button class="nb" onclick="goPage('chiphi'); renderChiPhi();">💸 Chi Phí</button>
+  <button class="nb" onclick="goPage('haohut'); renderHaoHut();">📉 Hao Hụt</button>
+  <button class="nb" onclick="goPage('huyhang'); renderHuyHang();">🗑 Hủy Hàng</button>
+  <button class="nb" onclick="goPage('tonkho'); renderTonKho();">🗄 Tồn Kho</button>
+  <button class="nb" onclick="goPage('baocao'); renderBaoCao();">📈 Báo Cáo</button>
+  <button class="nb" onclick="goPage('dubaodoanhthu'); renderDuBao();" style="border-color:var(--teal);color:var(--teal)">📐 Dự Báo DT</button>
+  <button class="nb hidden" id="nb-nguoidung" onclick="goPage('nguoidung');">👤 Người Dùng</button>
   <div class="nav-right">
     <span class="fs10 txt-gray"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Đã kết nối</span></span>
     <span class="saved-msg" id="savedMsg">✓ Đã lưu</span>
@@ -225,6 +225,8 @@ tr:hover .sticky-col{background:#F7F4F0}
     <button class="btn btn-outline btn-sm" onclick="doLogout()">Đăng xuất</button>
   </div>
 </nav>
+
+
 
 <div class="content">
 
