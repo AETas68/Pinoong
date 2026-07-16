@@ -7412,11 +7412,10 @@ async function doiMatKhauFileBtp(branchName) {
     alert("⚠️ " + e.message);
   }
 }
-// =========================================================================
-// Đoạn mã bổ sung khôi phục hàm renderBtpOnline và các bộ hoãn thời gian gõ
-// ĐẶT TRƯỚC THẺ ĐÓNG </script> KHÔNG ĐƯỢC ĐẶT NGOÀI
-// =========================================================================
-
+<!-- ========================================================================= -->
+<!-- KHỐI SCRIPT PHỤ ĐỘC LẬP - ÉP CHẠY LỆNH HỆ THỐNG VÀ FIX TRẮNG TRANG -->
+<!-- ========================================================================= -->
+<script type="text/javascript">
 
 /** Hàm nạp dữ liệu và vẽ lại toàn bộ danh sách công thức BTP từ server lên màn hình */
 async function renderBtpOnline(branchName) {
@@ -7449,7 +7448,7 @@ async function renderBtpOnline(branchName) {
   }
 }
 
-// Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ
+// Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ khi đang gõ dở
 let timerLuuBtp = null;
 let timerCapNhatBtp = null;
 
@@ -7470,7 +7469,6 @@ function debounceCapNhatVaLuu(coSo) {
     }, 600);
 }
 
-  
 </script>
 </body>
 </html>
