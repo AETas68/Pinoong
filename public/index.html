@@ -7417,6 +7417,7 @@ async function doiMatKhauFileBtp(branchName) {
 // ĐẶT TRƯỚC THẺ ĐÓNG </script> KHÔNG ĐƯỢC ĐẶT NGOÀI
 // =========================================================================
 
+
 /** Hàm nạp dữ liệu và vẽ lại toàn bộ danh sách công thức BTP từ server lên màn hình */
 async function renderBtpOnline(branchName) {
   const statusEl = document.getElementById('btp-save-status-' + branchName);
@@ -7426,12 +7427,9 @@ async function renderBtpOnline(branchName) {
   }
 
   try {
-    // Gọi hàm lấy dữ liệu danh sách BTP cập nhật mới từ server của bạn
     if (typeof loadData === 'function') {
       await loadData();
     }
-    
-    // Kích hoạt hàm vẽ danh sách món ăn lên thẻ select và danh sách rút gọn
     if (typeof taiVaVeDanhSachMonBtp === 'function') {
       const select = document.getElementById('sel-btp-' + branchName);
       const dishId = select && select.value ? parseInt(select.value) : null;
@@ -7472,6 +7470,7 @@ function debounceCapNhatVaLuu(coSo) {
     }, 600);
 }
 
+  
 </script>
 </body>
 </html>
