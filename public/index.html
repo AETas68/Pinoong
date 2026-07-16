@@ -571,15 +571,18 @@ tr:hover .sticky-col{background:#F7F4F0}
       </div>
       <div class="form-group" style="grid-column:span 2">
         <label>Tên món BTP</label>
-        <input type="text" id="name-btp-khapkhun" placeholder="VD: Btp - cốt lèo" oninput="tuDongLuuBtp('khapkhun')">
+        <!-- VỊ TRÍ 1: Thay đổi từ tuDongLuuBtp thành debounceLuuBtp -->
+        <input type="text" id="name-btp-khapkhun" placeholder="VD: Btp - cốt lèo" oninput="debounceLuuBtp('khapkhun')">
       </div>
       <div class="form-group">
         <label>SL danh nghĩa / mẻ *</label>
-        <input type="number" id="nominal-qty-btp-khapkhun" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="capNhatUocTinhBtp('khapkhun');tuDongLuuBtp('khapkhun')">
+        <!-- VỊ TRÍ 2: Gom hành động tính toán và lưu vào debounceCapNhatVaLuu -->
+        <input type="number" id="nominal-qty-btp-khapkhun" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="debounceCapNhatVaLuu('khapkhun')">
       </div>
       <div class="form-group">
         <label>ĐVT của 1 mẻ tiêu chuẩn</label>
-        <select id="unit-btp-khapkhun" onchange="capNhatUocTinhBtp('khapkhun');tuDongLuuBtp('khapkhun')">
+        <!-- VỊ TRÍ 3: Gom hành động tính toán và lưu vào debounceCapNhatVaLuu -->
+        <select id="unit-btp-khapkhun" onchange="debounceCapNhatVaLuu('khapkhun')">
           <option value="kg">kg</option><option value="lít">lít</option>
           <option value="cái">cái</option><option value="hộp">hộp</option>
           <option value="bịch">bịch</option><option value="chai">chai</option>
@@ -593,7 +596,8 @@ tr:hover .sticky-col{background:#F7F4F0}
 
     <div class="card-title" style="font-size:13px; margin-top:15px; display:flex; align-items:center; gap:8px;">
       🧂 Nguyên Liệu (tự lưu khi gõ)
-      <button class="btn btn-teal btn-sm" onclick="addBtpIngRow('khapkhun');tuDongLuuBtp('khapkhun')" title="Thêm 1 dòng NVL vào công thức">+ Thêm NVL</button>
+      <!-- VỊ TRÍ 4: Nút bấm bạn đã sửa đúng (chỉ gọi addBtpIngRow) -->
+      <button class="btn btn-teal btn-sm" onclick="addBtpIngRow('khapkhun')" title="Thêm 1 dòng NVL vào công thức">+ Thêm NVL</button>
       <span id="btp-save-status-khapkhun" class="fs11" style="margin-left:auto;color:var(--gray)"></span>
     </div>
     <div id="btp-ing-list-khapkhun"><!-- Các dòng nguyên liệu của công thức sẽ tự vẽ ở đây --></div>
@@ -628,21 +632,24 @@ tr:hover .sticky-col{background:#F7F4F0}
       </div>
       <div class="form-group" style="grid-column:span 2">
         <label>Tên món BTP</label>
-        <input type="text" id="name-btp-pinoong" placeholder="VD: Btp - cốt lèo" oninput="tuDongLuuBtp('pinoong')">
+        <input type="text" id="name-btp-pinoong" placeholder="VD: Btp - cốt lèo" oninput="debounceLuuBtp('pinoong')">
       </div>
       <div class="form-group">
         <label>SL danh nghĩa / mẻ *</label>
         <input type="number" id="nominal-qty-btp-pinoong" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="capNhatUocTinhBtp('pinoong');tuDongLuuBtp('pinoong')">
       </div>
       <div class="form-group">
-        <label>ĐVT của 1 mẻ tiêu chuẩn</label>
-        <select id="unit-btp-pinoong" onchange="capNhatUocTinhBtp('pinoong');tuDongLuuBtp('pinoong')">
-          <option value="kg">kg</option><option value="lít">lít</option>
-          <option value="cái">cái</option><option value="hộp">hộp</option>
-          <option value="bịch">bịch</option><option value="chai">chai</option>
-        </select>
-      </div>
-    </div>
+  <label>SL danh nghĩa / mẻ *</label>
+  <input type="number" id="nominal-qty-btp-pinoong" placeholder="VD: 2 (cho 2kg)" min="0.01" step="0.01" oninput="debounceCapNhatVaLuu('pinoong')">
+</div>
+<div class="form-group">
+  <label>ĐVT của 1 mẻ tiêu chuẩn</label>
+  <select id="unit-btp-pinoong" onchange="debounceCapNhatVaLuu('pinoong')">
+    <option value="kg">kg</option><option value="lít">lít</option>
+    <option value="cái">cái</option><option value="hộp">hộp</option>
+    <option value="bịch">bịch</option><option value="chai">chai</option>
+  </select>
+</div>
 
     <div class="metrics" id="btp-preview-pinoong" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
       <!-- Ước tính giá vốn / mẻ / 1kg sẽ tự tính lại theo dữ liệu đang nhập -->
@@ -650,7 +657,7 @@ tr:hover .sticky-col{background:#F7F4F0}
 
     <div class="card-title" style="font-size:13px; margin-top:15px; display:flex; align-items:center; gap:8px;">
       🧂 Nguyên Liệu (tự lưu khi gõ)
-      <button class="btn btn-teal btn-sm" onclick="addBtpIngRow('pinoong');tuDongLuuBtp('pinoong')" title="Thêm 1 dòng NVL vào công thức">+ Thêm NVL</button>
+    <button class="btn btn-teal btn-sm" onclick="addBtpIngRow('pinoong')" title="Thêm 1 dòng NVL vào công thức">+ Thêm NVL</button>
       <span id="btp-save-status-pinoong" class="fs11" style="margin-left:auto;color:var(--gray)"></span>
     </div>
     <div id="btp-ing-list-pinoong"><!-- Các dòng nguyên liệu của công thức sẽ tự vẽ ở đây --></div>
@@ -7262,15 +7269,20 @@ async function luuCongThucOnly(branchName, imLang) {
     return;
   }
 
-  await loadData();
-  await taiVaVeDanhSachMonBtp(branchName, savedDish.id);
-  if (typeof renderNVL === 'function') renderNVL();
+  // ĐIỀU KIỆN SỬA LỖI GỐC: Chỉ tải lại dữ liệu và vẽ lại giao diện nếu người dùng chủ động lưu (không phải tự động lưu im lặng khi đang gõ)
+  // Nếu imLang là true (đang tự động lưu nền), hệ thống sẽ KHÔNG chạy 2 hàm vẽ lại HTML dưới đây để bảo vệ chữ đang gõ của bạn
+  if (!imLang) {
+    await loadData();
+    await taiVaVeDanhSachMonBtp(branchName, savedDish.id);
+    if (typeof renderNVL === 'function') renderNVL();
+  }
+
   const gio = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   if (statusEl) { statusEl.textContent = `✅ Đã lưu lúc ${gio}`; statusEl.style.color = 'var(--green)'; statusEl.style.fontWeight = '400'; }
   if (!imLang) toast('✓ Đã tự lưu công thức "' + form.newName + '".');
 }
 
-/** Tự lưu công thức BTP sau khi ngừng gõ ~900ms — gắn vào oninput/onchange
+/** Tự lưu công thức BTP sau khi ngừng gõ ~1200ms — gắn vào oninput/onchange
  * của các ô trong form BTP, KHÔNG cần bấm nút "Lưu" nào cả. */
 const _btpAutoSaveTimers = {};
 function tuDongLuuBtp(branchName) {
@@ -7281,12 +7293,42 @@ function tuDongLuuBtp(branchName) {
     const select = document.getElementById('sel-btp-' + branchName);
     const dishId = select && select.value ? parseInt(select.value) : null;
     if (!dishId) return; // chưa có món nào đang chọn thì chưa có gì để tự lưu
+
+    // KIỂM TRA ĐIỀU KIỆN ĐANG GÕ DỞ:
+    // Kiểm tra xem trên giao diện có dòng nguyên liệu nào mới nhập tên nhưng chưa có định lượng hay không
+    const container = document.getElementById('btp-ing-list-' + branchName);
+    if (container) {
+      // Tìm tất cả các ô nhập liệu trong vùng chứa danh sách nguyên liệu
+      const textInputs = container.querySelectorAll('input[type="text"]');
+      let coDongDangGoDo = false;
+
+      textInputs.forEach(input => {
+        const row = input.closest('.form-grid') || input.parentElement;
+        if (row) {
+          const numberInput = row.querySelector('input[type="number"]');
+          const tenNVL = input.value.trim();
+          const dinhLuong = numberInput ? numberInput.value.trim() : "";
+
+          // Nếu đã nhập tên NVL nhưng định lượng trống hoặc bằng 0 -> Đang gõ dở
+          if (tenNVL && (!dinhLuong || parseFloat(dinhLuong) <= 0)) {
+            coDongDangGoDo = true;
+          }
+        }
+      });
+
+      // Nếu phát hiện có dòng đang gõ dở, hoãn đồng bộ lên server để không làm hỏng giao diện
+      if (coDongDangGoDo) {
+        if (statusEl) { statusEl.textContent = '⏳ Chờ điền đủ tên và định lượng...'; statusEl.style.color = 'var(--amber)'; }
+        return;
+      }
+    }
+
     luuCongThucOnly(branchName, true);
-  }, 900);
+  }, 1200); // Tăng thời gian chờ lên 1.2 giây để nhập liệu thoải mái hơn
 }
 
 /** Nếu người dùng rời trang/đóng tab khi còn lệnh tự lưu đang chờ (chưa đủ
- * 900ms) — LƯU NGAY LẬP TỨC thay vì để mất, vì setTimeout sẽ không bao giờ
+ * 1200ms) — LƯU NGAY LẬP TỨC thay vì để mất, vì setTimeout sẽ không bao giờ
  * chạy được nữa nếu trang đã đóng. */
 window.addEventListener('beforeunload', () => {
   for (const branchName of Object.keys(_btpAutoSaveTimers)) {
@@ -7294,10 +7336,51 @@ window.addEventListener('beforeunload', () => {
       clearTimeout(_btpAutoSaveTimers[branchName]);
       const select = document.getElementById('sel-btp-' + branchName);
       const dishId = select && select.value ? parseInt(select.value) : null;
-      if (dishId) luuCongThucOnly(branchName, true);
+      if (dishId) {
+        // Tương tự, chỉ lưu khi không có dòng nào bị bỏ trống thông tin mẻ
+        const container = document.getElementById('btp-ing-list-' + branchName);
+        let coDongDangGoDo = false;
+        if (container) {
+          const textInputs = container.querySelectorAll('input[type="text"]');
+          textInputs.forEach(input => {
+            const row = input.closest('.form-grid') || input.parentElement;
+            if (row) {
+              const numberInput = row.querySelector('input[type="number"]');
+              if (input.value.trim() && (!numberInput || !numberInput.value.trim())) {
+                coDongDangGoDo = true;
+              }
+            }
+          });
+        }
+        if (!coDongDangGoDo) luuCongThucOnly(branchName, true);
+      }
     }
   }
 });
+
+// Hàm hoãn xử lý an toàn cho việc cập nhật thông số định lượng lớn hoặc ĐVT mẻ chính
+let _btpUpdateTimers = {};
+function debounceCapNhatVaLuu(branchName) {
+  clearTimeout(_btpUpdateTimers[branchName]);
+  _btpUpdateTimers[branchName] = setTimeout(() => {
+    if (typeof capNhatUocTinhBtp === 'function') {
+      capNhatUocTinhBtp(branchName);
+    }
+    tuDongLuuBtp(branchName);
+  }, 800);
+}
+
+// Hàm hoãn xử lý nhập liệu tên món chính 
+let _btpNameTimers = {};
+function debounceLuuBtp(branchName) {
+  const statusEl = document.getElementById('btp-save-status-' + branchName);
+  if (statusEl) { statusEl.textContent = '⏳ Đang gõ tên món BTP...'; statusEl.style.color = 'var(--gray)'; }
+  clearTimeout(_btpNameTimers[branchName]);
+  _btpNameTimers[branchName] = setTimeout(() => {
+    tuDongLuuBtp(branchName);
+  }, 1000);
+}
+
 
 
 // ---- Đổi mật khẩu file BTP (yêu cầu đúng mật khẩu CŨ) ----
