@@ -7469,38 +7469,35 @@ async function renderBtpOnline(branchName) {
     }
   }
 }
+<!-- ĐOẠN ĐUÔI FILE FIX LỖI CRASH DEPLOY -->
 <script>
-// Thiết lập các bộ đếm thời gian hoãn gõ phím giúp chặn lỗi biến mất chữ khi đang gõ dở
+// 1. Khai báo biến đếm thời gian
 var timerLuuBtp = null;
 var timerCapNhatBtp = null;
 
-// ==========================================================================
-// 1. HÀM ĐIỀU HƯỚNG CHUYỂN TAB VÀ TỰ ĐỘNG NẠP DỮ LIỆU (FIX TRẮNG TRANG)
-// ==========================================================================
+// 2. Hàm điều hướng chuyển tab an toàn
 function goPage(pageId) {
-    // Ẩn toàn bộ các trang nội dung bằng cách gỡ bỏ class 'on'
-    document.querySelectorAll('.page').forEach(function(page) {
-        page.classList.remove('on');
-    });
-    
-    // Tìm trang mục tiêu dựa vào ID tương ứng
-    var targetPage = document.getElementById('page-' + pageId);
-    if (targetPage) {
-        targetPage.classList.add('on');
-    } else {
-        console.error("Không tìm thấy thẻ trang tương ứng: #page-" + pageId);
-    }
-
-    // Đổi trạng thái active (làm sáng) nút bấm trên thanh Menu điều hướng
-    document.querySelectorAll('.nav .nb').forEach(function(btn) {
-        btn.classList.remove('on');
-    });
-    if (window.event && window.event.currentTarget) {
-        window.event.currentTarget.classList.add('on');
-    }
-
-    // TỰ ĐỘNG KÍCH HOẠT HÀM RENDER ĐỂ ĐỔ DỮ LIỆU LÊN BẢNG
     try {
+        // Ẩn toàn bộ các trang nội dung
+        document.querySelectorAll('.page').forEach(function(page) {
+            page.classList.remove('on');
+        });
+        
+        // Hiển thị trang được chọn
+        var targetPage = document.getElementById('page-' + pageId);
+        if (targetPage) {
+            targetPage.classList.add('on');
+        }
+
+        // Làm sáng nút bấm menu
+        document.querySelectorAll('.nav .nb').forEach(function(btn) {
+            btn.classList.remove('on');
+        });
+        if (window.event && window.event.currentTarget) {
+            window.event.currentTarget.classList.add('on');
+        }
+
+        // Tự động gọi hàm render dữ liệu nếu có tồn tại
         if (pageId === 'banhang' && typeof renderBanHang === 'function') renderBanHang();
         if (pageId === 'nvl' && typeof renderNVL === 'function') renderNVL();
         if (pageId === 'inventory' && typeof renderInventory === 'function') renderInventory();
@@ -7513,26 +7510,24 @@ function goPage(pageId) {
         if (pageId === 'tonkho' && typeof renderTonKho === 'function') renderTonKho();
         if (pageId === 'baocao' && typeof renderBaoCao === 'function') renderBaoCao();
         if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') renderDuBao();
-    } catch (error) {
-        console.error("Lỗi logic hệ thống khi render dữ liệu tab " + pageId + ":", error);
+    } catch (e) {
+        console.error("Lỗi chuyển tab:", e);
     }
 }
 
-// ==========================================================================
-// 2. CÁC HÀM TỐI ƯU DEBOUNCE CHO XƯỞNG BTP (ĐÃ KHỬ TRÙNG LẶP)
-// ==========================================================================
+// 3. Các hàm tối ưu gõ phím cho xưởng BTP
 function debounceLuuBtp(coSo) {
-    const statusLabel = document.getElementById(`btp-save-status-${coSo}`);
+    const statusLabel = document.getElementById('btp-save-status-' + coSo);
     if (statusLabel) statusLabel.innerText = "⏳ Đang gõ...";
     clearTimeout(timerLuuBtp);
-    timerLuuBtp = setTimeout(() => {
+    timerLuuBtp = setTimeout(function() {
         if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
     }, 700); 
 }
 
 function debounceCapNhatVaLuu(coSo) {
     clearTimeout(timerCapNhatBtp);
-    timerCapNhatBtp = setTimeout(() => {
+    timerCapNhatBtp = setTimeout(function() {
         if (typeof capNhatUocTinhBtp === "function") capNhatUocTinhBtp(coSo);
         if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
     }, 600);
@@ -7540,4 +7535,3 @@ function debounceCapNhatVaLuu(coSo) {
 </script>
 </body>
 </html>
-
