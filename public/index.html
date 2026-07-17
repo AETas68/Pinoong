@@ -648,6 +648,7 @@ tr:hover .sticky-col{background:#F7F4F0}
     <option value="bịch">bịch</option><option value="chai">chai</option>
   </select>
 </div>
+    </div>
 
     <div class="metrics" id="btp-preview-pinoong" style="grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
       <!-- Ước tính giá vốn / mẻ / 1kg sẽ tự tính lại theo dữ liệu đang nhập -->
@@ -1956,6 +1957,10 @@ function addInventoryQuick(){
   const gia=parseFloat(document.getElementById('inv-q-gia')?.value)||0;
   const ghichu=document.getElementById('inv-q-ghichu')?.value||'';
   const msg=document.getElementById('inv-quick-msg');
+   if(normName(ten) === 'gia vị phụ thêm'){
+    if(msg){msg.textContent='❌ "Gia vị phụ thêm" có giá cố định 10.000đ/kg, không quản lý nhập/tồn kho riêng — không cần nhập phiếu này!';msg.style.color='var(--red)';}
+    return;
+  }
 
   if(!ngay){if(msg){msg.textContent='❌ Chọn ngày nhập!';msg.style.color='var(--red)';}return;}
   if(!ten){if(msg){msg.textContent='❌ Nhập tên NVL!';msg.style.color='var(--red)';}return;}
@@ -3100,7 +3105,17 @@ async function loadData(){
   for(const n of S.nvl){
     if(!n.gia_chuan && n.gia>0) n.gia_chuan=n.gia;
     if(!n.gia_chuan_ngay) n.gia_chuan_ngay=new Date().toISOString().slice(0,10);
+   // "Gia vị phụ thêm" là NVL không đếm được theo suất (ống hút, khăn giấy, gia vị lặt vặt...)
+  // → khóa giá cố định 10.000đ/kg, và loại khỏi mọi báo cáo Tồn Kho, nhưng vẫn tính vào giá vốn món.
+  for(const n of S.nvl){
+    if(normName(n.ten) === 'gia vị phụ thêm'){
+      n.gia = 10000;
+      n.gia_chuan = 10000;
+      n.khong_quan_ly_ton = true;
+    }
+  } 
   }
+  
   // Tự động đánh dấu "Gia vị phụ thêm" là NVL không quản lý tồn kho (chỉ set 1 lần,
   // nếu bạn đã tự tick tắt cho nó thì sẽ không bị ép bật lại)
   for(const n of S.nvl){
@@ -3973,8 +3988,12 @@ function editNVL(idx){
 
 function saveNVLEdit(){
   const idx=parseInt(document.getElementById('nvl-edit-idx').value);
+  if(normName(S.nvl[idx]?.ten) === 'gia vị phụ thêm'){
+    alert('⚠️ "Gia vị phụ thêm" có giá cố định 10.000đ/kg, không thể sửa tay!');
+    closeModal('modal-nvl-edit');
+    return;
+  }
   const newGia=parseFloat(document.getElementById('nvl-edit-gia').value)||0;
-  const gcEl=document.getElementById('nvl-edit-gia-chuan');
   const newGiaChuan=gcEl?parseFloat(gcEl.value)||0:null;
   S.nvl[idx].ten=document.getElementById('nvl-edit-ten').value;
   S.nvl[idx].dvt=document.getElementById('nvl-edit-dvt').value;
@@ -7474,72 +7493,6 @@ async function renderBtpOnline(branchName) {
 let timerLuuBtp = null;
 let timerCapNhatBtp = null;
 </script>
-// ==========================================================================
-// 1. HÀM ĐIỀU HƯỚNG CHUYỂN TAB VÀ TỰ ĐỘNG NẠP DỮ LIỆU (FIX TRẮNG TRANG)
-// ==========================================================================
-function goPage(pageId) {
-    // Ẩn toàn bộ các trang nội dung
-    document.querySelectorAll('.page').forEach(function(page) {
-        page.classList.remove('on');
-    });
-    
-    // Tìm trang mục tiêu dựa vào ID
-    var targetPage = document.getElementById('page-' + pageId);
-    if (targetPage) {
-        targetPage.classList.add('on');
-    } else {
-        console.error("Không tìm thấy thẻ trang tương ứng: #page-" + pageId);
-    }
-
-    // Đổi trạng thái active (làm sáng) nút bấm trên thanh Menu
-    document.querySelectorAll('.nav .nb').forEach(function(btn) {
-        btn.classList.remove('on');
-    });
-    if (window.event && window.event.currentTarget) {
-        window.event.currentTarget.classList.add('on');
-    }
-
-    // TỰ ĐỘNG KÍCH HOẠT HÀM RENDER ĐỂ ĐỔ DỮ LIỆU LÊN BẢNG
-    try {
-        if (pageId === 'banhang' && typeof renderBanHang === 'function') renderBanHang();
-        if (pageId === 'nvl' && typeof renderNVL === 'function') renderNVL();
-        if (pageId === 'inventory' && typeof renderInventory === 'function') renderInventory();
-        if (pageId === 'menu' && typeof renderMenu === 'function') renderMenu();
-        if (pageId === 'bantaicho' && typeof renderTaiCho === 'function') renderTaiCho();
-        if (pageId === 'chamcong' && typeof renderChamCong === 'function') renderChamCong();
-        if (pageId === 'chiphi' && typeof renderChiPhi === 'function') renderChiPhi();
-        if (pageId === 'haohut' && typeof renderHaoHut === 'function') renderHaoHut();
-        if (pageId === 'huyhang' && typeof renderHuyHang === 'function') renderHuyHang();
-        if (pageId === 'tonkho' && typeof renderTonKho === 'function') renderTonKho();
-        if (pageId === 'baocao' && typeof renderBaoCao === 'function') renderBaoCao();
-        if (pageId === 'dubaodoanhthu' && typeof renderDuBao === 'function') renderDuBao();
-    } catch (error) {
-        console.error("Lỗi logic hệ thống khi render dữ liệu tab " + pageId + ":", error);
-    }
-}
-
-// ==========================================================================
-// 2. CÁC HÀM TỐI ƯU DEBOUNCE CHO XƯỞNG BTP (ĐÃ KHỬ TRÙNG LẶP)
-// ==========================================================================
-var timerLuuBtp;
-var timerCapNhatBtp;
-
-function debounceLuuBtp(coSo) {
-    const statusLabel = document.getElementById(`btp-save-status-${coSo}`);
-    if (statusLabel) statusLabel.innerText = "⏳ Đang gõ...";
-    clearTimeout(timerLuuBtp);
-    timerLuuBtp = setTimeout(() => {
-        if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
-    }, 700); 
-}
-
-function debounceCapNhatVaLuu(coSo) {
-    clearTimeout(timerCapNhatBtp);
-    timerCapNhatBtp = setTimeout(() => {
-        if (typeof capNhatUocTinhBtp === "function") capNhatUocTinhBtp(coSo);
-        if (typeof tuDongLuuBtp === "function") tuDongLuuBtp(coSo);
-    }, 600);
-}
-
+  
 </body>
 </html>
