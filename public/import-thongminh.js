@@ -183,7 +183,7 @@ const IMP_COL_ALIASES = {
   loai: ['loại', 'loai', 'type'],
   nhan_vien: ['nhân viên', 'nhan vien', 'họ tên', 'ho ten', 'staff', 'tên nv'],
   gio: ['số giờ', 'giờ công', 'gio', 'giờ', 'hours', 'công'],
-  ten_mon: ['tên món', 'ten mon', 'món ăn', 'mon an', 'món', 'tên sản phẩm', 'sản phẩm', 'dish', 'product', 'item'],
+  ten_mon: ['tên món', 'ten mon', 'món ăn', 'mon an', 'món', 'tên sản phẩm', 'sản phẩm', 'dish', 'product', 'item', 'tên sốt', 'ten sot'],
   dinh_luong: ['định lượng', 'dinh luong', 'đluong', 'dl (g/ml)', 'khối lượng']
 };
 function impDetectCol(headerRow) {
@@ -198,18 +198,65 @@ function impDetectCol(headerRow) {
   });
   return map;
 }
+// 🏠 Đọc file "Chart Món/Công Thức" — hỗ trợ 2 kiểu bố cục thường gặp:
+//  1) Mỗi SHEET là 1 món (tên món lấy từ TÊN SHEET), bảng nguyên liệu có
+//     cột "Tên NVL" + "Định lượng" nằm ở đâu đó trong ~20 dòng đầu.
+//  2) 1 sheet gộp NHIỀU món/BTP (vd "BTP- CÁC LOẠI SỐT"), có thêm 1 cột
+//     riêng ghi tên món/tên sốt cho từng dòng (ô gộp — dòng nào trống thì
+//     coi là món ở dòng trên).
+// Sheet không tìm được cả 2 cột "Tên NVL" + "Định lượng" trong 20 dòng đầu
+// (vd sheet quy trình thuần văn bản) sẽ được bỏ qua an toàn, không báo lỗi.
+function impParseExcelTaiCho(wb) {
+  const rows = [];
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!raw.length) continue;
+
+    let headerIdx = -1, cols = {};
+    for (let i = 0; i < Math.min(raw.length, 20); i++) {
+      const m = impDetectCol(raw[i]);
+      if (m.ten !== undefined && m.dinh_luong !== undefined) { headerIdx = i; cols = m; break; }
+    }
+    if (headerIdx < 0) continue; // Không phải bảng công thức — bỏ qua sheet này
+
+    const groupedMode = cols.ten_mon !== undefined;
+    let lastMonTen = groupedMode ? '' : sheetName.trim();
+    for (let i = headerIdx + 1; i < raw.length; i++) {
+      const r = raw[i];
+      if (!r || r.every(c => c === '' || c === null || c === undefined)) continue;
+      const get = k => cols[k] !== undefined ? r[cols[k]] : '';
+      if (groupedMode) {
+        const mt = (get('ten_mon') || '').toString().trim();
+        if (mt) lastMonTen = mt;
+      }
+      const nvlTen = (get('ten') || '').toString().trim();
+      const dinhLuong = impMoneyToNumber(get('dinh_luong'));
+      if (!nvlTen || !lastMonTen || !dinhLuong) continue; // dòng tiêu đề nhóm phụ / dòng quy trình xen kẽ
+      rows.push(impMakeRow({ mon_ten: lastMonTen, ten: nvlTen, dvt: (get('dvt') || '').toString().trim(), dinh_luong: dinhLuong }));
+    }
+  }
+  return rows;
+}
+
 async function impParseExcelFile(file) {
   if (typeof XLSX === 'undefined') throw new Error('Thư viện đọc Excel (SheetJS) chưa được tải.');
   _impLastMonTen = '';
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+
+  // 🏠 Chart Món/Công Thức: file thường có NHIỀU SHEET (mỗi sheet 1 món hoặc
+  // 1 nhóm món/BTP), tiêu đề bảng có thể nằm sâu vài dòng → xử lý riêng.
+  if (_impLoai === 'taicho') return impParseExcelTaiCho(wb);
+
   const ws = wb.Sheets[wb.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
   if (!raw.length) return [];
 
-  // Tìm dòng tiêu đề: dòng đầu tiên khớp được >=2 cột đã biết
+  // Tìm dòng tiêu đề: dò trong tối đa 15 dòng đầu (nhiều file có vài dòng
+  // tiêu đề/ngày tháng phía trên bảng thật), khớp được >=2 cột đã biết
   let headerIdx = 0, cols = {};
-  for (let i = 0; i < Math.min(raw.length, 5); i++) {
+  for (let i = 0; i < Math.min(raw.length, 15); i++) {
     const m = impDetectCol(raw[i]);
     if (Object.keys(m).length >= 2) { headerIdx = i; cols = m; break; }
   }
@@ -233,15 +280,6 @@ async function impParseExcelFile(file) {
             rows.push(impMakeRow({ nhan_vien: tenNV, ngay_so: day, gio: val }));
           }
         });
-      }
-    } else if (_impLoai === 'taicho') {
-      // Mỗi dòng = 1 nguyên liệu của 1 món. Nếu ô "Tên món" trống, coi là
-      // nguyên liệu tiếp theo của món ở dòng trên (kiểu bảng có ô gộp/merge).
-      const monTen = (get('ten_mon') || '').toString().trim();
-      if (monTen) _impLastMonTen = monTen;
-      const nguyenLieuTen = (cols.ten !== undefined ? get('ten') : '').toString().trim();
-      if (_impLastMonTen && nguyenLieuTen) {
-        rows.push(impMakeRow({ mon_ten: _impLastMonTen, ten: nguyenLieuTen, dvt: get('dvt') || '', dinh_luong: impMoneyToNumber(get('dinh_luong')) }));
       }
     } else if (_impLoai === 'banhang') {
       const monTen = (get('ten_mon') || get('ten') || '').toString().trim();
