@@ -1,15 +1,16 @@
-// ═══════════════════════════════════════════════════════════════
+ ═══════════════════════════════════════════════════════════════
 // 📁 IMPORT THÔNG MINH — tự đọc Bill NVL / Chi Phí / Hủy Hàng / Chấm Công
 // từ file Excel, ảnh (OCR) hoặc PDF, rồi đồng bộ vào đúng tab.
 // File này CHẠY SAU script chính (cần S, saveData, mkey, sortAZ, fmt...
 // đã tồn tại trong window khi các hàm bên dưới thực sự được gọi).
 // ═══════════════════════════════════════════════════════════════
-
+ 
 let _impLoai = 'nvl';          // nvl | chiphi | huyhang | chamcong | taicho | banhang
 let _impRows = [];             // các dòng đã parse, đang chờ xem trước / sửa / lưu
 let _impRowSeq = 0;
 let _impLastMonTen = '';       // hỗ trợ đọc Excel công thức có ô "Tên món" bị gộp (merge)
-
+let _impUsedFallback = false;  // đánh dấu lần đọc gần nhất có phải "đoán cột" hay không (file không có tiêu đề)
+ 
 // ── Từ khoá đoán Nhóm NVL khi tạo NVL mới từ import ──────────────
 const IMP_NHOM_KEYWORDS = [
   ['🥬 Nhóm Rau Củ', ['rau','cải','cà chua','cà rốt','hành','tỏi','ớt','chanh','bắp','khoai','dưa','giá đỗ','ngò','ngải','bí','đậu que','đậu bắp','nấm','xà lách','bầu']],
@@ -25,7 +26,7 @@ function guessNhomNVL(ten) {
   }
   return '📦 Nhóm Hàng Khô';
 }
-
+ 
 // ── So khớp gần đúng tên NVL / Nhân viên đã có trong hệ thống ────
 function impNormalize(s) {
   return (s || '').toString().normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -71,7 +72,7 @@ function impMatchStaff(ten) {
   }
   return bestScore >= 0.72 ? best : null;
 }
-
+ 
 // ── Chuẩn hoá ngày về YYYY-MM-DD, hỗ trợ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd ──
 function impParseDate(str) {
   if (!str) return null;
@@ -99,7 +100,7 @@ function impMoneyToNumber(str) {
   const num = parseFloat(noSep.replace(',', '.'));
   return isNaN(num) ? 0 : num;
 }
-
+ 
 function impMatchMonIn(list, ten) {
   const q = impNormalize(ten);
   if (!q) return null;
@@ -114,7 +115,7 @@ function impMatchMonIn(list, ten) {
   }
   return bestScore >= 0.72 ? best : null;
 }
-
+ 
 // ══════════ TAB & FILE INPUT ══════════
 function onImportLoaiChange() {
   _impLoai = document.getElementById('imp-loai').value;
@@ -131,17 +132,18 @@ function onImportLoaiChange() {
   _impRows = [];
   renderImportPreview();
 }
-
+ 
 async function onImportFilesSelected() {
   const input = document.getElementById('imp-files');
   const files = Array.from(input.files || []);
   if (!files.length) return;
   const statusEl = document.getElementById('imp-status');
   const progEl = document.getElementById('imp-progress');
-
+ 
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     if (statusEl) statusEl.textContent = `⏳ Đang xử lý (${i + 1}/${files.length}): ${f.name}...`;
+    _impUsedFallback = false;
     try {
       const ext = (f.name.split('.').pop() || '').toLowerCase();
       let newRows = [];
@@ -165,11 +167,11 @@ async function onImportFilesSelected() {
     }
   }
   if (progEl) progEl.innerHTML = '';
-  if (statusEl) statusEl.textContent = `✅ Đã đọc xong ${files.length} file — ${_impRows.length} dòng dữ liệu tìm được. Kiểm tra & sửa bên dưới trước khi Lưu.`;
+  if (statusEl) statusEl.textContent = `✅ Đã đọc xong ${files.length} file — ${_impRows.length} dòng dữ liệu tìm được.${_impUsedFallback ? ' ⚠️ File không có dòng tiêu đề rõ ràng nên hệ thống đã TỰ ĐOÁN cột theo dữ liệu — kiểm tra kỹ từng cột bên dưới trước khi lưu!' : ''} Kiểm tra & sửa bên dưới trước khi Lưu.`;
   input.value = '';
   renderImportPreview();
 }
-
+ 
 // ══════════ ĐỌC EXCEL / CSV (SheetJS) ══════════
 const IMP_COL_ALIASES = {
   ngay: ['ngày', 'ngay', 'date'],
@@ -212,14 +214,14 @@ function impParseExcelTaiCho(wb) {
     const ws = wb.Sheets[sheetName];
     const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
     if (!raw.length) continue;
-
+ 
     let headerIdx = -1, cols = {};
     for (let i = 0; i < Math.min(raw.length, 20); i++) {
       const m = impDetectCol(raw[i]);
       if (m.ten !== undefined && m.dinh_luong !== undefined) { headerIdx = i; cols = m; break; }
     }
     if (headerIdx < 0) continue; // Không phải bảng công thức — bỏ qua sheet này
-
+ 
     const groupedMode = cols.ten_mon !== undefined;
     let lastMonTen = groupedMode ? '' : sheetName.trim();
     for (let i = headerIdx + 1; i < raw.length; i++) {
@@ -238,27 +240,74 @@ function impParseExcelTaiCho(wb) {
   }
   return rows;
 }
-
+ 
+function impLooksLikeUnit(v) {
+  const s = (v || '').toString().trim().toLowerCase();
+  if (!s) return false;
+  return /^(kg|g|gr|lít|l|ml|hộp|thùng|bó|quả|trái|cái|chai|gói|con|kí|can|bao|cây|lon|hủ|keo)\b/.test(s) || /\d+\s*(kg|g|gr|l|ml|lít)\b/i.test(s);
+}
+// 🧠 Khi KHÔNG tìm được dòng tiêu đề nào khớp tên cột quen thuộc (file không
+// có header, dữ liệu vào thẳng — vd danh sách bảng giá nhà cung cấp) — đoán
+// vai trò từng cột dựa theo KIỂU DỮ LIỆU thực tế: cột nhiều số lớn (≥500) =
+// giá; cột nhiều token kiểu "kg/g/lít/thùng..." = đơn vị/quy cách; cột chữ
+// dài, gần như luôn có dữ liệu = tên; cột thưa (kiểu ô gộp, chỉ có ở 1 vài
+// dòng đầu mỗi nhóm) = nhóm/nhà cung cấp/tên món (dùng carry-forward).
+function impInferColumnsFallback(raw) {
+  const nonEmptyRows = raw.filter(r => r && r.some(c => c !== '' && c != null));
+  if (nonEmptyRows.length < 2) return null;
+  const numCols = Math.max(...raw.map(r => r ? r.length : 0));
+  const sample = nonEmptyRows.slice(0, 60);
+  const stats = [];
+  for (let c = 0; c < numCols; c++) {
+    let numCount = 0, textLenSum = 0, textCount = 0, unitCount = 0, filled = 0;
+    for (const r of sample) {
+      const v = r[c];
+      if (v === '' || v == null) continue;
+      filled++;
+      const isPureNum = typeof v === 'number' || /^[\d.,\s₫đvndVND]+$/.test(String(v).trim());
+      if (isPureNum && impMoneyToNumber(v) >= 500) numCount++;
+      else if (impLooksLikeUnit(v)) unitCount++;
+      else { textLenSum += String(v).length; textCount++; }
+    }
+    stats.push({ c, numCount, unitCount, textCount, textLenSum, filled, fillRatio: filled / sample.length });
+  }
+  const giaCol = stats.slice().sort((a, b) => b.numCount - a.numCount)[0];
+  if (!giaCol || giaCol.numCount === 0) return null; // Không có cột nào giống cột giá → không đủ tin cậy để đoán
+  const dvtCol = stats.filter(s => s.c !== giaCol.c && s.unitCount > 0).sort((a, b) => b.unitCount - a.unitCount)[0];
+  const tenCandidates = stats.filter(s => s.c !== giaCol.c && s.c !== dvtCol?.c && s.fillRatio > 0.5);
+  if (!tenCandidates.length) return null;
+  const tenCol = tenCandidates.sort((a, b) => (b.textLenSum / (b.textCount || 1)) - (a.textLenSum / (a.textCount || 1)))[0];
+  const groupCol = stats.filter(s => s.c !== giaCol.c && s.c !== dvtCol?.c && s.c !== tenCol.c && s.fillRatio < 0.5 && s.fillRatio > 0.01)
+    .sort((a, b) => b.fillRatio - a.fillRatio)[0];
+  return { ten: tenCol.c, gia: giaCol.c, dvt: dvtCol?.c, nhom: groupCol?.c, _fallback: true };
+}
+ 
 async function impParseExcelFile(file) {
   if (typeof XLSX === 'undefined') throw new Error('Thư viện đọc Excel (SheetJS) chưa được tải.');
   _impLastMonTen = '';
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array', cellDates: true });
-
+ 
   // 🏠 Chart Món/Công Thức: file thường có NHIỀU SHEET (mỗi sheet 1 món hoặc
   // 1 nhóm món/BTP), tiêu đề bảng có thể nằm sâu vài dòng → xử lý riêng.
   if (_impLoai === 'taicho') return impParseExcelTaiCho(wb);
-
+ 
   const ws = wb.Sheets[wb.SheetNames[0]];
   const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
   if (!raw.length) return [];
-
+ 
   // Tìm dòng tiêu đề: dò trong tối đa 15 dòng đầu (nhiều file có vài dòng
   // tiêu đề/ngày tháng phía trên bảng thật), khớp được >=2 cột đã biết
   let headerIdx = 0, cols = {};
   for (let i = 0; i < Math.min(raw.length, 15); i++) {
     const m = impDetectCol(raw[i]);
     if (Object.keys(m).length >= 2) { headerIdx = i; cols = m; break; }
+  }
+  // 🧠 Không tìm được tiêu đề nào phù hợp (file không có header, vd danh
+  // sách bảng giá) → thử đoán cột theo kiểu dữ liệu, coi TOÀN BỘ file là dữ liệu.
+  if (Object.keys(cols).length < 2) {
+    const fb = impInferColumnsFallback(raw);
+    if (fb) { cols = fb; headerIdx = -1; _impUsedFallback = true; }
   }
   const rows = [];
   for (let i = headerIdx + 1; i < raw.length; i++) {
@@ -297,16 +346,19 @@ async function impParseExcelFile(file) {
       // nvl / huyhang
       const sl = impMoneyToNumber(get('sl')) || 1;
       const gia = impMoneyToNumber(get('gia'));
+      // File không có cột ngày (vd bảng giá nhà cung cấp) → mặc định hôm nay, sửa lại được ở bảng xem trước
+      const ngay = impParseDate(get('ngay')) || new Date().toISOString().slice(0, 10);
+      const nhaCungCap = cols._fallback && cols.nhom !== undefined ? (get('nhom') || '').toString().trim() : '';
       rows.push(impMakeRow({
-        ngay: impParseDate(get('ngay')) || '', ten: get('ten'), sl, dvt: get('dvt') || '',
+        ngay, ten: get('ten'), sl, dvt: get('dvt') || '',
         gia: gia || (impMoneyToNumber(get('thanh_tien')) && sl ? impMoneyToNumber(get('thanh_tien')) / sl : 0),
-        ly_do: get('ly_do') || ''
+        ly_do: get('ly_do') || '', _nha_cung_cap: nhaCungCap
       }));
     }
   }
   return rows.filter(r => r.ten || r.nhan_vien);
 }
-
+ 
 // ══════════ OCR ẢNH (Tesseract.js) ══════════
 async function impOcrImage(file, progEl) {
   if (typeof Tesseract === 'undefined') throw new Error('Thư viện OCR (Tesseract.js) chưa được tải.');
@@ -319,7 +371,7 @@ async function impOcrImage(file, progEl) {
   });
   return data.text || '';
 }
-
+ 
 // ══════════ ĐỌC PDF (pdf.js) — ưu tiên lớp text số, nếu rỗng thì OCR ảnh trang ══════════
 async function impExtractPdfText(file, progEl) {
   if (typeof pdfjsLib === 'undefined') throw new Error('Thư viện đọc PDF (pdf.js) chưa được tải.');
@@ -346,17 +398,17 @@ async function impExtractPdfText(file, progEl) {
   }
   return fullText;
 }
-
+ 
 // ══════════ PHÂN TÍCH VĂN BẢN OCR THÀNH CÁC DÒNG DỮ LIỆU (rule-based) ══════════
 const IMP_SKIP_LINE_KEYWORDS = ['stt', 'tổng cộng', 'tong cong', 'cộng', 'ký tên', 'ky ten', 'người bán', 'người mua', 'hóa đơn', 'hoa don', 'biên bản'];
 function impMakeRow(fields) {
-  return Object.assign({ ngay: '', ten: '', sl: 1, dvt: '', gia: 0, so_tien: 0, ly_do: '', nhom: '', loai: '', nhan_vien: '', gio: 0, ngay_so: null, mon_ten: '', dinh_luong: 0, kho: false }, fields);
+  return Object.assign({ ngay: '', ten: '', sl: 1, dvt: '', gia: 0, so_tien: 0, ly_do: '', nhom: '', loai: '', nhan_vien: '', gio: 0, ngay_so: null, mon_ten: '', dinh_luong: 0, kho: false, _nha_cung_cap: '' }, fields);
 }
 function impParseTextToRows(text) {
   const rows = [];
   const globalDate = impFindGlobalDate(text) || new Date().toISOString().slice(0, 10);
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
+ 
   // 📸 Ảnh/PDF công thức món: mặc định coi CẢ FILE là 1 món (1 ảnh = 1 thẻ công thức) —
   // dòng đầu tiên có chữ (không toàn số) là TÊN MÓN, các dòng sau là nguyên liệu.
   if (_impLoai === 'taicho') {
@@ -386,12 +438,12 @@ function impParseTextToRows(text) {
     }
     return rows;
   }
-
+ 
   for (const line of lines) {
     const low = line.toLowerCase();
     if (line.length < 3) continue;
     if (IMP_SKIP_LINE_KEYWORDS.some(k => low.includes(k))) continue;
-
+ 
     if (_impLoai === 'chamcong') {
       // "Tên nhân viên   8"  hoặc  "Tên nhân viên   7.5 giờ"
       const m = line.match(/^([^\d]{3,}?)\s+(\d{1,2}(?:[.,]\d+)?)\s*(?:h|giờ|gio)?\s*$/i);
@@ -400,7 +452,7 @@ function impParseTextToRows(text) {
       }
       continue;
     }
-
+ 
     // NVL / Hủy Hàng / Chi Phí: tìm [tên] ... [số lượng]? [đvt]? ... [giá/tiền]
     const m = line.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)\s*(kg|g|gr|lít|l|ml|hộp|thùng|bó|quả|trái|cái|chai|gói|con|kí)?\s*[xX*]?\s*(\d{1,3}(?:[.,]\d{3})+|\d{4,})\s*(?:đ|vnd|₫)?\s*$/i);
     if (m) {
@@ -417,7 +469,7 @@ function impParseTextToRows(text) {
       }
       continue;
     }
-
+ 
     // Dòng chỉ có [tên] ... [số tiền] — dùng cho Chi Phí hoặc fallback
     const m2 = line.match(/^(.+?)\s+(\d{1,3}(?:[.,]\d{3})+|\d{4,})\s*(?:đ|vnd|₫)?\s*$/i);
     if (m2 && _impLoai === 'chiphi') {
@@ -426,19 +478,19 @@ function impParseTextToRows(text) {
   }
   return rows;
 }
-
+ 
 // ══════════ BẢNG XEM TRƯỚC / SỬA ══════════
 function renderImportPreview() {
   const el = document.getElementById('imp-preview');
   if (!el) return;
   if (!_impRows.length) { el.innerHTML = ''; return; }
-
+ 
   if (_impLoai === 'taicho') { renderImportPreviewTaiCho(el); return; }
   if (_impLoai === 'banhang') { renderImportPreviewBanHang(el); return; }
-
+ 
   const nvlOpts = () => sortAZ(S.nvl).map(n => `<option value="${n.ten}">`).join('');
   let head = '', body = '';
-
+ 
   if (_impLoai === 'chamcong') {
     head = `<th>✓</th><th>Nhân Viên</th><th>Khớp NV</th><th>Ngày</th><th>Số Giờ</th><th>Nguồn File</th><th></th>`;
     body = _impRows.map((r, i) => {
@@ -491,7 +543,7 @@ function renderImportPreview() {
       </tr>`;
     }).join('');
   }
-
+ 
   el.innerHTML = `
     <datalist id="imp-nvl-datalist">${nvlOpts()}</datalist>
     <div class="alert alert-info mb8 fs12">📋 Tìm được <strong>${_impRows.length}</strong> dòng. Kiểm tra/sửa các ô bên dưới, bỏ tick dòng nào không muốn lưu, rồi bấm <strong>Lưu Tất Cả</strong>.</div>
@@ -503,13 +555,13 @@ function renderImportPreview() {
 }
 function impRowSet(i, field, val) { if (_impRows[i]) { _impRows[i][field] = val; if (['ten', 'sl', 'gia', 'mon_ten', '_target'].includes(field)) renderImportPreview(); } }
 function impRemoveRow(i) { _impRows.splice(i, 1); renderImportPreview(); }
-
+ 
 // ── 🏠 Xem trước: Chart Món / Công Thức (nhóm theo tên món) ──
 function renderImportPreviewTaiCho(el) {
   const nvlOpts = sortAZ(S.nvl).map(n => `<option value="${n.ten}">`).join('');
   const groups = {};
   _impRows.forEach((r, i) => { (groups[r.mon_ten] = groups[r.mon_ten] || []).push(i); });
-
+ 
   const body = Object.entries(groups).map(([monTen, idxs]) => {
     const match = impMatchMonIn(S.menu_taicho, monTen);
     const oldCount = match ? (match.nguyen_lieu || []).length : 0;
@@ -533,7 +585,7 @@ function renderImportPreviewTaiCho(el) {
       <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên NVL</th><th>Khớp NVL</th><th>Định Lượng</th><th>ĐVT</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
   }).join('');
-
+ 
   el.innerHTML = `
     <datalist id="imp-nvl-datalist">${nvlOpts}</datalist>
     <div class="alert alert-info mb8 fs12">📋 Tìm được công thức cho <strong>${Object.keys(groups).length}</strong> món (${_impRows.length} dòng nguyên liệu). Kiểm tra kỹ định lượng trước khi lưu — mỗi món khớp tên có sẵn sẽ bị GHI ĐÈ công thức cũ.</div>
@@ -543,7 +595,7 @@ function renderImportPreviewTaiCho(el) {
       <button class="btn btn-outline" onclick="_impRows=[];renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
-
+ 
 // ── 🛒 Xem trước: Báo Cáo Bán Hàng (tự dò khớp món ở cả 2 nơi) ──
 function renderImportPreviewBanHang(el) {
   const allMonOpts = sortAZ([...S.menu.map(m => m.ten), ...S.menu_taicho.map(m => m.ten)].filter((v, i, a) => a.indexOf(v) === i).map(ten => ({ ten }))).map(m => `<option value="${m.ten}">`).join('');
@@ -568,7 +620,7 @@ function renderImportPreviewBanHang(el) {
       <td><button class="btn btn-outline btn-sm" onclick="impRemoveRow(${i})">🗑</button></td>
     </tr>`;
   }).join('');
-
+ 
   el.innerHTML = `
     <datalist id="imp-mon-datalist">${allMonOpts}</datalist>
     <div class="alert alert-info mb8 fs12">📋 Tìm được <strong>${_impRows.length}</strong> dòng bán hàng. Hệ thống tự dò khớp món ở cả Menu Tại Chỗ và Bán Hàng (App) — kiểm tra cột "Khớp Món" và chọn lại đích nếu cần, số lượng sẽ GHI ĐÈ (thay thế) số đã có trong ngày đó.</div>
@@ -578,13 +630,13 @@ function renderImportPreviewBanHang(el) {
       <button class="btn btn-outline" onclick="_impRows=[];renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
-
+ 
 // ══════════ LƯU VÀO HỆ THỐNG ══════════
 function saveAllImportRows() {
   const rows = _impRows.filter(r => r._include);
   if (!rows.length) { alert('Không có dòng nào được chọn để lưu!'); return; }
   let added = 0;
-
+ 
   if (_impLoai === 'nvl' || _impLoai === 'huyhang') {
     rows.forEach(r => {
       if (!r.ten || !r.ngay) return;
@@ -604,7 +656,7 @@ function saveAllImportRows() {
         S.inventory[mk].push({
           id: Date.now() + added, date: r.ngay, ten: nvl.ten, dvt: r.dvt || nvl.dvt, sl: r.sl || 0,
           don_gia: r.gia || 0, thanh_tien: (r.sl || 0) * (r.gia || 0), nhom: nvl.nhom,
-          ghichu: `Import tự động (${r._source || ''})`, gia_chuan_ref: giaChuan, pct_vs_chuan: pct,
+          ghichu: `Import tự động${r._nha_cung_cap ? ' — NCC: ' + r._nha_cung_cap : ''} (${r._source || ''})`, gia_chuan_ref: giaChuan, pct_vs_chuan: pct,
           warn_level: pct > 0 ? (getPriceWarnLevel(pct)?.label || null) : null, tu_import: true
         });
         if (r.gia > 0) nvl.gia = r.gia;
@@ -694,7 +746,7 @@ function saveAllImportRows() {
       added++;
     });
   }
-
+ 
   saveData();
   _impRows = [];
   renderImportPreview();
@@ -712,7 +764,7 @@ function saveAllImportRows() {
   if (typeof renderDashboard === 'function') renderDashboard();
   if (typeof refreshNVLDatalist === 'function') refreshNVLDatalist();
 }
-
+ 
 function renderImport() {
   const sel = document.getElementById('imp-loai');
   if (sel) _impLoai = sel.value;
