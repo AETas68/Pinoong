@@ -231,99 +231,87 @@ module.exports = function (io) {
   });
 
   router.post('/save-dish', requireAuth, async (req, res) => {
-    const { branch, dish } = req.body;
-    if (!validBranch(branch)) {
-      return res.status(400).json({ success: false, message: 'Chi nhánh không hợp lệ!' });
-    }
-    if (!dish || !dish.name || !dish.output_qty || !dish.output_unit) {
-      return res.status(400).json({ success: false, message: 'Thiếu tên món / số lượng ra mẻ (danh nghĩa) / đơn vị' });
-    }
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const data = await loadState(client);
-      if (!data.btp_recipes) data.btp_recipes = { khapkhun: [], pinoong: [] };
-      if (!data.btp_recipes[branch]) data.btp_recipes[branch] = [];
-      if (!Array.isArray(data.nvl)) data.nvl = [];
+  const { branch, dish } = req.body;
+  if (!validBranch(branch)) {
+    return res.status(400).json({ success: false, message: 'Chi nhánh không hợp lệ!' });
+  }
+  if (!dish || !dish.name || !dish.output_qty || !dish.output_unit) {
+    return res.status(400).json({ success: false, message: 'Thiếu tên món / số lượng ra mẻ (danh nghĩa) / đơn vị' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const data = await loadState(client);
+    if (!data.btp_recipes) data.btp_recipes = { khapkhun: [], pinoong: [] };
+    if (!data.btp_recipes[branch]) data.btp_recipes[branch] = [];
+    if (!Array.isArray(data.nvl)) data.nvl = [];
 
-      // FIX: tự động tạo NVL còn thiếu cho MỌI nguyên liệu trong công thức
-      // vừa lưu (nhóm mặc định "📦 Nhóm Hàng Khô", giá 0đ — cần cập nhật giá
-      // thật sau ở tab Danh Mục NVL) — giống hệt cách ensureNVLForIngredients
-      // đã làm cho Menu bình thường. TRƯỚC ĐÂY: nếu client gõ tên nguyên liệu
-      // không khớp tuyệt đối 1 NVL đã có sẵn (vd "Gạo" thay vì "Gạo trắng"),
-      // client chặn TOÀN BỘ việc gửi công thức lên server (không có dòng nào
-      // được lưu) — khiến món BTP đó không bao giờ cập nhật giá/không hiện
-      // đúng bên NVL, trông như lỗi đồng bộ nhưng thực chất công thức chưa
-      // từng thực sự được lưu. Việc tự tạo NVL ở đây đảm bảo LƯU CÔNG THỨC
-      // BTP KHÔNG BAO GIỜ BỊ CHẶN chỉ vì tên nguyên liệu chưa có sẵn.
-      if (Array.isArray(dish?.ingredients)) {
-        for (const ing of dish.ingredients) {
-          if (!ing || !ing.ten) continue;
-          const key = normName(ing.ten);
-          if (!data.nvl.some(n => normName(n.ten) === key)) {
-            const maxIdNvl = Math.max(0, ...data.nvl.map(n => n.id || 0));
-            data.nvl.push({ id: maxIdNvl + 1, ten: ing.ten, dvt: 'kg', gia: 0, nhom: '📦 Nhóm Hàng Khô' });
-          }
+    if (Array.isArray(dish?.ingredients)) {
+      for (const ing of dish.ingredients) {
+        if (!ing || !ing.ten) continue;
+        const key = normName(ing.ten);
+        if (!data.nvl.some(n => normName(n.ten) === key)) {
+          const maxIdNvl = Math.max(0, ...data.nvl.map(n => n.id || 0));
+          data.nvl.push({ id: maxIdNvl + 1, ten: ing.ten, dvt: 'kg', gia: 0, nhom: ' Nhóm Hàng Khô' }); 
         }
       }
-
-              // =================================================================
-        // ĐOẠN MÃ ĐÃ SỬA: PHÁ BỎ "BIA MỘ" ĐỂ HOÀN TÁC KHI LƯU LẠI MÓN CŨ
-        // =================================================================
-        if (data.btp_recipes_deleted?.[branch]) {
-            const currentKey = normName(dish.name);
-            if (data.btp_recipes_deleted[branch].includes(currentKey)) {
-                data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
-                    nameKey => nameKey !== currentKey
-                );
-                console.log(`[Hồi sinh BTP] Đã xóa "${dish.name}" khỏi danh sách btp_recipes_deleted.`);
-            }
-        }
-
-        const list = data.btp_recipes[branch];
-        let oldName = null;
-        
-        if (dish.id) {
-            const idx = list.findIndex(d => d.id === dish.id);
-            if (idx >= 0) { 
-                oldName = list[idx].name; 
-                list[idx] = { ...list[idx], ...dish }; 
-            } else {
-                list.push(dish);
-            }
-        } else {
-            const maxId = Math.max(0, ...list.map(d => d.id || 0));
-            dish.id = maxId + 1;
-            list.push(dish);
-        }
-
-        if (dish.name) {
-            const newNameKey = normName(dish.name);
-            if (data.btp_recipes_deleted?.[branch]?.includes(newNameKey)) {
-                data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
-                    nameKey => nameKey !== newNameKey
-                );
-            }
-        }
-
-        if (oldName && normName(oldName) !== normName(dish.name)) {
-            const oldNvl = data.nvl.find(n => normName(n.ten) === normName(oldName));
-            const conflictNvl = data.nvl.find(n => normName(n.ten) === normName(dish.name));
-            if (oldNvl && !conflictNvl) oldNvl.ten = dish.name;
-        }
-        // =================================================================
-  }
-
-      await saveState(client, data, req.user.name, req.headers['x-socket-id']);
-      await client.query('COMMIT');
-      res.json({ success: true, message: 'Đã lưu công thức BTP!', dish });
-    } catch (e) {
-      await client.query('ROLLBACK');
-      res.status(500).json({ success: false, message: e.message });
-    } finally {
-      client.release();
     }
-  });
+
+    // --- ĐOẠN ĐÃ SỬA: PHÁ BỎ BIA MỘ ---
+    if (data.btp_recipes_deleted?.[branch]) {
+      const currentKey = normName(dish.name);
+      if (data.btp_recipes_deleted[branch].includes(currentKey)) {
+        data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
+          nameKey => nameKey !== currentKey
+        );
+        console.log(`[Hồi sinh BTP] Đã xóa "${dish.name}" khỏi danh sách btp_recipes_deleted.`);
+      }
+    }
+
+    const list = data.btp_recipes[branch];
+    let oldName = null;
+    
+    if (dish.id) {
+      const idx = list.findIndex(d => d.id === dish.id);
+      if (idx >= 0) { 
+        oldName = list[idx].name; 
+        list[idx] = { ...list[idx], ...dish }; 
+      } else {
+        list.push(dish);
+      }
+    } else {
+      const maxId = Math.max(0, ...list.map(d => d.id || 0));
+      dish.id = maxId + 1;
+      list.push(dish);
+    }
+
+    if (dish.name) {
+      const newNameKey = normName(dish.name);
+      if (data.btp_recipes_deleted?.[branch]?.includes(newNameKey)) {
+        data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
+          nameKey => nameKey !== newNameKey
+        );
+      }
+    }
+
+    if (oldName && normName(oldName) !== normName(dish.name)) {
+      const oldNvl = data.nvl.find(n => normName(n.ten) === normName(oldName));
+      const conflictNvl = data.nvl.find(n => normName(n.ten) === normName(dish.name));
+      if (oldNvl && !conflictNvl) oldNvl.ten = dish.name;
+    }
+    // --- HẾT ĐOẠN PHÁ BỎ BIA MỘ ---
+
+    await saveState(client, data, req.user.name, req.headers['x-socket-id']);
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Đã lưu công thức BTP!', dish });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ success: false, message: e.message });
+  } finally {
+    client.release();
+  }
+});
+
 
  router.delete('/dish/:id', requireAuth, async (req, res) => {
     const { branch } = req.query;
