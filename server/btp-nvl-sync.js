@@ -58,22 +58,32 @@ function estimatedUnitPrice(dish, nvlList) {
  */
 function reconcileBtpNvl(data) {
   if (!Array.isArray(data.nvl)) data.nvl = [];
-  let changed = false;
+    let changed = false;
 
-  // Danh sách tên (đã chuẩn hoá) NVL mà người dùng đã CHỦ ĐỘNG bấm "Xóa".
+  // Tự động giải phóng "bia mộ" trong nvl_deleted nếu món BTP đó đã được tạo lại công thức
+  if (Array.isArray(data.nvl_deleted) && data.btp_recipes) {
+    const activeBtpKeys = new Set();
+    for (const branch of ['khapkhun', 'pinoong']) {
+      for (const d of (data.btp_recipes[branch] || [])) {
+        if (d && d.name) activeBtpKeys.add(normName(d.name));
+      }
+    }
+    
+    // Nếu tên nằm trong danh sách xóa nhưng thực tế đang có công thức hoạt động, xóa tên đó khỏi nvl_deleted
+    const beforeDeletedLength = data.nvl_deleted.length;
+    data.nvl_deleted = data.nvl_deleted.filter(name => !activeBtpKeys.has(normName(name)));
+    if (data.nvl_deleted.length !== beforeDeletedLength) changed = true;
+  }
+
+  // Danh sách tên NVL đã thực sự bị xóa (sau khi đã lọc bỏ các món được hồi sinh)
   const deletedSet = new Set((data.nvl_deleted || []).map(normName));
 
-  // ── CHỐT CHẶN TUYỆT ĐỐI: xoá thẳng khỏi data.nvl bất kỳ dòng nào trùng
-  //    tên với danh sách đã xoá — KHÔNG QUAN TÂM nó vừa được thêm lại bởi
-  //    đường nào (route /produce trong btp.js, seed data lúc khởi động,
-  //    hay một thiết bị/tab khác gửi lên dữ liệu cũ trước khi xoá). Hàm
-  //    này chạy ở MỌI nơi dữ liệu đi qua (GET, PUT, mọi API btp.js) nên
-  //    đây là nơi duy nhất cần chặn, không cần sửa từng route riêng lẻ.
   if (deletedSet.size > 0) {
     const before = data.nvl.length;
     data.nvl = data.nvl.filter(n => !deletedSet.has(normName(n.ten)));
     if (data.nvl.length !== before) changed = true;
   }
+
 
   if (!data.btp_recipes) { data.btp_raw_expansion = data.btp_raw_expansion || {}; return changed; }
 
