@@ -267,27 +267,52 @@ module.exports = function (io) {
         }
       }
 
-      const list = data.btp_recipes[branch];
-      let oldName = null;
-      if (dish.id) {
-        const idx = list.findIndex(d => d.id === dish.id);
-        if (idx >= 0) { oldName = list[idx].name; list[idx] = { ...list[idx], ...dish }; }
-        else list.push(dish);
-      } else {
-        const maxId = Math.max(0, ...list.map(d => d.id || 0));
-        dish.id = maxId + 1;
-        list.push(dish);
-      }
+              // =================================================================
+        // ĐOẠN MÃ ĐÃ SỬA: PHÁ BỎ "BIA MỘ" ĐỂ HOÀN TÁC KHI LƯU LẠI MÓN CŨ
+        // =================================================================
+        if (data.btp_recipes_deleted?.[branch]) {
+            const currentKey = normName(dish.name);
+            if (data.btp_recipes_deleted[branch].includes(currentKey)) {
+                data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
+                    nameKey => nameKey !== currentKey
+                );
+                console.log(`[Hồi sinh BTP] Đã xóa "${dish.name}" khỏi danh sách btp_recipes_deleted.`);
+            }
+        }
 
-      // ---- Đổi tên món -> đổi tên luôn dòng NVL tương ứng (nếu có) ----
-      // (Việc TẠO MỚI / xác nhận đúng nhóm "🍲 Nhóm BTP" cho dòng NVL của
-      // món này được saveState() lo tự động thông qua reconcileBtpNvl(),
-      // chạy MỖI LẦN lưu — kể cả khi trình duyệt gửi lên dữ liệu cũ.)
-      if (oldName && normName(oldName) !== normName(dish.name)) {
-        const oldNvl = data.nvl.find(n => normName(n.ten) === normName(oldName));
-        const conflictNvl = data.nvl.find(n => normName(n.ten) === normName(dish.name));
-        if (oldNvl && !conflictNvl) oldNvl.ten = dish.name;
-      }
+        const list = data.btp_recipes[branch];
+        let oldName = null;
+        
+        if (dish.id) {
+            const idx = list.findIndex(d => d.id === dish.id);
+            if (idx >= 0) { 
+                oldName = list[idx].name; 
+                list[idx] = { ...list[idx], ...dish }; 
+            } else {
+                list.push(dish);
+            }
+        } else {
+            const maxId = Math.max(0, ...list.map(d => d.id || 0));
+            dish.id = maxId + 1;
+            list.push(dish);
+        }
+
+        if (dish.name) {
+            const newNameKey = normName(dish.name);
+            if (data.btp_recipes_deleted?.[branch]?.includes(newNameKey)) {
+                data.btp_recipes_deleted[branch] = data.btp_recipes_deleted[branch].filter(
+                    nameKey => nameKey !== newNameKey
+                );
+            }
+        }
+
+        if (oldName && normName(oldName) !== normName(dish.name)) {
+            const oldNvl = data.nvl.find(n => normName(n.ten) === normName(oldName));
+            const conflictNvl = data.nvl.find(n => normName(n.ten) === normName(dish.name));
+            if (oldNvl && !conflictNvl) oldNvl.ten = dish.name;
+        }
+        // =================================================================
+  }
 
       await saveState(client, data, req.user.name, req.headers['x-socket-id']);
       await client.query('COMMIT');
