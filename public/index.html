@@ -3463,13 +3463,6 @@ function thucHienChuyenTrangThucTe(id) {
     if(btn) btn.classList.add('on');
   }
   
-  const t = S.thang, n = S.nam;
-  ['bh','cc','cp','tk','bc','inv'].forEach(prefix=>{
-    const ts = document.getElementById(prefix+'-thang');
-    const tn = document.getElementById(prefix+'-nam');
-    if(ts) ts.value = t;
-    if(tn) tn.value = n;
-  });
   
   if (id === 'btp-khapkhun') {
     renderGiaoDienBtpTichHopCongThuc('khapkhun');
@@ -7076,9 +7069,9 @@ async function init(){
   if(!S.combos) S.combos=[];
   if(!S.gia_tai_cho) S.gia_tai_cho={};
   if(!S.user_tabs) S.user_tabs={};
-  const now=new Date();
-  if(!S.thang) S.thang=now.getMonth()+1;
-  if(!S.nam) S.nam=now.getFullYear();
+  cconst now=new Date();
+  S.thang=now.getMonth()+1;
+  S.nam=now.getFullYear();
   const t=S.thang, n=S.nam;
   ['bh','cc','cp','tk','bc','hh2','inv'].forEach(p=>{
     const ts=document.getElementById(p+'-thang');
