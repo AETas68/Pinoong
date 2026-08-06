@@ -479,6 +479,11 @@ tr:hover .sticky-col{background:#F7F4F0}
         </button>
       </div>
     </div>
+    <div id="inv-q-qd-wrap" style="display:none;margin-top:8px;padding:8px;border:1px dashed #ccc;border-radius:6px;background:#fafaf8;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="font-weight:600;font-size:12px" id="inv-q-qd-label">Số lượng theo hộp/chai</label>
+      <input type="number" id="inv-q-sl-goc" placeholder="VD: 3" min="0" step="0.01" oninput="tinhQuyDoiInv()" style="max-width:120px">
+      <span class="fs11 txt-gray" id="inv-q-qd-hint"></span>
+    </div>
     <!-- Giá chuẩn hint + live warning -->
     <div style="display:flex;gap:16px;margin-top:6px;flex-wrap:wrap">
       <div id="inv-gia-chuan-hint" style="font-size:11px;min-height:18px"></div>
@@ -1293,6 +1298,16 @@ body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
       <div class="form-group" style="grid-column:1/-1"><label>Tên NVL *</label><input id="nvl-new-ten" placeholder="Ví dụ: Tôm sú"></div>
       <div class="form-group"><label>ĐVT *</label><input id="nvl-new-dvt" placeholder="kg, lít, hộp..."></div>
       <div class="form-group"><label>Giá Nhập (đ/đvt) *</label><input type="number" id="nvl-new-gia" placeholder="0"></div>
+<div class="form-group" style="grid-column:1/-1;border:1px dashed #ccc;padding:8px;border-radius:6px;background:#fafaf8">
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+    <input type="checkbox" id="nvl-new-qd-bat" style="width:16px;height:16px" onchange="toggleQuyDoiFields('new')">
+    🔄 NVL này nhập theo Hộp/Chai/Thùng — cần quy đổi ra ĐVT chuẩn
+  </label>
+  <div id="nvl-new-qd-fields" style="display:none;gap:8px;margin-top:8px;flex-wrap:wrap">
+    <div class="form-group" style="flex:1;min-width:140px"><label>Đơn vị nhập (hộp, chai, thùng...)</label><input id="nvl-new-qd-dvt" placeholder="chai"></div>
+    <div class="form-group" style="flex:1;min-width:140px"><label>1 đơn vị nhập = ? ĐVT chuẩn</label><input type="number" id="nvl-new-qd-heso" placeholder="VD: 5" step="0.01"></div>
+  </div>
+</div>
       <div class="form-group" style="grid-column:1/-1"><label>Nhóm *</label>
         <select id="nvl-new-nhom">
           <option>🥬 Nhóm Rau Củ</option>
@@ -1625,7 +1640,17 @@ body: JSON.stringify({ passKhapKhun: passKK, passPinoong: passPN })
     <div class="form-grid fg2">
       <div class="form-group" style="grid-column:1/-1"><label>Tên NVL</label><input id="nvl-edit-ten"></div>
       <div class="form-group"><label>ĐVT</label><input id="nvl-edit-dvt"></div>
-      <div class="form-group"><label>Giá Nhập Hiện Tại (đ)</label><input type="number" id="nvl-edit-gia"></div>
+     <div class="form-group"><label>Giá Nhập Hiện Tại (đ)</label><input type="number" id="nvl-edit-gia"></div>
+<div class="form-group" style="grid-column:1/-1;border:1px dashed #ccc;padding:8px;border-radius:6px;background:#fafaf8">
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400">
+    <input type="checkbox" id="nvl-edit-qd-bat" style="width:16px;height:16px" onchange="toggleQuyDoiFields('edit')">
+    🔄 NVL này nhập theo Hộp/Chai/Thùng — cần quy đổi ra ĐVT chuẩn
+  </label>
+  <div id="nvl-edit-qd-fields" style="display:none;gap:8px;margin-top:8px;flex-wrap:wrap">
+    <div class="form-group" style="flex:1;min-width:140px"><label>Đơn vị nhập (hộp, chai, thùng...)</label><input id="nvl-edit-qd-dvt" placeholder="chai"></div>
+    <div class="form-group" style="flex:1;min-width:140px"><label>1 đơn vị nhập = ? ĐVT chuẩn</label><input type="number" id="nvl-edit-qd-heso" placeholder="VD: 5" step="0.01"></div>
+  </div>
+</div>
       <div class="form-group" style="grid-column:1/-1">
         <label>⚙ Giá Chuẩn (đ) <span class="txt-gray fs10">— Giá chốt với NCC, dùng làm cơ sở cảnh báo</span></label>
         <input type="number" id="nvl-edit-gia-chuan" placeholder="Để trống = giữ nguyên giá chuẩn cũ">
@@ -1973,7 +1998,25 @@ function getInvMK(){
   const n=parseInt(document.getElementById('inv-nam')?.value)||S.nam;
   return mkey(t,n);
 }
-
+function toggleQuyDoiFields(prefix){
+  const cb=document.getElementById('nvl-'+prefix+'-qd-bat');
+  const box=document.getElementById('nvl-'+prefix+'-qd-fields');
+  if(box) box.style.display = cb?.checked ? 'flex' : 'none';
+}
+function tinhQuyDoiInv(){
+  const ten=(document.getElementById('inv-q-ten')?.value||'').trim();
+  const nvl=S.nvl.find(x=>x.ten===ten)||S.nvl.find(x=>x.ten.toLowerCase()===ten.toLowerCase());
+  if(!nvl||!nvl.quy_doi_bat) return;
+  const heso=parseFloat(nvl.quy_doi_heso)||0;
+  const slGoc=parseFloat(document.getElementById('inv-q-sl-goc')?.value)||0;
+  const slEl=document.getElementById('inv-q-sl');
+  const hintEl=document.getElementById('inv-q-qd-hint');
+  const ketQua=slGoc*heso;
+  if(slEl) slEl.value = ketQua>0 ? ketQua : '';
+  if(hintEl) hintEl.textContent = heso>0
+    ? `= ${fmtQty(ketQua)} ${nvl.dvt} (1 ${nvl.quy_doi_dvt||'đơn vị'} = ${fmtQty(heso)} ${nvl.dvt})`
+    : '⚠️ Chưa cấu hình hệ số quy đổi cho NVL này!';
+}
 function autoFillInv(){
   const ten=(document.getElementById('inv-q-ten')?.value||'').trim();
   if(!ten) return;
@@ -1981,7 +2024,19 @@ function autoFillInv(){
   const dvtEl=document.getElementById('inv-q-dvt');
   const giaEl=document.getElementById('inv-q-gia');
   if(nvl){
-    if(dvtEl) dvtEl.value=nvl.dvt;
+     if(dvtEl) dvtEl.value=nvl.dvt;
+    const qdWrap=document.getElementById('inv-q-qd-wrap');
+    const qdLabel=document.getElementById('inv-q-qd-label');
+    const slGocEl=document.getElementById('inv-q-sl-goc');
+    const qdHintEl=document.getElementById('inv-q-qd-hint');
+    if(nvl.quy_doi_bat){
+      if(qdWrap) qdWrap.style.display='flex';
+      if(qdLabel) qdLabel.textContent=`Số lượng theo ${nvl.quy_doi_dvt||'đơn vị nhập'}`;
+      if(slGocEl) slGocEl.value='';
+      if(qdHintEl) qdHintEl.textContent='';
+    } else {
+      if(qdWrap) qdWrap.style.display='none';
+    }
     // Use latest inventory price for this NVL (most recent entry)
     const mk=getInvMK();
     const entries=(S.inventory[mk]||[]).filter(x=>x.ten===nvl.ten).sort((a,b)=>b.date.localeCompare(a.date));
@@ -2018,7 +2073,116 @@ function addInventoryQuick(){
   if(!gia||gia<=0){if(msg){msg.textContent='❌ Nhập đơn giá!';msg.style.color='var(--red)';}return;}
 
   const nvl=S.nvl.find(x=>x.ten===ten)||S.nvl.find(x=>x.ten.toLowerCase()===ten.toLowerCase());
-  const dvt=document.getElementById('inv-q-dvt')?.value||nvl?.dvt||'kg';
+ const dvt=document.getElementById('inv-q-dvt')?.value||nvl?.dvt||'kg';
+  const nhom=nvl?.nhom||'';
+  let ghichuFinal=ghichu;
+  if(nvl?.quy_doi_bat){
+    const slGoc=parseFloat(document.getElementById('inv-q-sl-goc')?.value)||0;
+    const heso=parseFloat(nvl.quy_doi_heso)||0;
+    if(slGoc>0 && heso>0){
+      ghichuFinal = `${ghichu?ghichu+' — ':''}📦 Quy đổi: ${fmtQty(slGoc)} ${nvl.quy_doi_dvt||'đv'} × ${fmtQty(heso)} = ${fmtQty(slGoc*heso)} ${dvt}`;
+    }
+  }
+
+4d. Ngay bên dưới, tìm dòng:
+
+js
+    gia_chuan_ref: giaChuan,
+
+Trong khối tạo entry, đổi ghichu thành ghichuFinal. Cụ thể tìm:
+
+js
+  const entry={
+    id:Date.now(), date:ngay, ten:nvl?.ten||ten, dvt, sl, don_gia:gia,
+    thanh_tien:sl*gia, nhom, ghichu,
+    gia_chuan_ref: giaChuan,
+
+Thay bằng:
+
+js
+  const entry={
+    id:Date.now(), date:ngay, ten:nvl?.ten||ten, dvt, sl, don_gia:gia,
+    thanh_tien:sl*gia, nhom, ghichu:ghichuFinal,
+    gia_chuan_ref: giaChuan,
+
+4e. Tìm dòng reset form sau khi lưu thành công:
+
+js
+  ['inv-q-ten','inv-q-sl','inv-q-ghichu'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+
+Thay bằng:
+
+js
+  ['inv-q-ten','inv-q-sl','inv-q-ghichu','inv-q-sl-goc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const _qdw=document.getElementById('inv-q-qd-wrap'); if(_qdw) _qdw.style.display='none';
+
+4f. Tìm dòng cuối addNVL():
+
+js
+ S.nvl.push({id:newId, ten, dvt:document.getElementById('nvl-new-dvt').value||'kg',
+    gia, gia_chuan: gia,
+    gia_chuan_ngay: new Date().toISOString().slice(0,10),
+    gia_chuan_auto: false,
+    nhom:document.getElementById('nvl-new-nhom').value,
+    khong_quan_ly_ton: document.getElementById('nvl-new-khong-ton')?.checked || false});
+
+Thay bằng:
+
+js
+ S.nvl.push({id:newId, ten, dvt:document.getElementById('nvl-new-dvt').value||'kg',
+    gia, gia_chuan: gia,
+    gia_chuan_ngay: new Date().toISOString().slice(0,10),
+    gia_chuan_auto: false,
+    nhom:document.getElementById('nvl-new-nhom').value,
+    khong_quan_ly_ton: document.getElementById('nvl-new-khong-ton')?.checked || false,
+    quy_doi_bat: document.getElementById('nvl-new-qd-bat')?.checked || false,
+    quy_doi_dvt: document.getElementById('nvl-new-qd-dvt')?.value || '',
+    quy_doi_heso: parseFloat(document.getElementById('nvl-new-qd-heso')?.value) || 0});
+
+4g. Tìm dòng reset cuối addNVL():
+
+js
+  ['nvl-new-ten','nvl-new-dvt','nvl-new-gia','nvl-new-hh','nvl-new-ton'].forEach(id=>document.getElementById(id).value='');
+
+Thay bằng:
+
+js
+  ['nvl-new-ten','nvl-new-dvt','nvl-new-gia','nvl-new-hh','nvl-new-ton','nvl-new-qd-dvt','nvl-new-qd-heso'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nvl-new-qd-bat').checked=false;
+  toggleQuyDoiFields('new');
+
+4h. Tìm dòng trong editNVL(idx):
+
+js
+  document.getElementById('nvl-edit-khong-ton').checked = !!n.khong_quan_ly_ton;
+
+Thay bằng:
+
+js
+  document.getElementById('nvl-edit-khong-ton').checked = !!n.khong_quan_ly_ton;
+  document.getElementById('nvl-edit-qd-bat').checked = !!n.quy_doi_bat;
+  document.getElementById('nvl-edit-qd-dvt').value = n.quy_doi_dvt||'';
+  document.getElementById('nvl-edit-qd-heso').value = n.quy_doi_heso||'';
+  toggleQuyDoiFields('edit');
+
+4i. Tìm dòng trong saveNVLEdit():
+
+js
+   S.nvl[idx].khong_quan_ly_ton = document.getElementById('nvl-edit-khong-ton')?.checked || false;
+
+Thay bằng:
+
+js
+   S.nvl[idx].khong_quan_ly_ton = document.getElementById('nvl-edit-khong-ton')?.checked || false;
+  S.nvl[idx].quy_doi_bat = document.getElementById('nvl-edit-qd-bat')?.checked || false;
+  S.nvl[idx].quy_doi_dvt = document.getElementById('nvl-edit-qd-dvt')?.value || '';
+  S.nvl[idx].quy_doi_heso = parseFloat(document.getElementById('nvl-edit-qd-heso')?.value) || 0;
+Sau khi sửa xong cả 9 mục (4a→4i + 3 mục HTML):
+Lưu file, git add -A && git commit -m "Add: quy doi hop/chai sang kg/lit theo tung NVL" rồi git push origin main
+Đợi Render deploy xong
+Test: vào Danh Mục NVL → sửa 1 NVL (VD "Dầu ăn") → tick vào ô 🔄 quy đổi → nhập "chai" và hệ số "5" → Lưu → sang tab Nhập Hàng, gõ tên "Dầu ăn" → ô "Số lượng theo hộp/chai" sẽ hiện ra → nhập "3" → ô Số Lượng chính sẽ tự nhảy thành "15" (lít)
+
+Anh làm xong báo em kết quả nhé — nếu chỗ nào tìm không ra hoặc báo lỗi console, gửi em dòng lỗi để mình dò tiếp.
   const nhom=nvl?.nhom||'';
   const mk=getInvMK();
   if(!S.inventory) S.inventory={};
@@ -2035,9 +2199,9 @@ function addInventoryQuick(){
 
   // Cảnh báo giá bất thường — KHÔNG chặn lưu, chỉ nhắc trong dòng thông báo bên dưới (1 chạm)
 
-  const entry={
+   const entry={
     id:Date.now(), date:ngay, ten:nvl?.ten||ten, dvt, sl, don_gia:gia,
-    thanh_tien:sl*gia, nhom, ghichu,
+    thanh_tien:sl*gia, nhom, ghichu:ghichuFinal,
     gia_chuan_ref: giaChuan,
     pct_vs_chuan: pctVsChuan,
     warn_level: warnLevel?.label||null
@@ -2051,7 +2215,8 @@ function addInventoryQuick(){
   // ── Quy tắc 3: Kiểm tra 14-ngày auto-update ──────────────
   autoUpdateGiaChuan();
 
-  ['inv-q-ten','inv-q-sl','inv-q-ghichu'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['inv-q-ten','inv-q-sl','inv-q-ghichu','inv-q-sl-goc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  const _qdw=document.getElementById('inv-q-qd-wrap'); if(_qdw) _qdw.style.display='none';
   ['inv-q-gia','inv-q-dvt'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const hint1=document.getElementById('inv-gia-chuan-hint');
   const hint2=document.getElementById('inv-gia-warn-hint');
@@ -3995,7 +4160,10 @@ function addNVL(){
     gia_chuan_ngay: new Date().toISOString().slice(0,10),
     gia_chuan_auto: false,
     nhom:document.getElementById('nvl-new-nhom').value,
-    khong_quan_ly_ton: document.getElementById('nvl-new-khong-ton')?.checked || false});
+    khong_quan_ly_ton: document.getElementById('nvl-new-khong-ton')?.checked || false,
+    quy_doi_bat: document.getElementById('nvl-new-qd-bat')?.checked || false,
+    quy_doi_dvt: document.getElementById('nvl-new-qd-dvt')?.value || '',
+    quy_doi_heso: parseFloat(document.getElementById('nvl-new-qd-heso')?.value) || 0});
   // Lưu tồn đầu vào ton_data theo tháng hiện tại
   if(!S.ton_data) S.ton_data = {};
   const newNvlMk = mkey(S.thang, S.nam);
@@ -4005,7 +4173,9 @@ function addNVL(){
   S.hao_hut[ten]=hh;
   closeModal('modal-nvl-add');
   saveData(); renderNVL(); refreshNVLDatalist();
-  ['nvl-new-ten','nvl-new-dvt','nvl-new-gia','nvl-new-hh','nvl-new-ton'].forEach(id=>document.getElementById(id).value='');
+  ['nvl-new-ten','nvl-new-dvt','nvl-new-gia','nvl-new-hh','nvl-new-ton','nvl-new-qd-dvt','nvl-new-qd-heso'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nvl-new-qd-bat').checked=false;
+  toggleQuyDoiFields('new');
 }
 
 function editNVL(idx){
@@ -4017,6 +4187,10 @@ function editNVL(idx){
   document.getElementById('nvl-edit-dvt').value=n.dvt;
   document.getElementById('nvl-edit-gia').value=n.gia;
   document.getElementById('nvl-edit-khong-ton').checked = !!n.khong_quan_ly_ton;
+  document.getElementById('nvl-edit-qd-bat').checked = !!n.quy_doi_bat;
+  document.getElementById('nvl-edit-qd-dvt').value = n.quy_doi_dvt||'';
+  document.getElementById('nvl-edit-qd-heso').value = n.quy_doi_heso||'';
+  toggleQuyDoiFields('edit');
   const isBtp = (n.nhom||'') === '🍲 Nhóm BTP';
   const btpOpt = document.getElementById('nvl-edit-nhom-btp-opt');
   const btpHint = document.getElementById('nvl-edit-nhom-btp-hint');
@@ -4050,6 +4224,9 @@ function saveNVLEdit(){
   S.nvl[idx].gia=newGia;
   S.nvl[idx].nhom=document.getElementById('nvl-edit-nhom').value;
    S.nvl[idx].khong_quan_ly_ton = document.getElementById('nvl-edit-khong-ton')?.checked || false;
+  S.nvl[idx].quy_doi_bat = document.getElementById('nvl-edit-qd-bat')?.checked || false;
+  S.nvl[idx].quy_doi_dvt = document.getElementById('nvl-edit-qd-dvt')?.value || '';
+  S.nvl[idx].quy_doi_heso = parseFloat(document.getElementById('nvl-edit-qd-heso')?.value) || 0;
   if(newGiaChuan!==null && newGiaChuan>0){
     const old=S.nvl[idx].gia_chuan;
     if(newGiaChuan!==old){
