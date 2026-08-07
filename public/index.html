@@ -479,9 +479,15 @@ tr:hover .sticky-col{background:#F7F4F0}
         </button>
       </div>
     </div>
-    <div id="inv-q-qd-wrap" style="display:none;margin-top:8px;padding:8px;border:1px dashed #ccc;border-radius:6px;background:#fafaf8;gap:8px;align-items:center;flex-wrap:wrap">
-      <label style="font-weight:600;font-size:12px" id="inv-q-qd-label">Số lượng theo hộp/chai</label>
-      <input type="number" id="inv-q-sl-goc" placeholder="VD: 3" min="0" step="0.01" oninput="tinhQuyDoiInv()" style="max-width:120px">
+   <div id="inv-q-qd-wrap" style="display:none;margin-top:8px;padding:8px;border:1px dashed #ccc;border-radius:6px;background:#fafaf8;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div>
+        <label style="font-weight:600;font-size:12px;display:block" id="inv-q-qd-label">Số lượng theo hộp/chai</label>
+        <input type="number" id="inv-q-sl-goc" placeholder="VD: 3" min="0" step="0.01" oninput="tinhQuyDoiInv()" style="max-width:120px">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:12px;display:block">Giá 1 hộp/chai (đ)</label>
+        <input type="number" id="inv-q-gia-goc" placeholder="VD: 40000" min="0" step="100" oninput="tinhQuyDoiInv()" style="max-width:140px">
+      </div>
       <span class="fs11 txt-gray" id="inv-q-qd-hint"></span>
     </div>
     <!-- Giá chuẩn hint + live warning -->
@@ -2009,12 +2015,20 @@ function tinhQuyDoiInv(){
   if(!nvl||!nvl.quy_doi_bat) return;
   const heso=parseFloat(nvl.quy_doi_heso)||0;
   const slGoc=parseFloat(document.getElementById('inv-q-sl-goc')?.value)||0;
+  const giaGoc=parseFloat(document.getElementById('inv-q-gia-goc')?.value)||0;
   const slEl=document.getElementById('inv-q-sl');
+  const giaEl=document.getElementById('inv-q-gia');
   const hintEl=document.getElementById('inv-q-qd-hint');
   const ketQua=slGoc*heso;
   if(slEl) slEl.value = ketQua>0 ? ketQua : '';
+  let giaText='';
+  if(heso>0 && giaGoc>0){
+    const giaQuyDoi=giaGoc/heso;
+    if(giaEl) giaEl.value=+giaQuyDoi.toFixed(2);
+    giaText=` — Giá quy đổi: ${fmt(giaQuyDoi)} đ/${nvl.dvt}`;
+  }
   if(hintEl) hintEl.textContent = heso>0
-    ? `= ${fmtQty(ketQua)} ${nvl.dvt} (1 ${nvl.quy_doi_dvt||'đơn vị'} = ${fmtQty(heso)} ${nvl.dvt})`
+    ? `= ${fmtQty(ketQua)} ${nvl.dvt} (1 ${nvl.quy_doi_dvt||'đơn vị'} = ${fmtQty(heso)} ${nvl.dvt})${giaText}`
     : '⚠️ Chưa cấu hình hệ số quy đổi cho NVL này!';
 }
 function autoFillInv(){
@@ -2032,7 +2046,9 @@ function autoFillInv(){
     if(nvl.quy_doi_bat){
       if(qdWrap) qdWrap.style.display='flex';
       if(qdLabel) qdLabel.textContent=`Số lượng theo ${nvl.quy_doi_dvt||'đơn vị nhập'}`;
-      if(slGocEl) slGocEl.value='';
+     if(slGocEl) slGocEl.value='';
+      const giaGocEl=document.getElementById('inv-q-gia-goc');
+      if(giaGocEl) giaGocEl.value='';
       if(qdHintEl) qdHintEl.textContent='';
     } else {
       if(qdWrap) qdWrap.style.display='none';
@@ -2115,7 +2131,7 @@ function addInventoryQuick(){
   // ── Quy tắc 3: Kiểm tra 14-ngày auto-update ──────────────
   autoUpdateGiaChuan();
 
-  ['inv-q-ten','inv-q-sl','inv-q-ghichu','inv-q-sl-goc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['inv-q-ten','inv-q-sl','inv-q-ghichu','inv-q-sl-goc','inv-q-gia-goc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const _qdw=document.getElementById('inv-q-qd-wrap'); if(_qdw) _qdw.style.display='none';
   ['inv-q-gia','inv-q-dvt'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const hint1=document.getElementById('inv-gia-chuan-hint');
