@@ -5470,6 +5470,13 @@ function renderTonKho(){
     const tonDauTitle = hasStored ? 'Đã chốt/sửa tay' : `Tính từ tồn cuối tháng ${getPrevMK(thang,nam)}`;
     const tonDauStyle = hasStored ? 'border-color:var(--teal);background:#f0fdfa' : '';
     const rowStyle = isNeg ? 'background:#FFF5F5' : '';
+    let quyDoiHtml = '';
+    if(n.quy_doi_bat && n.quy_doi_heso > 0){
+      const absTon = Math.abs(tonCuoi);
+      const soHop = Math.floor(absTon / n.quy_doi_heso + 1e-9);
+      const le = absTon - soHop * n.quy_doi_heso;
+      quyDoiHtml = `<div class="fs10 txt-gray" style="font-weight:400;margin-top:2px">≈ ${soHop} ${n.quy_doi_dvt || 'đv'}${le > 0.0001 ? ` + lẻ ${fmtQty(le)} ${n.dvt}` : ''}</div>`;
+    }
     const tonDauAmChoTruoc = tonDau < 0; // âm đã có SẴN từ tồn đầu (tức từ tháng/kỳ trước) — không phải do tháng này
 
     // 🆕 Tồn Thực Tế (kiểm kê tay) + Chênh Lệch — chỉ nhập được khi đã chọn 1 ngày cụ thể
@@ -5505,6 +5512,7 @@ function renderTonKho(){
       <td class="mono txt-amber">${fmtQty(xuat)}</td>
       <td class="mono fw700 ${isNeg ? 'txt-red' : isLow ? 'txt-red' : isMid ? 'txt-amber' : 'txt-green'}">
         ${isNeg ? '−' : ''}${fmtQty(Math.abs(tonCuoi))}
+        ${quyDoiHtml}
       </td>
       <td>
         <input class="input-inline" type="number" step="0.001" placeholder="${ngayLoc?'nhập...':'chọn ngày'}"
