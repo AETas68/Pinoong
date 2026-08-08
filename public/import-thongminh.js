@@ -175,6 +175,7 @@ async function onImportFilesSelected() {
 // ══════════ ĐỌC EXCEL / CSV (SheetJS) ══════════
 const IMP_COL_ALIASES = {
   ngay: ['ngày', 'ngay', 'date'],
+  phan_loai: ['phân loại', 'phan loai'],
   ten: ['tên nvl', 'ten nvl', 'tên hàng', 'tên', 'ten', 'sản phẩm', 'mặt hàng', 'name', 'khoản chi', 'nội dung'],
   sl: ['số lượng', 'so luong', 'sl', 'qty', 'quantity'],
   dvt: ['đvt', 'dvt', 'đơn vị', 'don vi', 'unit'],
@@ -331,12 +332,15 @@ async function impParseExcelFile(file) {
         });
       }
     } else if (_impLoai === 'banhang') {
+      const phanLoai = impNormalize(get('phan_loai') || '');
+      const laDongTuyChon = phanLoai.includes('tùy chọn') || phanLoai.includes('tuy chon');
       const monTen = (get('ten_mon') || get('ten') || '').toString().trim();
       const sl = impMoneyToNumber(get('sl'));
-      if (monTen && sl) {
+      if (monTen && sl && !laDongTuyChon) {
         const khoStr = impNormalize(monTen + ' ' + r.join(' '));
         rows.push(impMakeRow({ mon_ten: monTen, sl, ngay: impParseDate(get('ngay')) || '', kho: khoStr.includes('kho') && !khoStr.includes('khong') }));
       }
+    }
     } else if (_impLoai === 'chiphi') {
       rows.push(impMakeRow({
         ten: get('ten'), so_tien: impMoneyToNumber(get('thanh_tien') || get('gia')),
