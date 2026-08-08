@@ -340,7 +340,6 @@ async function impParseExcelFile(file) {
         const khoStr = impNormalize(monTen + ' ' + r.join(' '));
         rows.push(impMakeRow({ mon_ten: monTen, sl, ngay: impParseDate(get('ngay')) || '', kho: khoStr.includes('kho') && !khoStr.includes('khong') }));
       }
-    }
     } else if (_impLoai === 'chiphi') {
       rows.push(impMakeRow({
         ten: get('ten'), so_tien: impMoneyToNumber(get('thanh_tien') || get('gia')),
