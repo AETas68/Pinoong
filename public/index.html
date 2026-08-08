@@ -3186,6 +3186,20 @@ function saveData(){
   _saveTimer = setTimeout(pushStateToServer, 400); // gop cac luot luu lien tiep
 }
 
+// An toàn dữ liệu: ép lưu NGAY LẬP TỨC (bỏ qua độ trễ 400ms) mỗi khi trang
+// sắp bị ẩn đi hoặc trình duyệt sắp đóng băng trang (chuyển app, tắt màn hình,
+// chuyển tab...) — tránh mất dữ liệu do bộ đếm lưu bị đóng băng giữa chừng.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    clearTimeout(_saveTimer);
+    pushStateToServer();
+  }
+});
+window.addEventListener('pagehide', () => {
+  clearTimeout(_saveTimer);
+  pushStateToServer();
+});
+
 async function pushStateToServer(){
   if(!authToken) return;
   try{
