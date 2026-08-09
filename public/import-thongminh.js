@@ -31,6 +31,13 @@ function guessNhomNVL(ten) {
 function impNormalize(s) {
   return (s || '').toString().normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase();
 }
+// 🇻🇳 Bỏ dấu tiếng Việt để so khớp gần đúng — nhân viên hay gõ/OCR ra thiếu dấu
+// (vd "Hanh la" phải khớp được với "Hành lá" đã có trong hệ thống, không được coi là NVL mới)
+function impFold(s) {
+  return impNormalize(s)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // tách & bỏ dấu thanh (à,á,ả,ã,ạ,...)
+    .replace(/đ/g, 'd');
+}
 function impLevenshtein(a, b) {
   const m = a.length, n = b.length;
   if (!m) return n; if (!n) return m;
@@ -43,35 +50,29 @@ function impLevenshtein(a, b) {
         : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
   return dp[m][n];
 }
+// So khớp gần đúng dùng chung cho NVL / Nhân viên / Món: ưu tiên khớp NGUYÊN VĂN có dấu trước,
+// sau đó khớp NGUYÊN VĂN bỏ dấu (gõ/OCR thiếu dấu vẫn nhận ra), cuối cùng mới tới Levenshtein bỏ dấu.
+function impBestMatch(list, ten, getTen) {
+  const q = impNormalize(ten);
+  if (!q) return null;
+  let exact = (list || []).find(x => impNormalize(getTen(x)) === q);
+  if (exact) return exact;
+  const qf = impFold(ten);
+  if (!qf) return null;
+  let exactFold = (list || []).find(x => impFold(getTen(x)) === qf);
+  if (exactFold) return exactFold;
+  let best = null, bestScore = 0;
+  for (const x of (list || [])) {
+    const cand = impFold(getTen(x));
+    const dist = impLevenshtein(qf, cand);
+    const score = 1 - dist / Math.max(qf.length, cand.length, 1);
+    if (score > bestScore) { bestScore = score; best = x; }
+  }
+  return bestScore >= 0.75 ? best : null;
+}
 // Trả về NVL khớp nhất trong S.nvl (hoặc null nếu không đủ giống)
-function impMatchNVL(ten) {
-  const q = impNormalize(ten);
-  if (!q) return null;
-  let exact = S.nvl.find(n => impNormalize(n.ten) === q);
-  if (exact) return exact;
-  let best = null, bestScore = 0;
-  for (const n of S.nvl) {
-    const cand = impNormalize(n.ten);
-    const dist = impLevenshtein(q, cand);
-    const score = 1 - dist / Math.max(q.length, cand.length, 1);
-    if (score > bestScore) { bestScore = score; best = n; }
-  }
-  return bestScore >= 0.72 ? best : null;
-}
-function impMatchStaff(ten) {
-  const q = impNormalize(ten);
-  if (!q) return null;
-  let exact = (S.staff || []).find(n => impNormalize(n.ten) === q);
-  if (exact) return exact;
-  let best = null, bestScore = 0;
-  for (const n of (S.staff || [])) {
-    const cand = impNormalize(n.ten);
-    const dist = impLevenshtein(q, cand);
-    const score = 1 - dist / Math.max(q.length, cand.length, 1);
-    if (score > bestScore) { bestScore = score; best = n; }
-  }
-  return bestScore >= 0.72 ? best : null;
-}
+function impMatchNVL(ten) { return impBestMatch(S.nvl, ten, n => n.ten); }
+function impMatchStaff(ten) { return impBestMatch(S.staff || [], ten, n => n.ten); }
 
 // ── Chuẩn hoá ngày về YYYY-MM-DD, hỗ trợ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd ──
 function impParseDate(str) {
@@ -101,20 +102,24 @@ function impMoneyToNumber(str) {
   return isNaN(num) ? 0 : num;
 }
 
-function impMatchMonIn(list, ten) {
-  const q = impNormalize(ten);
-  if (!q) return null;
-  let exact = (list || []).find(m => impNormalize(m.ten) === q);
-  if (exact) return exact;
-  let best = null, bestScore = 0;
-  for (const m of (list || [])) {
-    const cand = impNormalize(m.ten);
-    const dist = impLevenshtein(q, cand);
-    const score = 1 - dist / Math.max(q.length, cand.length, 1);
-    if (score > bestScore) { bestScore = score; best = m; }
-  }
-  return bestScore >= 0.72 ? best : null;
+// ── Áp dụng lựa chọn "Khớp Với" thủ công (nếu người dùng đã chọn ở dropdown) ──
+// r._mapOverride: undefined => để hệ thống tự dò (mặc định) | 'new' => LUÔN tạo mới, bỏ qua tự dò | number => ID món/NVL/NV được chọn tay
+function impResolveNVL(r) {
+  if (r._mapOverride === 'new') return null;
+  if (typeof r._mapOverride === 'number') return S.nvl.find(n => n.id === r._mapOverride) || null;
+  return impMatchNVL(r.ten);
 }
+function impResolveStaff(r) {
+  if (r._mapOverride === 'new') return null;
+  if (typeof r._mapOverride === 'number') return (S.staff || []).find(n => n.id === r._mapOverride) || null;
+  return impMatchStaff(r.nhan_vien);
+}
+function impResolveMonIn(list, r, tenField) {
+  if (r._mapOverride === 'new') return null;
+  if (typeof r._mapOverride === 'number') return (list || []).find(m => m.id === r._mapOverride) || null;
+  return impMatchMonIn(list, r[tenField]);
+}
+function impMatchMonIn(list, ten) { return impBestMatch(list, ten, m => m.ten); }
 
 // ══════════ TAB & FILE INPUT ══════════
 function onImportLoaiChange() {
@@ -130,6 +135,7 @@ function onImportLoaiChange() {
   };
   if (hintEl) hintEl.textContent = hints[_impLoai] || '';
   _impRows = [];
+  window._impMonMapOverride = {};
   renderImportPreview();
 }
 
@@ -189,15 +195,33 @@ const IMP_COL_ALIASES = {
   ten_mon: ['tên món', 'ten mon', 'món ăn', 'mon an', 'món', 'tên sản phẩm', 'sản phẩm', 'dish', 'product', 'item', 'tên sốt', 'ten sot'],
   dinh_luong: ['định lượng', 'dinh luong', 'đluong', 'dl (g/ml)', 'khối lượng']
 };
+function impEscRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// 🧠 So khớp tên cột theo ĐIỂM (score), không phải "khớp đầu tiên tìm thấy":
+//  - Khớp NGUYÊN VĂN cả tiêu đề (vd "Tên món" == "tên món") → điểm rất cao, luôn thắng.
+//  - Khớp trọn TỪ trong tiêu đề (word-boundary, vd "món" trong "Tên món") → điểm = độ dài cụm từ.
+//  - Mỗi CỘT chỉ được gán vào ĐÚNG 1 field có điểm cao nhất của chính cột đó.
+//  - Nếu 2 cột cùng muốn nhận 1 field (vd cả "Mã món" và "Tên món" đều dính "món"),
+//    cột có điểm cao hơn thắng → tránh lỗi "Mã món" bị hiểu nhầm thành "Tên món".
 function impDetectCol(headerRow) {
-  const map = {};
+  const colBest = {}; // idx -> { key, score }
   headerRow.forEach((h, idx) => {
     const hn = impNormalize(h);
     if (!hn) return;
+    let bestKey = null, bestScore = 0;
     for (const [key, aliases] of Object.entries(IMP_COL_ALIASES)) {
-      if (map[key] !== undefined) continue;
-      if (aliases.some(a => hn.includes(a))) map[key] = idx;
+      for (const a of aliases) {
+        let score = 0;
+        if (hn === a) score = 1000 + a.length; // khớp nguyên văn cả ô tiêu đề
+        else if (new RegExp('(^|\\s)' + impEscRegex(a) + '($|\\s)').test(hn)) score = a.length; // khớp trọn từ/cụm
+        if (score > bestScore) { bestScore = score; bestKey = key; }
+      }
     }
+    if (bestKey) colBest[idx] = { key: bestKey, score: bestScore };
+  });
+  const map = {};
+  Object.keys(colBest).forEach(idxStr => {
+    const idx = +idxStr, { key, score } = colBest[idx];
+    if (map[key] === undefined || score > colBest[map[key]].score) map[key] = idx;
   });
   return map;
 }
@@ -359,7 +383,7 @@ async function impParseExcelFile(file) {
       }));
     }
   }
-  return rows.filter(r => r.ten || r.nhan_vien);
+  return rows.filter(r => r.ten || r.nhan_vien || r.mon_ten); // [FIX] dòng Bán Hàng dùng field mon_ten (không phải ten) — trước đây bị lọc mất hết
 }
 
 // ══════════ OCR ẢNH (Tesseract.js) ══════════
@@ -405,7 +429,21 @@ async function impExtractPdfText(file, progEl) {
 // ══════════ PHÂN TÍCH VĂN BẢN OCR THÀNH CÁC DÒNG DỮ LIỆU (rule-based) ══════════
 const IMP_SKIP_LINE_KEYWORDS = ['stt', 'tổng cộng', 'tong cong', 'cộng', 'ký tên', 'ky ten', 'người bán', 'người mua', 'hóa đơn', 'hoa don', 'biên bản'];
 function impMakeRow(fields) {
-  return Object.assign({ ngay: '', ten: '', sl: 1, dvt: '', gia: 0, so_tien: 0, ly_do: '', nhom: '', loai: '', nhan_vien: '', gio: 0, ngay_so: null, mon_ten: '', dinh_luong: 0, kho: false, _nha_cung_cap: '' }, fields);
+  return Object.assign({ ngay: '', ten: '', sl: 1, dvt: '', gia: 0, so_tien: 0, ly_do: '', nhom: '', loai: '', nhan_vien: '', gio: 0, ngay_so: null, mon_ten: '', dinh_luong: 0, kho: false, _nha_cung_cap: '', _mapOverride: undefined }, fields);
+}
+// Dựng danh sách <option> cho dropdown "Khớp Với" — tuỳ chọn đầu luôn là auto-detect / tạo mới
+function impMapOptions(list, autoMatch, current, newLabel) {
+  const opts = [`<option value="__auto__" ${current === undefined ? 'selected' : ''}>🔎 Tự động (${autoMatch ? '✅ ' + autoMatch.ten : '🆕 tạo mới'})</option>`];
+  opts.push(`<option value="__new__" ${current === 'new' ? 'selected' : ''}>${newLabel}</option>`);
+  sortAZ(list).forEach(item => {
+    opts.push(`<option value="${item.id}" ${current === item.id ? 'selected' : ''}>${item.ten}</option>`);
+  });
+  return opts.join('');
+}
+function impRowSetMap(i, val) {
+  if (!_impRows[i]) return;
+  _impRows[i]._mapOverride = val === '__auto__' ? undefined : (val === '__new__' ? 'new' : parseInt(val));
+  renderImportPreview();
 }
 function impParseTextToRows(text) {
   const rows = [];
@@ -495,13 +533,13 @@ function renderImportPreview() {
   let head = '', body = '';
 
   if (_impLoai === 'chamcong') {
-    head = `<th>✓</th><th>Nhân Viên</th><th>Khớp NV</th><th>Ngày</th><th>Số Giờ</th><th>Nguồn File</th><th></th>`;
+    head = `<th>✓</th><th>Nhân Viên (từ file)</th><th>Khớp Với</th><th>Ngày</th><th>Số Giờ</th><th>Nguồn File</th><th></th>`;
     body = _impRows.map((r, i) => {
-      const match = impMatchStaff(r.nhan_vien);
+      const auto = impMatchStaff(r.nhan_vien);
       return `<tr>
         <td><input type="checkbox" ${r._include ? 'checked' : ''} onchange="impRowSet(${i},'_include',this.checked)"></td>
         <td><input value="${r.nhan_vien || ''}" style="width:150px" onchange="impRowSet(${i},'nhan_vien',this.value)"></td>
-        <td>${match ? `✅ ${match.ten}` : `<span style="color:var(--amber)">🆕 NV mới</span>`}</td>
+        <td><select onchange="impRowSetMap(${i},this.value)" style="width:170px">${impMapOptions(S.staff || [], auto, r._mapOverride, '➕ Luôn tạo NV mới')}</select></td>
         <td><input type="date" value="${r.ngay || ''}" onchange="impRowSet(${i},'ngay',this.value)"></td>
         <td><input type="number" step="0.5" value="${r.gio || 0}" style="width:70px" onchange="impRowSet(${i},'gio',parseFloat(this.value)||0)"></td>
         <td class="fs11 txt-gray">${r._source || ''}</td>
@@ -527,16 +565,20 @@ function renderImportPreview() {
   } else {
     // nvl | huyhang
     const showLyDo = _impLoai === 'huyhang';
-    head = `<th>✓</th><th>Ngày</th><th>Tên NVL</th><th>Khớp NVL</th><th>SL</th><th>ĐVT</th><th>Đơn Giá</th>${showLyDo ? '<th>Lý Do</th>' : ''}<th>Nguồn File</th><th></th>`;
+    head = `<th>✓</th><th>Ngày</th><th>Tên NVL (từ file)</th><th>Khớp Với</th><th>SL</th><th>ĐVT</th><th>Đơn Giá</th>${showLyDo ? '<th>Lý Do</th>' : ''}<th>Nguồn File</th><th></th>`;
     body = _impRows.map((r, i) => {
-      const match = impMatchNVL(r.ten);
+      const auto = impMatchNVL(r.ten);
+      const resolved = impResolveNVL(r);
       return `<tr>
         <td><input type="checkbox" ${r._include ? 'checked' : ''} onchange="impRowSet(${i},'_include',this.checked)"></td>
         <td><input type="date" value="${r.ngay || ''}" style="width:130px" onchange="impRowSet(${i},'ngay',this.value)"></td>
         <td><input list="imp-nvl-datalist" value="${r.ten || ''}" style="width:160px" onchange="impRowSet(${i},'ten',this.value)"></td>
-        <td>${match ? `✅ ${match.ten}` : `<span style="color:var(--amber)">🆕 NVL mới (${guessNhomNVL(r.ten)})</span>`}</td>
+        <td>
+          <select onchange="impRowSetMap(${i},this.value)" style="width:170px">${impMapOptions(S.nvl, auto, r._mapOverride, `➕ Luôn tạo NVL mới (${guessNhomNVL(r.ten)})`)}</select>
+          ${resolved ? '' : `<div class="fs11" style="color:var(--amber)">🆕 sẽ tạo NVL mới</div>`}
+        </td>
         <td><input type="number" value="${r.sl || 0}" style="width:70px" onchange="impRowSet(${i},'sl',parseFloat(this.value)||0)"></td>
-        <td><input value="${r.dvt || match?.dvt || ''}" style="width:60px" onchange="impRowSet(${i},'dvt',this.value)"></td>
+        <td><input value="${r.dvt || resolved?.dvt || ''}" style="width:60px" onchange="impRowSet(${i},'dvt',this.value)"></td>
         <td><input type="number" value="${r.gia || 0}" style="width:100px" onchange="impRowSet(${i},'gia',parseFloat(this.value)||0)"></td>
         ${showLyDo ? `<td><select onchange="impRowSet(${i},'ly_do',this.value)">
           ${['🔥 Hỏng / Hư tự nhiên', '❌ Lỗi chế biến', '⏰ Hết hạn sử dụng', '🍳 Cháy / Quá lửa', '💧 Đổ vỡ / Rò rỉ', '📦 Bao bì hỏng', '❓ Lý do khác'].map(l => `<option ${r.ly_do === l ? 'selected' : ''}>${l}</option>`).join('')}
@@ -553,10 +595,15 @@ function renderImportPreview() {
     <div class="tbl-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
     <div class="mt12 flex-center" style="gap:8px">
       <button class="btn btn-teal" onclick="saveAllImportRows()">💾 Lưu Tất Cả Vào Hệ Thống</button>
-      <button class="btn btn-outline" onclick="_impRows=[];renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
+      <button class="btn btn-outline" onclick="_impRows=[];window._impMonMapOverride={};renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
-function impRowSet(i, field, val) { if (_impRows[i]) { _impRows[i][field] = val; if (['ten', 'sl', 'gia', 'mon_ten', '_target'].includes(field)) renderImportPreview(); } }
+function impRowSet(i, field, val) {
+  if (!_impRows[i]) return;
+  _impRows[i][field] = val;
+  if (field === '_target') _impRows[i]._mapOverride = undefined; // đổi đích Tại Chỗ/App → reset lựa chọn khớp tay (danh sách món khác nhau)
+  if (['ten', 'sl', 'gia', 'mon_ten', '_target', 'nhan_vien'].includes(field)) renderImportPreview();
+}
 function impRemoveRow(i) { _impRows.splice(i, 1); renderImportPreview(); }
 
 // ── 🏠 Xem trước: Chart Món / Công Thức (nhóm theo tên món) ──
@@ -564,28 +611,40 @@ function renderImportPreviewTaiCho(el) {
   const nvlOpts = sortAZ(S.nvl).map(n => `<option value="${n.ten}">`).join('');
   const groups = {};
   _impRows.forEach((r, i) => { (groups[r.mon_ten] = groups[r.mon_ten] || []).push(i); });
+  if (!window._impMonMapOverride) window._impMonMapOverride = {}; // monTen -> id | 'new' | undefined(auto)
 
   const body = Object.entries(groups).map(([monTen, idxs]) => {
-    const match = impMatchMonIn(S.menu_taicho, monTen);
+    const auto = impMatchMonIn(S.menu_taicho, monTen);
+    const ov = window._impMonMapOverride[monTen];
+    const match = ov === 'new' ? null : (typeof ov === 'number' ? S.menu_taicho.find(m => m.id === ov) : auto);
     const oldCount = match ? (match.nguyen_lieu || []).length : 0;
     const rows = idxs.map(i => {
       const r = _impRows[i];
-      const nvlMatch = impMatchNVL(r.ten);
+      const nvlAuto = impMatchNVL(r.ten);
+      const nvlResolved = impResolveNVL(r);
       return `<tr>
         <td><input type="checkbox" ${r._include ? 'checked' : ''} onchange="impRowSet(${i},'_include',this.checked)"></td>
         <td><input list="imp-nvl-datalist" value="${r.ten || ''}" style="width:160px" onchange="impRowSet(${i},'ten',this.value)"></td>
-        <td>${nvlMatch ? `✅ ${nvlMatch.ten}` : `<span style="color:var(--amber)">🆕 NVL mới</span>`}</td>
+        <td><select onchange="impRowSetMap(${i},this.value)" style="width:170px">${impMapOptions(S.nvl, nvlAuto, r._mapOverride, '➕ Luôn tạo NVL mới')}</select>
+          ${nvlResolved ? '' : `<div class="fs11" style="color:var(--amber)">🆕 sẽ tạo NVL mới</div>`}
+        </td>
         <td><input type="number" value="${r.dinh_luong || 0}" style="width:80px" onchange="impRowSet(${i},'dinh_luong',parseFloat(this.value)||0)"></td>
-        <td><input value="${r.dvt || nvlMatch?.dvt || ''}" style="width:70px" onchange="impRowSet(${i},'dvt',this.value)"></td>
+        <td><input value="${r.dvt || nvlResolved?.dvt || ''}" style="width:70px" onchange="impRowSet(${i},'dvt',this.value)"></td>
         <td><button class="btn btn-outline btn-sm" onclick="impRemoveRow(${i})">🗑</button></td>
       </tr>`;
     }).join('');
+    const monSelectOpts = [
+      `<option value="__auto__" ${ov === undefined ? 'selected' : ''}>🔎 Tự động (${auto ? '✅ ' + auto.ten : '🆕 tạo món mới'})</option>`,
+      `<option value="__new__" ${ov === 'new' ? 'selected' : ''}>➕ Luôn tạo món mới</option>`,
+      ...sortAZ(S.menu_taicho).map(m => `<option value="${m.id}" ${ov === m.id ? 'selected' : ''}>${m.ten}</option>`)
+    ].join('');
     return `<div class="mb12" style="border:1.5px solid var(--border);border-radius:4px;overflow:hidden">
       <div style="padding:8px 12px;background:${match ? '#fff8f0' : '#f0fdf4'};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
         <strong>${monTen}</strong>
+        <span class="fs11">Khớp Với: <select onchange="_impMonMapOverride['${monTen.replace(/'/g, "\\'")}']=this.value==='__auto__'?undefined:(this.value==='__new__'?'new':parseInt(this.value));renderImportPreview();">${monSelectOpts}</select></span>
         <span class="fs11">${match ? `⚠️ Món đã có trong Menu Tại Chỗ — sẽ <strong>THAY THẾ</strong> công thức cũ (${oldCount} nguyên liệu → ${idxs.length} nguyên liệu mới)` : `🆕 Món mới — sẽ tạo trong Menu Tại Chỗ`}</span>
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên NVL</th><th>Khớp NVL</th><th>Định Lượng</th><th>ĐVT</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên NVL</th><th>Khớp Với</th><th>Định Lượng</th><th>ĐVT</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     </div>`;
   }).join('');
 
@@ -595,7 +654,7 @@ function renderImportPreviewTaiCho(el) {
     ${body}
     <div class="mt12 flex-center" style="gap:8px">
       <button class="btn btn-teal" onclick="saveAllImportRows()">💾 Lưu Tất Cả Vào Hệ Thống</button>
-      <button class="btn btn-outline" onclick="_impRows=[];renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
+      <button class="btn btn-outline" onclick="_impRows=[];window._impMonMapOverride={};renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
 
@@ -603,14 +662,20 @@ function renderImportPreviewTaiCho(el) {
 function renderImportPreviewBanHang(el) {
   const allMonOpts = sortAZ([...S.menu.map(m => m.ten), ...S.menu_taicho.map(m => m.ten)].filter((v, i, a) => a.indexOf(v) === i).map(ten => ({ ten }))).map(m => `<option value="${m.ten}">`).join('');
   const body = _impRows.map((r, i) => {
-    const tc = impMatchMonIn(S.menu_taicho, r.mon_ten);
-    const ap = !tc ? impMatchMonIn(S.menu, r.mon_ten) : null;
-    if (r._target === undefined) r._target = tc ? 'taicho' : (ap ? 'menu' : 'skip');
-    const matchLabel = tc ? `✅ Tại Chỗ: ${tc.ten}` : ap ? `✅ Bán Hàng (App): ${ap.ten}` : `❓ Chưa khớp món — vui lòng chọn tay`;
+    const tcAuto = impMatchMonIn(S.menu_taicho, r.mon_ten);
+    const apAuto = !tcAuto ? impMatchMonIn(S.menu, r.mon_ten) : null;
+    if (r._target === undefined) r._target = tcAuto ? 'taicho' : (apAuto ? 'menu' : 'skip');
+    const candList = r._target === 'taicho' ? S.menu_taicho : r._target === 'menu' ? S.menu : [];
+    const auto = r._target === 'taicho' ? tcAuto : r._target === 'menu' ? apAuto : null;
+    const resolved = impResolveMonIn(candList, r, 'mon_ten');
+    const matchLabel = resolved ? `✅ Khớp: ${resolved.ten}` : `🆕 Món mới — sẽ tạo trong ${r._target === 'taicho' ? 'Menu Tại Chỗ' : r._target === 'menu' ? 'Bán Hàng (App)' : '(chưa chọn đích)'}`;
     return `<tr>
       <td><input type="checkbox" ${r._include ? 'checked' : ''} onchange="impRowSet(${i},'_include',this.checked)"></td>
       <td><input list="imp-mon-datalist" value="${r.mon_ten || ''}" style="width:170px" onchange="impRowSet(${i},'mon_ten',this.value)"></td>
-      <td class="fs11">${matchLabel}</td>
+      <td>
+        <select onchange="impRowSetMap(${i},this.value)" style="width:170px" ${candList.length ? '' : 'disabled'}>${impMapOptions(candList, auto, r._mapOverride, '➕ Luôn tạo món mới')}</select>
+        <div class="fs11 txt-gray">${matchLabel}</div>
+      </td>
       <td><select onchange="impRowSet(${i},'_target',this.value)">
         <option value="taicho" ${r._target === 'taicho' ? 'selected' : ''}>🏠 Menu Tại Chỗ</option>
         <option value="menu" ${r._target === 'menu' ? 'selected' : ''}>🛒 Bán Hàng (App)</option>
@@ -626,11 +691,11 @@ function renderImportPreviewBanHang(el) {
 
   el.innerHTML = `
     <datalist id="imp-mon-datalist">${allMonOpts}</datalist>
-    <div class="alert alert-info mb8 fs12">📋 Tìm được <strong>${_impRows.length}</strong> dòng bán hàng. Hệ thống tự dò khớp món ở cả Menu Tại Chỗ và Bán Hàng (App) — kiểm tra cột "Khớp Món" và chọn lại đích nếu cần, số lượng sẽ GHI ĐÈ (thay thế) số đã có trong ngày đó.</div>
-    <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên Món</th><th>Khớp Món</th><th>Lưu Vào</th><th>Ngày</th><th>SL Bán</th><th>Khô?</th><th>Nguồn File</th><th></th></tr></thead><tbody>${body}</tbody></table></div>
+    <div class="alert alert-info mb8 fs12">📋 Tìm được <strong>${_impRows.length}</strong> dòng bán hàng. Hệ thống tự dò khớp món ở cả Menu Tại Chỗ và Bán Hàng (App) — kiểm tra cột "Khớp Với" (chọn tay nếu chưa đúng) và "Lưu Vào", số lượng của các dòng TRÙNG món + trùng ngày sẽ được <strong>CỘNG DỒN</strong> vào số đã có sẵn trong ngày đó (không ghi đè mất số cũ).</div>
+    <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên Món (từ file)</th><th>Khớp Với</th><th>Lưu Vào</th><th>Ngày</th><th>SL Bán</th><th>Khô?</th><th>Nguồn File</th><th></th></tr></thead><tbody>${body}</tbody></table></div>
     <div class="mt12 flex-center" style="gap:8px">
       <button class="btn btn-teal" onclick="saveAllImportRows()">💾 Lưu Tất Cả Vào Hệ Thống</button>
-      <button class="btn btn-outline" onclick="_impRows=[];renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
+      <button class="btn btn-outline" onclick="_impRows=[];window._impMonMapOverride={};renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
 
@@ -643,7 +708,7 @@ function saveAllImportRows() {
   if (_impLoai === 'nvl' || _impLoai === 'huyhang') {
     rows.forEach(r => {
       if (!r.ten || !r.ngay) return;
-      let nvl = impMatchNVL(r.ten);
+      let nvl = impResolveNVL(r);
       if (!nvl) {
         const newId = Math.max(0, ...S.nvl.map(n => n.id)) + 1;
         nvl = { id: newId, ten: r.ten.trim(), dvt: r.dvt || 'kg', gia: r.gia || 0, gia_chuan: r.gia || 0, gia_chuan_ngay: new Date().toISOString().slice(0, 10), gia_chuan_auto: false, nhom: guessNhomNVL(r.ten), khong_quan_ly_ton: false };
@@ -684,7 +749,7 @@ function saveAllImportRows() {
   } else if (_impLoai === 'chamcong') {
     rows.forEach(r => {
       if (!r.nhan_vien) return;
-      let nv = impMatchStaff(r.nhan_vien);
+      let nv = impResolveStaff(r);
       if (!nv) {
         const newId = Math.max(0, ...(S.staff || []).map(n => n.id), 0) + 1;
         nv = { id: newId, ten: r.nhan_vien.trim(), chuc_vu: '', luong_gio: 0, luong_ngay: 0 };
@@ -709,7 +774,7 @@ function saveAllImportRows() {
     rows.forEach(r => { if (r.mon_ten) (groups[r.mon_ten] = groups[r.mon_ten] || []).push(r); });
     Object.entries(groups).forEach(([monTen, ingrRows]) => {
       const nguyenLieu = ingrRows.filter(r => r.ten).map(r => {
-        let nvl = impMatchNVL(r.ten);
+        let nvl = impResolveNVL(r);
         if (!nvl) {
           const newId = Math.max(0, ...S.nvl.map(n => n.id), 0) + 1;
           nvl = { id: newId, ten: r.ten.trim(), dvt: r.dvt || 'kg', gia: 0, gia_chuan: 0, gia_chuan_ngay: new Date().toISOString().slice(0, 10), gia_chuan_auto: false, nhom: guessNhomNVL(r.ten), khong_quan_ly_ton: false };
@@ -718,7 +783,8 @@ function saveAllImportRows() {
         return { ten: nvl.ten, dvt_nvl: r.dvt || nvl.dvt, dinh_luong: r.dinh_luong || 0 };
       });
       if (!nguyenLieu.length) return;
-      let mon = impMatchMonIn(S.menu_taicho, monTen);
+      const monOv = (window._impMonMapOverride || {})[monTen];
+      let mon = monOv === 'new' ? null : (typeof monOv === 'number' ? S.menu_taicho.find(m => m.id === monOv) : impMatchMonIn(S.menu_taicho, monTen));
       if (mon) {
         mon.nguyen_lieu = nguyenLieu; // [FIX-safe] mutate object tìm theo tên/ID, không đụng tới index mảng
       } else {
@@ -732,26 +798,43 @@ function saveAllImportRows() {
     if (typeof syncNVLHaoHut === 'function') syncNVLHaoHut();
   } else if (_impLoai === 'banhang') {
     if (!S.ban_hang) S.ban_hang = {};
+    // 🔗 CỘNG DỒN: nhiều dòng đơn hàng trong CÙNG lượt import trùng món+ngày+đích được gộp lại
+    // trước, sau đó cộng thêm vào số đã có sẵn trong hệ thống — không dòng nào bị ghi đè mất.
+    const batchAgg = {}; // "mk|key|day" -> tổng SL cộng thêm của lượt import này
     rows.forEach(r => {
       if (r._target === 'skip' || !r.mon_ten || !r.sl) return;
       const ngay = r.ngay || new Date().toISOString().slice(0, 10);
       const parts = ngay.split('-');
       const nam = parseInt(parts[0]), thang = parseInt(parts[1]), day = parseInt(parts[2]);
       if (!day) return;
+      const list = r._target === 'taicho' ? S.menu_taicho : S.menu;
+      let mon = impResolveMonIn(list, r, 'mon_ten');
+      if (!mon) {
+        if (r._mapOverride !== 'new') return; // Chưa khớp món & chưa chọn tay "Luôn tạo món mới" → bỏ qua, không tự ý tạo món từ báo cáo bán hàng
+        const newId = Math.max(0, ...S.menu.map(m => m.id), ...S.menu_taicho.map(m => m.id), 0) + 1;
+        mon = { id: newId, ten: r.mon_ten.trim(), gia_ban: 0, pct_san: 0, pct_mkt: 0, nhom_mon: (typeof getMonNhom === 'function' ? getMonNhom(r.mon_ten) : '') };
+        if (r._target === 'taicho') { mon.nguyen_lieu = []; if (!S.menu_taicho) S.menu_taicho = []; S.menu_taicho.push(mon); }
+        else { if (!S.menu) S.menu = []; S.menu.push(mon); }
+      }
       const mk = mkey(thang, nam);
-      const mon = r._target === 'taicho' ? impMatchMonIn(S.menu_taicho, r.mon_ten) : impMatchMonIn(S.menu, r.mon_ten);
-      if (!mon) return; // Chưa khớp món & chưa chọn tay đích → bỏ qua, không tự tạo món mới từ báo cáo bán hàng
       let key = r._target === 'taicho' ? 'tc_' + mon.id : String(mon.id);
       if (r.kho) key += '_kho';
+      const aggKey = `${mk}|${key}|${day}`;
+      batchAgg[aggKey] = (batchAgg[aggKey] || 0) + r.sl;
+    });
+    Object.entries(batchAgg).forEach(([aggKey, sumSl]) => {
+      const [mk, key, dayStr] = aggKey.split('|');
       if (!S.ban_hang[mk]) S.ban_hang[mk] = {};
       if (!S.ban_hang[mk][key]) S.ban_hang[mk][key] = {};
-      S.ban_hang[mk][key][String(day)] = r.sl;
+      const daDaCo = S.ban_hang[mk][key][dayStr] || 0;
+      S.ban_hang[mk][key][dayStr] = daDaCo + sumSl; // cộng dồn, không ghi đè
       added++;
     });
   }
 
   saveData();
   _impRows = [];
+  window._impMonMapOverride = {};
   renderImportPreview();
   const statusEl = document.getElementById('imp-status');
   if (statusEl) statusEl.textContent = `✅ Đã lưu ${added} dòng vào hệ thống! Vào tab tương ứng để kiểm tra.`;
