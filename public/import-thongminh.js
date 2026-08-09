@@ -7,6 +7,7 @@
 
 let _impLoai = 'nvl';          // nvl | chiphi | huyhang | chamcong | taicho | banhang
 let _impRows = [];             // các dòng đã parse, đang chờ xem trước / sửa / lưu
+let _impBanHangNgay = '';      // 📅 "Ngày bán" chung — chỉnh 1 lần, áp dụng cho TOÀN BỘ các dòng Bán Hàng đang xem trước
 let _impRowSeq = 0;
 let _impLastMonTen = '';       // hỗ trợ đọc Excel công thức có ô "Tên món" bị gộp (merge)
 let _impUsedFallback = false;  // đánh dấu lần đọc gần nhất có phải "đoán cột" hay không (file không có tiêu đề)
@@ -74,15 +75,42 @@ function impBestMatch(list, ten, getTen) {
 function impMatchNVL(ten) { return impBestMatch(S.nvl, ten, n => n.ten); }
 function impMatchStaff(ten) { return impBestMatch(S.staff || [], ten, n => n.ten); }
 
-// ── Chuẩn hoá ngày về YYYY-MM-DD, hỗ trợ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd ──
-function impParseDate(str) {
-  if (!str) return null;
-  const s = String(str).trim();
+// ── Chuẩn hoá ngày về YYYY-MM-DD, hỗ trợ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd,
+// dd/mm (không năm → lấy năm hiện tại), Date object thật (ô Excel định dạng Ngày),
+// và số serial ngày thô của Excel (phòng khi cellDates không áp dụng được) ──
+function impParseDate(val) {
+  if (val === null || val === undefined || val === '') return null;
+  // 📅 Ô Excel được ĐỊNH DẠNG NGÀY THẬT → SheetJS (cellDates:true) trả về đối tượng Date,
+  // KHÔNG phải chuỗi "dd/mm/yyyy" như code cũ tưởng → trước đây bị String(Date) ra dạng
+  // "Fri Aug 07 2026 GMT+..." không khớp regex nào → luôn null → tự rơi về "hôm nay".
+  // 📅 Ô Excel được ĐỊNH DẠNG NGÀY THẬT → SheetJS (cellDates:true) trả về đối tượng Date,
+  // KHÔNG phải chuỗi "dd/mm/yyyy" như code cũ tưởng → trước đây bị String(Date) ra dạng
+  // "Fri Aug 07 2026 GMT+..." không khớp regex nào → luôn null → tự rơi về "hôm nay".
+  // Dùng kiểm tra kiểu "vịt lai" (duck-typing) thay vì instanceof Date để không bị lỗi
+  // khi đối tượng Date được tạo ra ở 1 bối cảnh JS khác (vd module/iframe khác).
+  const isDateLike = val && typeof val === 'object' && typeof val.getUTCFullYear === 'function' && typeof val.getTime === 'function' && !isNaN(val.getTime());
+  if (isDateLike) {
+    const y = val.getUTCFullYear(), m = val.getUTCMonth() + 1, d = val.getUTCDate();
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  // Số serial ngày thô kiểu Excel (vd 46237) — chỉ áp dụng cho cột đã xác định là NGÀY nên an toàn
+  if (typeof val === 'number' && val > 20000 && val < 80000) {
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.round(val) * 86400000);
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  }
+  const s = String(val).trim();
+  if (!s) return null;
   let m = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
   if (m) return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
   m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
   if (m) {
     let y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
+  }
+  // Chỉ có ngày/tháng, KHÔNG có năm (vd "7/8") → mặc định lấy năm hiện tại
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+  if (m) {
+    const y = new Date().getFullYear();
     return `${y}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
   }
   return null;
@@ -135,6 +163,7 @@ function onImportLoaiChange() {
   };
   if (hintEl) hintEl.textContent = hints[_impLoai] || '';
   _impRows = [];
+  _impBanHangNgay = '';
   window._impMonMapOverride = {};
   renderImportPreview();
 }
@@ -173,6 +202,16 @@ async function onImportFilesSelected() {
     }
   }
   if (progEl) progEl.innerHTML = '';
+  // 📅 Bán Hàng: hầu hết báo cáo POS (Grab/Shopee/App) KHÔNG có cột ngày riêng từng dòng.
+  // Tự đặt "Ngày bán chung" 1 lần (ưu tiên ngày đọc được từ file nếu có, không thì hôm nay),
+  // rồi áp cho MỌI dòng chưa có ngày — người dùng chỉ cần sửa lại 1 ô là cả loạt cùng đổi theo.
+  if (_impLoai === 'banhang') {
+    if (!_impBanHangNgay) {
+      const detected = _impRows.find(r => r.ngay)?.ngay;
+      _impBanHangNgay = detected || new Date().toISOString().slice(0, 10);
+    }
+    _impRows.forEach(r => { if (!r.ngay) r.ngay = _impBanHangNgay; });
+  }
   if (statusEl) statusEl.textContent = `✅ Đã đọc xong ${files.length} file — ${_impRows.length} dòng dữ liệu tìm được.${_impUsedFallback ? ' ⚠️ File không có dòng tiêu đề rõ ràng nên hệ thống đã TỰ ĐOÁN cột theo dữ liệu — kiểm tra kỹ từng cột bên dưới trước khi lưu!' : ''} Kiểm tra & sửa bên dưới trước khi Lưu.`;
   input.value = '';
   renderImportPreview();
@@ -604,6 +643,13 @@ function impRowSet(i, field, val) {
   if (field === '_target') _impRows[i]._mapOverride = undefined; // đổi đích Tại Chỗ/App → reset lựa chọn khớp tay (danh sách món khác nhau)
   if (['ten', 'sl', 'gia', 'mon_ten', '_target', 'nhan_vien'].includes(field)) renderImportPreview();
 }
+// 📅 Đổi "Ngày bán chung" 1 lần → áp dụng cho TẤT CẢ các dòng Bán Hàng đang xem trước
+function impSetBanHangNgayChung(val) {
+  if (!val) return;
+  _impBanHangNgay = val;
+  _impRows.forEach(r => { r.ngay = val; });
+  renderImportPreview();
+}
 function impRemoveRow(i) { _impRows.splice(i, 1); renderImportPreview(); }
 
 // ── 🏠 Xem trước: Chart Món / Công Thức (nhóm theo tên món) ──
@@ -692,10 +738,15 @@ function renderImportPreviewBanHang(el) {
   el.innerHTML = `
     <datalist id="imp-mon-datalist">${allMonOpts}</datalist>
     <div class="alert alert-info mb8 fs12">📋 Tìm được <strong>${_impRows.length}</strong> dòng bán hàng. Hệ thống tự dò khớp món ở cả Menu Tại Chỗ và Bán Hàng (App) — kiểm tra cột "Khớp Với" (chọn tay nếu chưa đúng) và "Lưu Vào", số lượng của các dòng TRÙNG món + trùng ngày sẽ được <strong>CỘNG DỒN</strong> vào số đã có sẵn trong ngày đó (không ghi đè mất số cũ).</div>
+    <div class="mb8" style="padding:10px 12px;background:#fff8f0;border:1.5px solid var(--amber, #d97706);border-radius:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <strong class="fs13">📅 Ngày bán (áp dụng cho TẤT CẢ ${_impRows.length} dòng bên dưới):</strong>
+      <input type="date" value="${_impBanHangNgay || ''}" onchange="impSetBanHangNgayChung(this.value)" style="width:150px;font-weight:600">
+      <span class="fs11 txt-gray">Báo cáo bán hàng thường không có cột ngày riêng từng dòng — chỉ cần sửa Ở ĐÂY 1 LẦN, không cần sửa từng dòng. Vẫn có thể sửa riêng ở cột "Ngày" cho dòng nào khác ngày.</span>
+    </div>
     <div class="tbl-wrap"><table><thead><tr><th>✓</th><th>Tên Món (từ file)</th><th>Khớp Với</th><th>Lưu Vào</th><th>Ngày</th><th>SL Bán</th><th>Khô?</th><th>Nguồn File</th><th></th></tr></thead><tbody>${body}</tbody></table></div>
     <div class="mt12 flex-center" style="gap:8px">
       <button class="btn btn-teal" onclick="saveAllImportRows()">💾 Lưu Tất Cả Vào Hệ Thống</button>
-      <button class="btn btn-outline" onclick="_impRows=[];window._impMonMapOverride={};renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
+      <button class="btn btn-outline" onclick="_impRows=[];_impBanHangNgay='';window._impMonMapOverride={};renderImportPreview();">✖ Xoá Bảng Xem Trước</button>
     </div>`;
 }
 
