@@ -2878,6 +2878,7 @@ let authToken = localStorage.getItem('kk_token') || null;
 let currentUser = JSON.parse(localStorage.getItem('kk_user') || 'null');
 let socket = null;
 let socketId = null;
+let _lastKnownUpdatedAt = null; // 🔒 mốc thời gian dữ liệu client đang cầm — gửi kèm mỗi lần lưu để server phát hiện ghi đè chồng chéo
 
 async function apiFetch(path, opts={}){
   const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
@@ -2904,8 +2905,14 @@ async function apiFetch(path, opts={}){
     }
     throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.');
   }
-  if(!res.ok) throw new Error((body && body.error) || ('Lỗi '+res.status));
+ if(!res.ok){
+    const err = new Error((body && body.message) || (body && body.error) || ('Lỗi '+res.status));
+    err.code = body && body.error;
+    err.server_updated_at = body && body.server_updated_at;
+    throw err;
+  }
   return body;
+
 }
 
 function setSyncStatus(ok){
@@ -3084,7 +3091,8 @@ function connectSocket(){
   socket.on('state-updated', (payload)=>{
     // Du lieu vua duoc nguoi khac luu tu thiet bi khac — cap nhat man hinh ngay
     // (trừ khi máy này đang có thay đổi local chưa kịp lưu — xem safeAssignServerState)
-    if(!safeAssignServerState(payload.data)) return;
+   if(!safeAssignServerState(payload.data)) return;
+    _lastKnownUpdatedAt = payload.updated_at || null;
     try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){}
     const activePage = document.querySelector('.page.on');
     if(activePage) renderPage(activePage.id.replace('page-',''));
@@ -3109,7 +3117,8 @@ async function resyncStateFromServer(){
     if(res && res.data && Object.keys(res.data).length){
       // Không ghi đè nếu đang có thay đổi local chưa lưu xong (xem _dirtyLocal)
       if(safeAssignServerState(res.data)){
-        try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){}
+        _lastKnownUpdatedAt = res.updated_at || null;
+        try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){
         const activePage = document.querySelector('.page.on');
         if(activePage) renderPage(activePage.id.replace('page-',''));
         applyRoleTabs();
@@ -3626,22 +3635,30 @@ window.addEventListener('pagehide', () => {
 async function pushStateToServer(){
   if(!authToken) return;
   try{
-    await apiFetch('/api/state', {
+    const res = await apiFetch('/api/state', {
       method:'PUT',
       headers: socketId ? {'X-Socket-Id': socketId} : {},
-      body: JSON.stringify({data: S})
+      body: JSON.stringify({data: S, base_updated_at: _lastKnownUpdatedAt})
     });
+    _lastKnownUpdatedAt = res.updated_at || null;
     setSyncStatus(true);
-    // Chỉ tắt cờ "chưa lưu" SAU KHI server xác nhận đã ghi thành công —
-    // từ giờ các nguồn đồng bộ khác (socket/resync/lưới an toàn) mới được
-    // phép ghi đè S, đảm bảo không bao giờ đè lên thay đổi còn đang gửi dở.
     _dirtyLocal = false;
   }catch(e){
     setSyncStatus(false);
     console.error('Lỗi đồng bộ lên server:', e);
-    // KHÔNG tắt _dirtyLocal khi lưu thất bại — vẫn còn thay đổi local
-    // chưa lên được server, phải tiếp tục bảo vệ không cho ghi đè, và
-    // thử lưu lại ở lần sửa đổi tiếp theo hoặc khi mạng ổn định lại.
+    // 🔒 CHỐT AN TOÀN: server từ chối lưu vì đã có người khác lưu dữ liệu MỚI HƠN
+    // trong lúc máy này đang giữ bản cũ (VD: máy này mở từ chiều, nhân viên
+    // vừa nhập kho buổi tối trên máy khác). TUYỆT ĐỐI không thử lưu lại bằng
+    // dữ liệu cũ này (sẽ lại bị từ chối, và nếu lỡ server không kiểm tra kỹ
+    // thì đây chính là hành động XÓA MẤT dữ liệu mới). Bắt buộc tải lại toàn
+    // bộ trang để lấy dữ liệu mới nhất, không cho lưu tiếp bằng bản cũ.
+    if(e.code === 'CONFLICT_STALE_DATA'){
+      _dirtyLocal = false;
+      clearTimeout(_saveTimer);
+      alert('⚠️ Dữ liệu trên hệ thống vừa được người khác cập nhật trong lúc bạn đang thao tác trên máy này. Để không ghi đè mất dữ liệu của họ, trang sẽ tự tải lại — vui lòng kiểm tra và nhập lại thao tác vừa rồi nếu cần.');
+      location.reload();
+      return;
+    }
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(pushStateToServer, 3000);
   }
@@ -3652,9 +3669,10 @@ async function loadData(){
   let confirmedBrandNewDb = false; // true CHỈ KHI server xác nhận rõ ràng đây là database CHƯA TỪNG được lưu lần nào
   try{
     const res = await apiFetch('/api/state', { method:'GET' });
-    if(res && res.data && Object.keys(res.data).length){
+if(res && res.data && Object.keys(res.data).length){
       Object.assign(S, res.data);
       loaded = true;
+      _lastKnownUpdatedAt = res.updated_at || null;
       // 🔒🩹 CHỐT AN TOÀN CỰC KỲ QUAN TRỌNG: trước đây hễ phản hồi từ server
       // "trông có vẻ thiếu nvl" (vd chỉ còn {activeTab, allowedTabs} do một
       // lần đọc DB gặp trục trặc thoáng qua) là app ÂM THẦM coi như máy mới
