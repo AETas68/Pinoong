@@ -3118,7 +3118,7 @@ async function resyncStateFromServer(){
       // Không ghi đè nếu đang có thay đổi local chưa lưu xong (xem _dirtyLocal)
       if(safeAssignServerState(res.data)){
         _lastKnownUpdatedAt = res.updated_at || null;
-        try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){
+        try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){}
         const activePage = document.querySelector('.page.on');
         if(activePage) renderPage(activePage.id.replace('page-',''));
         applyRoleTabs();
