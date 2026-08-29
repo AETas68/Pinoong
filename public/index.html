@@ -2879,6 +2879,57 @@ let currentUser = JSON.parse(localStorage.getItem('kk_user') || 'null');
 let socket = null;
 let socketId = null;
 let _lastKnownUpdatedAt = null; // 🔒 mốc thời gian dữ liệu client đang cầm — gửi kèm mỗi lần lưu để server phát hiện ghi đè chồng chéo
+// 🔒 Bản chụp dữ liệu tại đúng thời điểm S khớp với server lần gần nhất
+// (sau load / sau lưu thành công / sau đồng bộ lại). Dùng để tính CHÍNH XÁC
+// những gì máy này đã tự sửa kể từ đó — không phải đoán mò cả khối dữ liệu.
+let _baseSnapshotForDiff = null;
+
+// So sánh 2 cây dữ liệu JSON, trả về danh sách các "đường dẫn" (path) có
+// giá trị thay đổi/thêm mới/xóa — chỉ tính đến cấp lá (số, chuỗi, mảng coi
+// như 1 khối). Đây là cách biết CHÍNH XÁC người dùng vừa sửa những ô nào,
+// thay vì phải ghi đè nguyên khối.
+function _deepDiffPaths(oldObj, newObj, path, out) {
+  path = path || []; out = out || [];
+  const isPlainObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  if (!isPlainObj(newObj)) {
+    if (JSON.stringify(newObj) !== JSON.stringify(oldObj)) out.push({ path, value: newObj });
+    return out;
+  }
+  const oldKeys = isPlainObj(oldObj) ? Object.keys(oldObj) : [];
+  const allKeys = new Set([...oldKeys, ...Object.keys(newObj)]);
+  for (const k of allKeys) {
+    const oV = isPlainObj(oldObj) ? oldObj[k] : undefined;
+    const nV = newObj[k];
+    if (nV === undefined) { if (oV !== undefined) out.push({ path: [...path, k], deleted: true }); }
+    else if (isPlainObj(nV)) _deepDiffPaths(oV, nV, [...path, k], out);
+    else if (JSON.stringify(nV) !== JSON.stringify(oV)) out.push({ path: [...path, k], value: nV });
+  }
+  return out;
+}
+
+// Áp các thay đổi (từ _deepDiffPaths) lên 1 cây dữ liệu khác — dùng để đặt
+// đúng những gì máy này vừa sửa lên trên bản MỚI NHẤT từ server, thay vì
+// ghi đè cả khối (giữ nguyên mọi thay đổi của người khác không liên quan).
+function _applyDiffPaths(target, diffs) {
+  for (const d of diffs) {
+    let obj = target;
+    for (let i = 0; i < d.path.length - 1; i++) {
+      const k = d.path[i];
+      if (obj[k] === undefined || typeof obj[k] !== 'object' || Array.isArray(obj[k])) obj[k] = {};
+      obj = obj[k];
+    }
+    const lastKey = d.path[d.path.length - 1];
+    if (d.deleted) delete obj[lastKey]; else obj[lastKey] = d.value;
+  }
+  return target;
+}
+
+// Ghi đè TOÀN BỘ nội dung S bằng 1 object mới mà KHÔNG đổi tham chiếu S
+// (rất nhiều hàm trong app giữ tham chiếu tới đúng biến S này).
+function _replaceStateContent(newContent) {
+  for (const k of Object.keys(S)) delete S[k];
+  Object.assign(S, newContent);
+}  
 
 async function apiFetch(path, opts={}){
   const headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
@@ -3093,6 +3144,7 @@ function connectSocket(){
     // (trừ khi máy này đang có thay đổi local chưa kịp lưu — xem safeAssignServerState)
    if(!safeAssignServerState(payload.data)) return;
     _lastKnownUpdatedAt = payload.updated_at || null;
+    _baseSnapshotForDiff = JSON.parse(JSON.stringify(S)); // 🔒 chốt lại bản gốc
     try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){}
     const activePage = document.querySelector('.page.on');
     if(activePage) renderPage(activePage.id.replace('page-',''));
@@ -3118,6 +3170,7 @@ async function resyncStateFromServer(){
       // Không ghi đè nếu đang có thay đổi local chưa lưu xong (xem _dirtyLocal)
       if(safeAssignServerState(res.data)){
         _lastKnownUpdatedAt = res.updated_at || null;
+        _baseSnapshotForDiff = JSON.parse(JSON.stringify(S)); // 🔒 chốt lại bản gốc
         try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e){}
         const activePage = document.querySelector('.page.on');
         if(activePage) renderPage(activePage.id.replace('page-',''));
@@ -3631,6 +3684,7 @@ window.addEventListener('pagehide', () => {
   clearTimeout(_saveTimer);
   pushStateToServer();
 });
+let _mergeRetryCount = 0; // đếm số lần vừa tự hợp nhất liên tiếp — chặn vòng lặp vô hạn trong trường hợp cực hiếm
 
 async function pushStateToServer(){
   if(!authToken) return;
@@ -3641,29 +3695,67 @@ async function pushStateToServer(){
       body: JSON.stringify({data: S, base_updated_at: _lastKnownUpdatedAt})
     });
     _lastKnownUpdatedAt = res.updated_at || null;
+    _baseSnapshotForDiff = JSON.parse(JSON.stringify(S)); // 🔒 lưu đã khớp server — chốt lại bản gốc
+    _mergeRetryCount = 0;
     setSyncStatus(true);
     _dirtyLocal = false;
   }catch(e){
     setSyncStatus(false);
     console.error('Lỗi đồng bộ lên server:', e);
-    // 🔒 CHỐT AN TOÀN: server từ chối lưu vì đã có người khác lưu dữ liệu MỚI HƠN
-    // trong lúc máy này đang giữ bản cũ (VD: máy này mở từ chiều, nhân viên
-    // vừa nhập kho buổi tối trên máy khác). TUYỆT ĐỐI không thử lưu lại bằng
-    // dữ liệu cũ này (sẽ lại bị từ chối, và nếu lỡ server không kiểm tra kỹ
-    // thì đây chính là hành động XÓA MẤT dữ liệu mới). Bắt buộc tải lại toàn
-    // bộ trang để lấy dữ liệu mới nhất, không cho lưu tiếp bằng bản cũ.
+
+    // 🔒🩹 XỬ LÝ XUNG ĐỘT THÔNG MINH: có người khác vừa lưu dữ liệu mới hơn
+    // trong lúc máy này đang cầm bản cũ. TRƯỚC ĐÂY: bắt tải lại cả trang —
+    // với nhiều người cùng thao tác liên tục, việc này xảy ra RẤT THƯỜNG
+    // XUYÊN dù 2 người có thể đang sửa 2 CHỖ HOÀN TOÀN KHÁC NHAU (vd người
+    // này nhập kho, người kia sửa giá NVL khác) — không hề thật sự đụng độ,
+    // nhưng vẫn bị chặn và làm phiền, gây "chớp màn hình" liên tục.
+    // GIỜ: tự tính CHÍNH XÁC những gì máy này vừa sửa (so với _baseSnapshotForDiff
+    // — bản gốc lúc còn khớp server), tải bản MỚI NHẤT từ server, đặt đúng
+    // các thay đổi của máy này lên trên bản mới đó, rồi lưu lại NGAY — không
+    // làm phiền người dùng, không mất dữ liệu của ai cả. Chỉ khi 2 người sửa
+    // ĐÚNG CÙNG 1 Ô dữ liệu trong cùng khoảnh khắc (cực hiếm) thì ai lưu sau
+    // mới thắng cho riêng ô đó — không ảnh hưởng phần còn lại.
     if(e.code === 'CONFLICT_STALE_DATA'){
-      _dirtyLocal = false;
-      clearTimeout(_saveTimer);
-      alert('⚠️ Dữ liệu trên hệ thống vừa được người khác cập nhật trong lúc bạn đang thao tác trên máy này. Để không ghi đè mất dữ liệu của họ, trang sẽ tự tải lại — vui lòng kiểm tra và nhập lại thao tác vừa rồi nếu cần.');
-      location.reload();
-      return;
+      _mergeRetryCount++;
+      if(_mergeRetryCount > 8){
+        // Cực kỳ hiếm: xung đột liên tục >8 lần liền — dừng vòng lặp, tải lại trang cho an toàn.
+        _mergeRetryCount = 0;
+        _dirtyLocal = false;
+        clearTimeout(_saveTimer);
+        alert('⚠️ Hệ thống đang có nhiều người cùng lưu liên tục, không tự hợp nhất được. Trang sẽ tải lại — vui lòng kiểm tra và nhập lại thao tác vừa rồi nếu cần.');
+        location.reload();
+        return;
+      }
+      try{
+        const myChanges = _deepDiffPaths(_baseSnapshotForDiff || {}, S);
+        const fresh = await apiFetch('/api/state', { method:'GET' });
+        const merged = _applyDiffPaths(JSON.parse(JSON.stringify(fresh.data || {})), myChanges);
+        _replaceStateContent(merged);
+        _lastKnownUpdatedAt = fresh.updated_at || null;
+        _baseSnapshotForDiff = JSON.parse(JSON.stringify(S));
+try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e2){}
+        // Vẽ lại đúng trang đang mở với dữ liệu đã hợp nhất
+        const activePage = document.querySelector('.page.on');
+        if(activePage && typeof renderPage==='function') renderPage(activePage.id.replace('page-',''));
+        if(typeof applyRoleTabs==='function') applyRoleTabs();
+        // Lưu lại NGAY với dữ liệu đã hợp nhất — không cần chờ người dùng thao tác tiếp
+        clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(pushStateToServer, 50);
+        return;
+      }catch(mergeErr){
+        console.error('Không tự hợp nhất được, tải lại trang:', mergeErr);
+        _dirtyLocal = false;
+        clearTimeout(_saveTimer);
+        alert('⚠️ Dữ liệu trên hệ thống vừa được người khác cập nhật. Trang sẽ tải lại — vui lòng kiểm tra và nhập lại thao tác vừa rồi nếu cần.');
+        location.reload();
+        return;
+      }
     }
+
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(pushStateToServer, 3000);
   }
 }
-
 async function loadData(){
   let loaded = false;
   let confirmedBrandNewDb = false; // true CHỈ KHI server xác nhận rõ ràng đây là database CHƯA TỪNG được lưu lần nào
@@ -3793,8 +3885,11 @@ if(res && res.data && Object.keys(res.data).length){
   // ── Auto-check 14-day rule on load ─────────────────
   autoUpdateGiaChuan();
 
+
   // Neu server chua co du lieu (lan dau tien) thi day du lieu khoi tao len ngay
+  _baseSnapshotForDiff = JSON.parse(JSON.stringify(S)); // 🔒 chốt bản gốc để so sánh từ đây
   if(!loaded) pushStateToServer();
+
 }
 
 
