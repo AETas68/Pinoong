@@ -28,11 +28,18 @@ module.exports = function (io) {
 
           if (reconcileBtpNvl(dbData)) {
             console.log('🍲 [GET /api/state] Đã tự đồng bộ lại Nhóm BTP trong NVL.');
-            const upd = await pool.query(
-              `UPDATE app_state SET data = $1, updated_at = now(), updated_by = $2 WHERE id = 1 RETURNING updated_at`,
-              [JSON.stringify(dbData), 'system-sync-btp-nhom']
+            // 🔒 QUAN TRỌNG: KHÔNG cập nhật updated_at ở đây. Đây là thao tác
+            // dọn dẹp nội bộ tự động (đồng bộ Nhóm BTP), không phải một
+            // chỉnh sửa thật của người dùng. Nếu tính vào updated_at, MỌI
+            // client khác đang cầm bản cũ hơn vài giây (kể cả chính người
+            // vừa mở trang) sẽ bị hệ thống coi là "dữ liệu cũ" và bị TỪ CHỐI
+            // LƯU OAN ở lần lưu tiếp theo — dù không có ai thực sự sửa gì.
+            // Đây chính là nguyên nhân gây cảnh báo "dữ liệu vừa được người
+            // khác cập nhật" lặp lại liên tục dù chỉ có 1 người đang dùng.
+            await pool.query(
+              `UPDATE app_state SET data = $1 WHERE id = 1`,
+              [JSON.stringify(dbData)]
             );
-            updated_at = upd.rows[0]?.updated_at || updated_at;
           }
 
           responseData = { ...dbData, allowedTabs: fullTabs };
