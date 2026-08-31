@@ -465,7 +465,17 @@ async function impParseExcelFile(file) {
       }));
     } else {
       // nvl / huyhang
-      const sl = impMoneyToNumber(get('sl')) || 1;
+      // 🩹 SỬA LỖI: impMoneyToNumber() trả về 0 cho CẢ 2 trường hợp "ô trống/
+      // không có cột" và "ô ghi rõ số lượng là 0" — không phân biệt được.
+      // Trước đây dùng `|| 1` nên số lượng 0 THẬT trong file bị tự động biến
+      // thành 1 (sai), thay vì phải loại bỏ dòng đó khỏi danh sách nhập.
+      // Giờ kiểm tra trực tiếp ô gốc: nếu file THỰC SỰ không có giá trị nào
+      // (trống/không có cột) → mặc định 1 như cũ. Nếu file có ghi số lượng
+      // (dù là "0") → giữ đúng số đó, và loại dòng có SL=0 khỏi kết quả.
+      const slRaw = get('sl');
+      const slCoGiaTri = slRaw !== undefined && slRaw !== null && String(slRaw).trim() !== '';
+      const sl = slCoGiaTri ? impMoneyToNumber(slRaw) : 1;
+      if (slCoGiaTri && sl === 0) continue; // File ghi rõ số lượng = 0 → bỏ qua dòng này, không đưa vào danh sách nhập
       const gia = impMoneyToNumber(get('gia'));
       // File không có cột ngày (vd bảng giá nhà cung cấp) → mặc định hôm nay, sửa lại được ở bảng xem trước
       const ngay = impParseDate(get('ngay')) || new Date().toISOString().slice(0, 10);
