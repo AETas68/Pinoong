@@ -28,18 +28,27 @@ module.exports = function (io) {
 
           if (reconcileBtpNvl(dbData)) {
             console.log('🍲 [GET /api/state] Đã tự đồng bộ lại Nhóm BTP trong NVL.');
-            // 🔒 QUAN TRỌNG: KHÔNG cập nhật updated_at ở đây. Đây là thao tác
-            // dọn dẹp nội bộ tự động (đồng bộ Nhóm BTP), không phải một
-            // chỉnh sửa thật của người dùng. Nếu tính vào updated_at, MỌI
-            // client khác đang cầm bản cũ hơn vài giây (kể cả chính người
-            // vừa mở trang) sẽ bị hệ thống coi là "dữ liệu cũ" và bị TỪ CHỐI
-            // LƯU OAN ở lần lưu tiếp theo — dù không có ai thực sự sửa gì.
-            // Đây chính là nguyên nhân gây cảnh báo "dữ liệu vừa được người
-            // khác cập nhật" lặp lại liên tục dù chỉ có 1 người đang dùng.
-            await pool.query(
-              `UPDATE app_state SET data = $1 WHERE id = 1`,
-              [JSON.stringify(dbData)]
-            );
+            // 🔒 KHÔNG cập nhật updated_at ở đây (đây là dọn dẹp nội bộ, không phải chỉnh sửa của người dùng).
+            // 🩹 [v13.1] Ghi lại trong giao dịch có khoá dòng và tính lại trên dữ liệu MỚI NHẤT:
+            // trước đây GET đọc bản cũ rồi ghi đè lên, nếu đúng lúc đó có người lưu (PUT) thì bản
+            // PUT bị GET xoá mất.
+            const gc = await pool.connect();
+            try {
+              await gc.query('BEGIN');
+              const { rows: lockRows } = await gc.query('SELECT data FROM app_state WHERE id = 1 FOR UPDATE');
+              const lockRaw = lockRows[0]?.data;
+              const latest = lockRaw ? (typeof lockRaw === 'string' ? JSON.parse(lockRaw) : lockRaw) : dbData;
+              if (reconcileBtpNvl(latest)) {
+                await gc.query(`UPDATE app_state SET data = $1 WHERE id = 1`, [JSON.stringify(latest)]);
+              }
+              await gc.query('COMMIT');
+              dbData = latest;
+            } catch (txErr) {
+              try { await gc.query('ROLLBACK'); } catch (_) {}
+              throw txErr;
+            } finally {
+              gc.release();
+            }
           }
 
           responseData = { ...dbData, allowedTabs: fullTabs };
@@ -62,36 +71,30 @@ module.exports = function (io) {
 
   // Luu toan bo du lieu, roi bao cho cac thiet bi khac dang mo app biet de cap nhat
   router.put('/', requireAuth, async (req, res) => {
-    const { data, base_updated_at } = req.body;
+    const { data, base_updated_at, force } = req.body;
 
     if (!data || typeof data !== 'object') {
       return res.status(400).json({ error: 'Dữ liệu không hợp lệ' });
     }
 
+    // 🩹 [v13.1] Dùng 1 giao dịch + khoá dòng (FOR UPDATE): trước đây bước "đọc rồi so sánh
+    // updated_at" và bước "ghi" nằm ở 2 truy vấn rời nhau, 2 người lưu cùng lúc đều có thể
+    // vượt qua kiểm tra và người sau ghi đè người trước.
+    const client = await pool.connect();
     try {
-      const { rows: curRows } = await pool.query('SELECT data, updated_at FROM app_state WHERE id = 1');
+      await client.query('BEGIN');
+      const { rows: curRows } = await client.query('SELECT data, updated_at FROM app_state WHERE id = 1 FOR UPDATE');
       const curRaw = curRows[0]?.data;
       const currentData = curRaw ? (typeof curRaw === 'string' ? JSON.parse(curRaw) : curRaw) : {};
       const currentUpdatedAt = curRows[0]?.updated_at || null;
 
-      // 🔒🛑 CHỐT AN TOÀN CHỐNG MẤT DỮ LIỆU (MỚI): mỗi lần lưu, trình duyệt gửi
-      // lên NGUYÊN KHỐI dữ liệu app mà nó đang cầm trong bộ nhớ. Nếu trong lúc
-      // client này đang mở app, một thiết bị/tab KHÁC đã lưu dữ liệu mới hơn lên
-      // server (ví dụ: nhân viên vừa nhập kho buổi tối), mà client này lại lưu
-      // đè lên bằng bản CŨ đang cầm (ví dụ do auto-save mỗi 2 phút của 1 tab bỏ
-      // quên từ trước) — dữ liệu mới sẽ bị XOÁ MẤT hoàn toàn, không có cách nào
-      // khôi phục. Đây chính là nguyên nhân "tối nhập, sáng mất dữ liệu".
-      //
-      // Cách chặn: client phải gửi kèm `base_updated_at` = thời điểm `updated_at`
-      // mà nó đã tải dữ liệu về lần gần nhất (giá trị này server trả về ở mọi lần
-      // GET /api/state và mọi sự kiện socket 'state-updated'). Nếu thời điểm đó
-      // khác với `updated_at` MỚI NHẤT thực tế trên server ngay lúc này, nghĩa là
-      // đã có người khác lưu dữ liệu mới hơn trong lúc client này chưa kịp tải lại
-      // → từ chối lưu, yêu cầu tải lại dữ liệu mới nhất trước khi lưu tiếp.
       const currentTs = currentUpdatedAt ? new Date(currentUpdatedAt).getTime() : null;
       const baseTs = base_updated_at ? new Date(base_updated_at).getTime() : null;
+      const serverHasData = Array.isArray(currentData.nvl) && currentData.nvl.length > 0;
 
+      // Chốt 1: mốc thời gian lệch -> có người khác đã lưu mới hơn.
       if (currentTs !== null && baseTs !== null && currentTs !== baseTs) {
+        await client.query('ROLLBACK');
         return res.status(409).json({
           error: 'CONFLICT_STALE_DATA',
           message: 'Dữ liệu trên server đã được người khác cập nhật sau khi bạn tải trang. Vui lòng tải lại (F5) để lấy bản mới nhất rồi nhập lại thao tác, để không ghi đè mất dữ liệu của người khác.',
@@ -99,19 +102,31 @@ module.exports = function (io) {
         });
       }
 
-      if (baseTs === null && currentTs !== null) {
-        // Client cũ (chưa được cập nhật để gửi base_updated_at) — vẫn cho lưu để
-        // không phá vỡ hoạt động, nhưng ghi log cảnh báo để biết cần nâng cấp front-end.
-        console.warn('⚠️ [PUT /api/state] Client không gửi base_updated_at — không thể kiểm tra xung đột ghi đè. Hãy cập nhật front-end để gửi kèm giá trị này.');
+      // Chốt 2 [v13.1]: KHÔNG cho ghi "mù". Trước đây thiếu base_updated_at chỉ ghi log rồi vẫn
+      // cho lưu -> máy dùng bản lưu tạm cũ (do server ngủ đông/mạng chập chờn/đổi thiết bị)
+      // ghi đè mất dữ liệu mới trên server. Giờ phải gửi base_updated_at, hoặc force:true
+      // (chỉ dùng cho "Phục hồi từ file sao lưu" — thao tác có chủ đích).
+      if (baseTs === null && currentTs !== null && serverHasData && !force) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          error: 'CONFLICT_STALE_DATA',
+          message: 'Máy này chưa đồng bộ với server nên không được lưu đè. Hệ thống sẽ tự tải bản mới nhất và hợp nhất thay đổi của bạn.',
+          server_updated_at: currentUpdatedAt
+        });
       }
 
-      // 🔒🩹 CHỐT AN TOÀN CHỐNG MẤT DỮ LIỆU BTP (giữ nguyên như cũ): vì GET
-      // /api/state đã lọc rỗng btp_recipes/btp_production của chi nhánh mà người
-      // này KHÔNG có quyền xem — nếu họ lưu bất kỳ thay đổi nào khác, trình duyệt
-      // vẫn gửi lên nguyên khối dữ liệu đang cầm (rỗng ở phần đó), và nếu lưu
-      // thẳng sẽ xoá mất dữ liệu thật trên server. Đọc lại dữ liệu hiện có trên
-      // server trước khi ghi, và với mỗi chi nhánh người này không có quyền, luôn
-      // giữ nguyên bản trên server, bỏ qua hoàn toàn phần họ gửi lên cho chi nhánh đó.
+      // Chốt 3 [v13.1]: không cho ghi một khối dữ liệu RỖNG/thiếu NVL đè lên server đang có dữ liệu thật
+      // (nguồn gốc của hiện tượng số liệu "về 0đ").
+      const incomingHasNvl = Array.isArray(data.nvl) && data.nvl.length > 0;
+      if (serverHasData && !incomingHasNvl && !force) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          error: 'REFUSE_EMPTY_OVERWRITE',
+          message: 'Từ chối lưu: dữ liệu gửi lên đang trống/thiếu Danh Mục NVL trong khi server đã có dữ liệu. Hãy tải lại trang (F5).'
+        });
+      }
+
+      // 🔒🩹 CHỐT AN TOÀN CHỐNG MẤT DỮ LIỆU BTP (giữ nguyên như cũ)
       const isSuper = !!req.user.is_superadmin;
       const perm = currentData.user_btp_tabs?.[req.user.id] || [];
       const canKK = isSuper || perm.includes('btp-khapkhun');
@@ -141,7 +156,7 @@ module.exports = function (io) {
 
       reconcileBtpNvl(data);
 
-      const { rows } = await pool.query(
+      const { rows } = await client.query(
         `INSERT INTO app_state (id, data, updated_at, updated_by)
          VALUES (1, $1, now(), $2)
          ON CONFLICT (id)
@@ -149,6 +164,7 @@ module.exports = function (io) {
          RETURNING updated_at`,
         [JSON.stringify(data), req.user.name]
       );
+      await client.query('COMMIT');
       const updated_at = rows[0].updated_at;
 
       const senderSocketId = req.headers['x-socket-id'];
@@ -161,7 +177,10 @@ module.exports = function (io) {
 
       res.json({ updated_at, updated_by: req.user.name });
     } catch (e) {
+      try { await client.query('ROLLBACK'); } catch (_) {}
       res.status(500).json({ error: e.message });
+    } finally {
+      client.release();
     }
   });
 
