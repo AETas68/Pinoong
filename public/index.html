@@ -3640,7 +3640,7 @@ async function phucHoiTuBackup(fileInput){
   )) return;
 
   try{
-    await apiFetch('/api/state', { method:'PUT', body: JSON.stringify({data: backupData}) });
+    await apiFetch('/api/state', { method:'PUT', body: JSON.stringify({data: backupData, force: true}) }); // 🩹 [v13.1] phục hồi là ghi đè có chủ đích
     toast('✅ Đã phục hồi dữ liệu thành công — đang tải lại trang...');
     setTimeout(()=>location.reload(), 1500);
   }catch(e){
@@ -3686,8 +3686,149 @@ window.addEventListener('pagehide', () => {
 });
 let _mergeRetryCount = 0; // đếm số lần vừa tự hợp nhất liên tiếp — chặn vòng lặp vô hạn trong trường hợp cực hiếm
 
+// 🩹 [v13.1] Cờ "đã từng đồng bộ thành công với server trong phiên này". Nếu FALSE
+// (vd server Render đang ngủ đông nên lúc mở app phải dùng bản lưu tạm trong máy),
+// TUYỆT ĐỐI không được gửi nguyên khối dữ liệu cũ lên server — nếu gửi sẽ ghi đè
+// mất dữ liệu mới hơn trên server (đây là nguyên nhân "tự nhiên về 0đ / mất số liệu
+// khi đổi thiết bị hoặc mạng chập chờn"). Phải tải bản server về, hợp nhất, rồi mới lưu.
+let _serverSynced = false;
+
+function _sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function _setSyncLabel(txt){ const l=document.getElementById('syncLabel'); if(l) l.textContent=txt; }
+
+// 🩹 [v13.1] Tải state có THỬ LẠI + thời gian chờ: Render gói Free ngủ đông sau ~15 phút,
+// lần gọi đầu mất 30-60 giây (hoặc trả 502/503). Trước đây chỉ thử 1 lần rồi lập tức
+// rơi về bản lưu tạm trong máy.
+async function _fetchStateWithRetry(){
+  const waits = [0, 3000, 6000, 10000, 15000, 20000]; // tổng chờ tối đa ~1 phút
+  let lastErr = null;
+  for(let i=0;i<waits.length;i++){
+    if(waits[i]) await _sleep(waits[i]);
+    const ctrl = (typeof AbortController!=='undefined') ? new AbortController() : null;
+    const to = ctrl ? setTimeout(()=>ctrl.abort(), 45000) : null;
+    try{
+      if(i>0) _setSyncLabel('⏳ Máy chủ đang khởi động lại, vui lòng chờ... ('+i+'/'+(waits.length-1)+')');
+      const res = await apiFetch('/api/state', ctrl ? { method:'GET', signal: ctrl.signal } : { method:'GET' });
+      if(to) clearTimeout(to);
+      return res;
+    }catch(e){
+      if(to) clearTimeout(to);
+      lastErr = e;
+      // Lỗi nghiệp vụ không cần thử lại: hết phiên đăng nhập / bị cấm
+      if(/Phiên đăng nhập/.test(e.message||'') ) throw e;
+    }
+  }
+  throw lastErr || new Error('Không tải được dữ liệu từ server');
+}
+
+// 🩹 [v13.1] Hợp nhất 3 chiều cho MẢNG (vd: danh sách phiếu Nhập Hàng, Hủy Hàng...).
+// Trước đây mảng bị thay NGUYÊN KHỐI -> 2 người cùng thêm phiếu thì phiếu của người
+// lưu trước bị xoá mất. Nay: lấy bản server (target) + thêm những phần tử MÌNH thêm
+// + bỏ những phần tử MÌNH xoá (so với bản gốc base).
+function _mergeArray3Way(baseArr, mineArr, targetArr){
+  baseArr = Array.isArray(baseArr) ? baseArr : [];
+  mineArr = Array.isArray(mineArr) ? mineArr : [];
+  targetArr = Array.isArray(targetArr) ? targetArr : [];
+  const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  const keyed = a => a.every(v => isObj(v) && v.id !== undefined && v.id !== null) && new Set(a.map(v => String(v.id))).size === a.length;
+  const J = v => JSON.stringify(v);
+
+  // (A) Mảng phần tử có "id" duy nhất (NVL, Menu, Nhân viên...): hợp nhất THEO ID và theo TỪNG TRƯỜNG,
+  //     nên sửa giá 1 NVL không sinh ra bản trùng và không đè lên NVL khác người khác vừa sửa.
+  if (keyed(baseArr) && keyed(mineArr) && keyed(targetArr)) {
+    const bm = new Map(baseArr.map(v => [String(v.id), v]));
+    const mm = new Map(mineArr.map(v => [String(v.id), v]));
+    const tm = new Map(targetArr.map(v => [String(v.id), v]));
+    const out = [];
+    for (const t of targetArr) {
+      const id = String(t.id);
+      if (bm.has(id) && !mm.has(id)) continue;                       // mình đã xoá phần tử này
+      if (bm.has(id) && mm.has(id) && J(bm.get(id)) !== J(mm.get(id))) { // mình đã sửa -> áp từng trường lên bản server
+        out.push(_applyDiffPaths(JSON.parse(J(t)), _deepDiffPaths(bm.get(id), mm.get(id))));
+      } else out.push(t);
+    }
+    for (const m of mineArr) {                                        // mình thêm mới
+      const id = String(m.id);
+      if (bm.has(id)) continue;
+      if (tm.has(id) && J(tm.get(id)) === J(m)) continue;             // đã có sẵn trên server (lần lưu trước tới nơi nhưng mất phản hồi)
+      out.push(m);                                                    // (trùng id khác nội dung: giữ CẢ HAI, không làm mất dữ liệu nào)
+    }
+    return out;
+  }
+
+  // (B) Mảng không có id (phiếu nhập/hủy hàng, chi phí...): so theo nội dung (đa tập hợp).
+  const count = arr => { const m = new Map(); for (const v of arr) { const k = J(v); m.set(k, (m.get(k) || 0) + 1); } return m; };
+  const baseC = count(baseArr), mineC = count(mineArr);
+  const added = new Set(), removed = new Map();
+  for (const [k, c] of mineC) if (c - (baseC.get(k) || 0) > 0) added.add(k);
+  for (const [k, c] of baseC) { const d = c - (mineC.get(k) || 0); if (d > 0) removed.set(k, d); }
+  const out = [];
+  for (const v of targetArr) {
+    const k = J(v);
+    if (removed.get(k) > 0) { removed.set(k, removed.get(k) - 1); continue; }
+    out.push(v);
+  }
+  // Bảo đảm có ĐỦ số bản sao của mỗi phần tử mình thêm (chống nhân đôi khi lần lưu trước đã tới server).
+  const have = count(out);
+  for (const k of added) {
+    const need = (mineC.get(k) || 0) - (have.get(k) || 0);
+    for (let i = 0; i < need; i++) out.push(JSON.parse(k));
+  }
+  return out;
+}
+
+// Hợp nhất thay đổi của máy này lên bản server mới nhất (dùng chung cho: xung đột 409
+// và cho trường hợp lần đầu đồng bộ sau khi phải dùng bản lưu tạm).
+function _mergeMyChangesOntoFresh(freshData){
+  const base = _baseSnapshotForDiff || {};
+  const myChanges = _deepDiffPaths(base, S);
+  const target = JSON.parse(JSON.stringify(freshData || {}));
+  for(const d of myChanges){
+    if(d.deleted || !Array.isArray(d.value)) continue;
+    // lấy mảng gốc & mảng đang có trên server cùng đường dẫn
+    const get = (root)=>{ let o=root; for(const k of d.path){ if(o==null) return undefined; o=o[k]; } return o; };
+    const bArr = get(base), tArr = get(target);
+    if(Array.isArray(bArr) || Array.isArray(tArr)){
+      d.value = _mergeArray3Way(Array.isArray(bArr)?bArr:[], d.value, Array.isArray(tArr)?tArr:[]);
+    }
+  }
+  return _applyDiffPaths(target, myChanges);
+}
+
+// Dùng khi máy đang cầm bản lưu tạm (chưa từng đồng bộ): tải bản server, hợp nhất, đặt mốc.
+async function _syncBaseFromServer(){
+  try{
+    const fresh = await apiFetch('/api/state', { method:'GET' });
+    if(!(fresh && fresh.data && Object.keys(fresh.data).length)) return false;
+    const merged = _mergeMyChangesOntoFresh(fresh.data);
+    _replaceStateContent(merged);
+    _lastKnownUpdatedAt = fresh.updated_at || null;
+    // Mốc so sánh = bản SERVER (không phải bản đã hợp nhất) để nếu lần lưu tiếp theo lại
+    // xung đột thì thay đổi của máy này vẫn còn được tính đúng.
+    _baseSnapshotForDiff = JSON.parse(JSON.stringify(fresh.data));
+    _serverSynced = true;
+    try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e2){}
+    const activePage = document.querySelector('.page.on');
+    if(activePage && typeof renderPage==='function') renderPage(activePage.id.replace('page-',''));
+    return true;
+  }catch(e){
+    console.error('Chưa đồng bộ được với server:', e);
+    return false;
+  }
+}
+
 async function pushStateToServer(){
   if(!authToken) return;
+  // 🩹 [v13.1] Chưa từng đồng bộ thành công (đang dùng bản lưu tạm): KHÔNG ghi mù lên server.
+  if(!_serverSynced){
+    const ok = await _syncBaseFromServer();
+    if(!ok){
+      setSyncStatus(false);
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(pushStateToServer, 8000); // thử lại sau, dữ liệu vẫn giữ ở máy (_dirtyLocal)
+      return;
+    }
+  }
   try{
     const res = await apiFetch('/api/state', {
       method:'PUT',
@@ -3696,6 +3837,7 @@ async function pushStateToServer(){
     });
     _lastKnownUpdatedAt = res.updated_at || null;
     _baseSnapshotForDiff = JSON.parse(JSON.stringify(S)); // 🔒 lưu đã khớp server — chốt lại bản gốc
+    _serverSynced = true;
     _mergeRetryCount = 0;
     setSyncStatus(true);
     _dirtyLocal = false;
@@ -3727,12 +3869,13 @@ async function pushStateToServer(){
         return;
       }
       try{
-        const myChanges = _deepDiffPaths(_baseSnapshotForDiff || {}, S);
         const fresh = await apiFetch('/api/state', { method:'GET' });
-        const merged = _applyDiffPaths(JSON.parse(JSON.stringify(fresh.data || {})), myChanges);
+        // 🩹 [v13.1] hợp nhất 3 chiều (kể cả mảng) + mốc so sánh = bản server để không mất
+        // thay đổi của máy này nếu lần lưu lại kế tiếp lại xung đột.
+        const merged = _mergeMyChangesOntoFresh(fresh.data || {});
         _replaceStateContent(merged);
         _lastKnownUpdatedAt = fresh.updated_at || null;
-        _baseSnapshotForDiff = JSON.parse(JSON.stringify(S));
+        _baseSnapshotForDiff = JSON.parse(JSON.stringify(fresh.data || {}));
 try{ localStorage.setItem('kk_state_cache', JSON.stringify(S)); }catch(e2){}
         // Vẽ lại đúng trang đang mở với dữ liệu đã hợp nhất
         const activePage = document.querySelector('.page.on');
@@ -3760,11 +3903,18 @@ async function loadData(){
   let loaded = false;
   let confirmedBrandNewDb = false; // true CHỈ KHI server xác nhận rõ ràng đây là database CHƯA TỪNG được lưu lần nào
   try{
-    const res = await apiFetch('/api/state', { method:'GET' });
+    const res = await _fetchStateWithRetry(); // 🩹 [v13.1] thử lại khi server Render đang ngủ đông
 if(res && res.data && Object.keys(res.data).length){
-      Object.assign(S, res.data);
+      if(_dirtyLocal && S.nvl && S.nvl.length){
+        // 🩹 [v13.1] Đang có thay đổi CHƯA LƯU trên máy này: không ghi đè bằng bản server
+        // (các lần loadData() gọi lại sau thao tác BTP trước đây có thể xoá mất phiếu vừa nhập).
+        console.warn('⏸ loadData(): bỏ qua ghi đè vì đang có thay đổi local chưa lưu.');
+      } else {
+        Object.assign(S, res.data);
+        _lastKnownUpdatedAt = res.updated_at || null;
+      }
+      _serverSynced = true;
       loaded = true;
-      _lastKnownUpdatedAt = res.updated_at || null;
       // 🔒🩹 CHỐT AN TOÀN CỰC KỲ QUAN TRỌNG: trước đây hễ phản hồi từ server
       // "trông có vẻ thiếu nvl" (vd chỉ còn {activeTab, allowedTabs} do một
       // lần đọc DB gặp trục trặc thoáng qua) là app ÂM THẦM coi như máy mới
@@ -8401,7 +8551,7 @@ function capNhatUocTinhBtp(branchName) {
     const nvl = S.nvl.find(x => normName(x.ten) === normName(ing.ten));
     if (!nvl) { missing.push(ing.ten); return; }
     const dvt = (nvl.dvt || 'kg').toLowerCase().trim();
-    const qty = (['kg', 'kilo', 'k', 'g', 'gr', 'gram', 'lit', 'lít', 'l', 'liter', 'ml'].includes(dvt)) ? ing.dl / 1000 : ing.dl;
+    const qty = ing.dl / (unitType(dvt) === 'mass' ? 1000 : 1); // 🩹 [v13.1] dùng đúng 1 chuẩn quy đổi như server/calcGiaVon
     totalNvl += (nvl.gia || 0) * qty * (1 + (ing.hh || 0));
   });
 
