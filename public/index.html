@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>🍜 KhạpKhun — Hệ Thống Quản Lý</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -161,6 +161,89 @@ tr:hover .sticky-col{background:#F7F4F0}
   .metrics{grid-template-columns:repeat(2,1fr)}
 }
 
+/* ═══════════ [v14] GIAO DIỆN ĐIỆN THOẠI (chỉ có tác dụng khi màn hình ≤768px; máy tính giữ nguyên) ═══════════ */
+.mob-only{display:none}
+.qs-btn{display:none}
+.qty-step{display:inline-flex;align-items:center;gap:6px}
+@media(max-width:768px){
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom));font-size:14px;-webkit-text-size-adjust:100%}
+  /* Thanh trên cùng gọn: bỏ dải 17 tab (vẫn còn trong DOM để thanh đáy gọi lại, giữ nguyên phân quyền) */
+  .nav{flex-wrap:nowrap;padding:6px 10px;gap:6px;padding-top:calc(6px + env(safe-area-inset-top))}
+  .nav .nb,.nav .ver,.nav #tsLabel,.nav .user-chip{display:none!important}
+  .nav .logo{font-size:15px;margin-right:0}
+  .nav-right{gap:8px;margin-left:auto}
+  .save-btn{padding:9px 14px;font-size:13px}
+  .nav .btn-sm{padding:8px 10px;font-size:12px}
+  .content{padding:10px 10px 0}
+  .card{padding:12px;margin-bottom:10px}
+  .form-grid,.fg3,.fg4{grid-template-columns:1fr 1fr}
+  .form-grid[style*="grid-template-columns"]{grid-template-columns:1fr 1fr!important}
+  .form-grid.m-form1{grid-template-columns:1fr!important}
+  .form-grid.m-form1 .btn{width:100%;justify-content:center;min-height:52px;font-size:16px}
+  input,select,textarea{font-size:16px;min-height:44px}   /* 16px: iPhone không tự phóng to khi bấm vào ô nhập */
+  .btn{min-height:44px;padding:10px 14px;font-size:14px}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .metric-val{font-size:18px}
+
+  /* ── Thanh điều hướng ĐÁY ── */
+  #mob-bottom{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1200;background:var(--white);border-top:2px solid var(--border2);padding-bottom:env(safe-area-inset-bottom)}
+  #mob-bottom button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;border:0;background:transparent;font-family:inherit;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer}
+  #mob-bottom button .ic{font-size:22px;line-height:1}
+  #mob-bottom button.on{color:var(--teal);box-shadow:inset 0 3px 0 var(--teal);background:rgba(0,0,0,.03)}
+  #mob-bottom button.off{display:none}
+  /* ── Nút + nổi (FAB) ── */
+  #mob-fab{display:flex;align-items:center;justify-content:center;position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:1250;width:58px;height:58px;border-radius:50%;border:2px solid var(--teal2);background:var(--teal);color:#fff;font-size:34px;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;padding:0 0 4px}
+  /* ── Ngăn kéo từ đáy ── */
+  #mob-sheet-bg{display:block;position:fixed;inset:0;z-index:1290;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s}
+  #mob-sheet-bg.open{opacity:1;pointer-events:auto}
+  #mob-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:1300;background:var(--white);border-top:3px solid var(--border2);max-height:82vh;overflow-y:auto;transform:translateY(105%);transition:transform .22s;padding:0 14px calc(14px + env(safe-area-inset-bottom))}
+  #mob-sheet.open{transform:none}
+  .mob-sheet-head{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);padding:12px 0 8px;font-size:16px;font-weight:700}
+  .mob-sheet-head button{border:0;background:var(--bg);width:40px;height:40px;font-size:18px;cursor:pointer}
+  .mob-grp{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 2px}
+  .mob-act{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:10px 14px;margin:8px 0;font-family:inherit;font-size:16px;font-weight:700;text-align:left;border:2px solid var(--border2);background:var(--white);color:var(--text1);cursor:pointer}
+  .mob-act .ic{font-size:26px;width:34px;text-align:center}
+  .mob-act small{display:block;font-size:12px;font-weight:400;color:var(--text3)}
+  .mob-act.big{min-height:68px;border-color:var(--teal);background:rgba(0,0,0,.02)}
+
+  /* ── Bảng → THẺ (card) ── */
+  table.m-card,table.m-card tbody,table.m-card tfoot{display:block;width:100%;border:0}
+  table.m-card thead{display:none}
+  table.m-card tr{display:block;background:var(--white);border:2px solid var(--border2);margin:0 0 10px;padding:8px 12px}
+  table.m-card td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.12);text-align:right;min-width:0!important;position:static;white-space:normal;font-size:14px}
+  table.m-card td:last-child{border-bottom:0}
+  table.m-card td[data-label]::before{content:attr(data-label);flex:0 0 40%;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase}
+  table.m-card td.m-title{display:block;text-align:left;font-size:16px;font-weight:700;padding-top:2px}
+  table.m-card td.m-title::before{content:none}
+  table.m-card td.m-hide{display:none}
+  table.m-card td:not([data-label]):not(.m-title){justify-content:flex-end;flex-wrap:wrap}
+  table.m-card td input:not(.qs-in),table.m-card td select{max-width:62%}
+  table.m-card tr[style*="table-row"]{display:block!important}  /* hàng bọc nhóm món: giữ chức năng thu gọn/mở rộng nhóm */
+  .nav .btn-sm,.save-btn{white-space:nowrap}
+  #bc-pnl-table{min-width:0!important}
+  div[style*="grid-template-columns:1fr 1fr"]:not(.form-grid):not(.metrics){grid-template-columns:1fr!important}   /* lưới 2 cột cố định (vd ma trận Ngôi Sao/Ngựa Cày) → 1 cột */
+  .col-2>*,.col-3>*,.metrics>*,.form-grid>*,div[style*="display:grid"]>*{min-width:0}   /* chống lưới bị bảng rộng làm phồng khỏi màn hình */
+  .tbl-wrap{-webkit-overflow-scrolling:touch}
+  #syncLabel{white-space:nowrap}
+  table.m-card tr.m-banner{background:transparent;border:0;padding:0;margin:0 0 6px}
+  table.m-card tr.m-banner>td{display:block;text-align:left;border:0;padding:6px 4px;width:100%}
+  table.m-card tr.m-banner>td::before{content:none}
+  table.m-card tr.m-banner>td[data-label]{display:inline-block;width:auto;padding:2px 10px 2px 4px}
+  table.m-card tr.m-banner>td[data-label]::before{content:attr(data-label)": ";font-size:10px}
+  table.m-card tr.m-banner>td>table{width:100%}
+  table.m-card tr.m-total{background:var(--bg);border:1px dashed var(--border2)}
+  /* Bán hàng: chỉ giữ Tên · Giá bán · SL · Doanh thu · Lãi (ẩn giá vốn & lãi/suất cho thẻ gọn) */
+  #bh-tbody tr.bh-item-row td:nth-child(3),#bh-tbody tr.bh-item-row td:nth-child(4){display:none}
+
+  /* ── Nút − [số] + ── */
+  .qty-step{display:flex;justify-content:flex-end}
+  .qty-step .qs-btn{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border:2px solid var(--border2);background:var(--white);font-size:26px;font-weight:700;line-height:1;color:var(--text1);cursor:pointer;padding:0 0 3px;touch-action:manipulation}
+  .qty-step .qs-btn:active{background:var(--teal);color:#fff}
+  .qty-step input{width:72px!important;max-width:72px!important;text-align:center;font-size:20px;font-weight:700;min-height:46px;padding:4px}
+  .form-group .qty-step{justify-content:stretch}
+  .form-group .qty-step input{flex:1;max-width:none!important}
+}
+
 /* LOGIN */
 .login-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center}
 .login-overlay.hidden{display:none}
@@ -237,6 +320,18 @@ tr:hover .sticky-col{background:#F7F4F0}
     <button class="btn btn-outline btn-sm" onclick="doLogout()">Đăng xuất</button>
   </div>
 </nav>
+
+<!-- [v14] ĐIỀU HƯỚNG ĐIỆN THOẠI: thanh đáy + nút + nổi + ngăn kéo (chỉ hiện ≤768px) -->
+<div id="mob-bottom" class="mob-only">
+  <button type="button" data-tab="dash" onclick="mobGo('dashboard')"><span class="ic">📊</span>Tổng Quan</button>
+  <button type="button" data-tab="quick" onclick="mobOpenQuick()"><span class="ic">⚡</span>Nhập Nhanh</button>
+  <button type="button" data-tab="rep" onclick="mobGo('baocao')"><span class="ic">📈</span>Báo Cáo</button>
+  <button type="button" data-tab="more" onclick="mobOpenMore()"><span class="ic">☰</span>Mở Rộng</button>
+</div>
+<button type="button" id="mob-fab" class="mob-only" aria-label="Thao tác nhanh" onclick="mobOpenQuick()">+</button>
+<div id="mob-sheet-bg" class="mob-only" onclick="mobCloseSheet()"></div>
+<div id="mob-sheet" class="mob-only"><div class="mob-sheet-head"><span id="mob-sheet-title"></span><button type="button" onclick="mobCloseSheet()">✕</button></div><div id="mob-sheet-body"></div></div>
+
 
 
 
@@ -451,7 +546,7 @@ tr:hover .sticky-col{background:#F7F4F0}
   <!-- Quick input form (inline, no modal) -->
   <div class="card mb12">
     <div class="card-title">➕ Nhập Nhanh Hàng Ngày</div>
-    <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+    <div class="form-grid m-form1" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
       <div class="form-group">
         <label>Ngày Nhập *</label>
         <input type="date" id="inv-q-ngay">
@@ -1176,7 +1271,7 @@ tr:hover .sticky-col{background:#F7F4F0}
       <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="exportDuBaoCSV()">⬇️ Xuất CSV</button>
     </div>
     <div class="tbl-wrap">
-      <table id="dubao-main-table">
+      <table id="dubao-main-table" class="no-card">
         <thead>
           <tr>
             <th style="min-width:160px">Kịch Bản</th>
@@ -1230,7 +1325,7 @@ tr:hover .sticky-col{background:#F7F4F0}
       </div>
     </div>
     <div class="tbl-wrap">
-      <table id="dubao-cp-table">
+      <table id="dubao-cp-table" class="no-card">
         <thead>
           <tr>
             <th>Kịch Bản</th>
@@ -8949,5 +9044,176 @@ let timerCapNhatBtp = null;
 <!-- Tính năng 📁 Import Thông Minh -->
 <script src="import-thongminh.js"></script>
 
+
+<script>
+/* ═══════════ [v14] LỚP GIAO DIỆN ĐIỆN THOẠI ═══════════
+   Không đụng tới dữ liệu S, không đổi công thức. Mọi nút điều hướng đều "bấm giùm" các nút .nb có sẵn,
+   nên phân quyền (ẩn tab, mật khẩu BTP...) và hàm render của từng trang giữ nguyên 100%. */
+(function(){
+  var MQ = window.matchMedia('(max-width:768px)');
+  function isMobile(){ return MQ.matches; }
+  function nbFor(id){
+    var all = document.querySelectorAll('.nav .nb');
+    for (var i=0;i<all.length;i++){ var o=all[i].getAttribute('onclick')||''; if (o.indexOf("goPage('"+id+"')")>-1) return all[i]; }
+    return null;
+  }
+  function allowed(id){ var b=nbFor(id); return !!b && !b.classList.contains('hidden'); }
+
+  window.mobCloseSheet = function(){
+    document.getElementById('mob-sheet').classList.remove('open');
+    document.getElementById('mob-sheet-bg').classList.remove('open');
+  };
+  function openSheet(title, build){
+    document.getElementById('mob-sheet-title').textContent = title;
+    var body = document.getElementById('mob-sheet-body'); body.innerHTML = '';
+    build(body);
+    document.getElementById('mob-sheet').classList.add('open');
+    document.getElementById('mob-sheet-bg').classList.add('open');
+  }
+  function act(body, icon, label, sub, fn, big){
+    var b = document.createElement('button'); b.type='button'; b.className = 'mob-act' + (big?' big':'');
+    var ic = document.createElement('span'); ic.className='ic'; ic.textContent = icon;
+    var tx = document.createElement('span'); tx.appendChild(document.createTextNode(label));
+    if (sub){ var sm=document.createElement('small'); sm.textContent=sub; tx.appendChild(sm); }
+    b.appendChild(ic); b.appendChild(tx);
+    b.onclick = function(){ mobCloseSheet(); fn(); };
+    body.appendChild(b);
+  }
+  window.mobGo = function(id){
+    var b = nbFor(id);
+    if (b && !b.classList.contains('hidden')) { b.click(); window.scrollTo(0,0); }
+  };
+  window.mobOpenQuick = function(){
+    openSheet('⚡ Nhập nhanh', function(body){
+      var items = [
+        ['banhang','🛒','Nhập đơn bán ngày','Ghi số lượng bán từng món'],
+        ['inventory','🚚','Nhập phiếu đi chợ','Nhập nguyên liệu mua về'],
+        ['huyhang','🗑','Báo hủy hàng','Ghi hàng hư / hết hạn']
+      ];
+      var n=0;
+      items.forEach(function(it){ if (allowed(it[0])) { n++; act(body,it[1],it[2],it[3],function(){ mobGo(it[0]); }, true); } });
+      if (!n) body.appendChild(document.createTextNode('Tài khoản của bạn chưa được cấp quyền nhập liệu.'));
+    });
+  };
+  var GROUPS = [
+    ['Danh mục & Công thức', ['nvl','menu','bantaicho','haohut','btp-khapkhun','btp-pinoong']],
+    ['Vận hành', ['tonkho','chamcong','chiphi','import']],
+    ['Phân tích & Quản trị', ['dubaodoanhthu','nguoidung']]
+  ];
+  window.mobOpenMore = function(){
+    openSheet('☰ Mở rộng', function(body){
+      GROUPS.forEach(function(g){
+        var shown = g[1].filter(allowed); if (!shown.length) return;
+        var h = document.createElement('div'); h.className='mob-grp'; h.textContent=g[0]; body.appendChild(h);
+        shown.forEach(function(id){
+          var nb = nbFor(id); var t = (nb.textContent||'').trim();
+          var m = t.match(/^(\S+)\s+(.*)$/); // tách emoji đầu nhãn
+          act(body, m?m[1]:'•', m?m[2]:t, '', function(){ mobGo(id); });
+        });
+      });
+      var h2 = document.createElement('div'); h2.className='mob-grp'; h2.textContent='Tài khoản'; body.appendChild(h2);
+      act(body,'💾','Lưu ngay','', function(){ if (typeof saveData==='function') saveData(); });
+      act(body,'🚪','Đăng xuất','', function(){ if (typeof doLogout==='function') doLogout(); });
+    });
+  };
+
+  // ── Làm nổi bật tab đáy theo trang đang mở + ẩn tab không có quyền ──
+  var QUICK = ['banhang','inventory','huyhang','bantaicho'];
+  function syncNav(){
+    var pg = document.querySelector('.page.on'); var id = pg ? pg.id.replace('page-','') : 'dashboard';
+    var tab = id==='dashboard' ? 'dash' : id==='baocao' ? 'rep' : QUICK.indexOf(id)>-1 ? 'quick' : 'more';
+    document.querySelectorAll('#mob-bottom button').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-tab')===tab);
+    });
+    var d=document.querySelector('#mob-bottom [data-tab=dash]'), r=document.querySelector('#mob-bottom [data-tab=rep]');
+    if (d) d.classList.toggle('off', !allowed('dashboard'));
+    if (r) r.classList.toggle('off', !allowed('baocao'));
+    var qOk = allowed('banhang')||allowed('inventory')||allowed('huyhang');
+    var q=document.querySelector('#mob-bottom [data-tab=quick]'), f=document.getElementById('mob-fab');
+    if (q) q.classList.toggle('off', !qOk);
+    if (f) f.style.visibility = qOk ? '' : 'hidden';
+  }
+
+  // ── Bảng → thẻ, thêm nút − / + cho ô số ──
+  function labelsOf(tbl){
+    var t = tbl, th = null;
+    while (t){
+      var head = t.tHead; if (head && head.rows.length){ th = head.rows[head.rows.length-1].cells; break; }
+      var up = t.parentElement ? t.parentElement.closest('table') : null; t = up;
+    }
+    if (!th) return null;
+    var out=[]; for (var i=0;i<th.length;i++) out.push((th[i].textContent||'').trim());
+    return out;
+  }
+  function step(inp, d){
+    var st = parseFloat(inp.step)||1; if (st<1) st = 1; // bước 0.1 quá chậm khi bấm +/−; vẫn có thể gõ số lẻ
+    var mn = inp.min!=='' ? parseFloat(inp.min) : -Infinity, mx = inp.max!=='' ? parseFloat(inp.max) : Infinity;
+    var v = (parseFloat(inp.value)||0) + d*st; v = Math.round(v*1000)/1000; v = Math.min(mx, Math.max(mn, v));
+    inp.value = v;
+    var hasIn = inp.hasAttribute('oninput'), hasCh = inp.hasAttribute('onchange');
+    if (hasIn || !hasCh) inp.dispatchEvent(new Event('input',{bubbles:true}));
+    if (hasCh || !hasIn) inp.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function addStepper(inp){
+    if (inp.getAttribute('data-mstep')) return; inp.setAttribute('data-mstep','1'); inp.classList.add('qs-in');
+    var wrap = document.createElement('div'); wrap.className='qty-step';
+    inp.parentNode.insertBefore(wrap, inp);
+    function mk(txt,d){ var b=document.createElement('button'); b.type='button'; b.className='qs-btn'; b.textContent=txt; b.setAttribute('aria-label', d>0?'Tăng':'Giảm');
+      b.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); step(inp,d); }); return b; }
+    wrap.appendChild(mk('−',-1)); wrap.appendChild(inp); wrap.appendChild(mk('+',1));
+  }
+  var obs = null, pending = false;
+  function enhance(){
+    pending = false; if (!isMobile()) return;
+    if (obs) obs.disconnect();
+    try{
+      syncNav();
+      var pg = document.querySelector('.page.on'); if (pg){
+        pg.querySelectorAll('table').forEach(function(tbl){
+          if (tbl.classList.contains('no-card') || tbl.querySelector('[rowspan]')) return;
+          var labels = labelsOf(tbl); if (!labels || labels.length < 4 || labels.length > 12) return; // bảng ≤3 cột (vd P&L) đọc tốt hơn khi giữ dạng bảng
+          if (!tbl.classList.contains('m-card')) tbl.classList.add('m-card');
+          for (var r=0;r<tbl.rows.length;r++){
+            var tr = tbl.rows[r]; if (tr.parentNode.tagName==='THEAD' || tr.getAttribute('data-mdone')) continue;
+            if (tr.closest('table')!==tbl) continue; // hàng của bảng lồng bên trong do chính bảng đó xử lý
+            var col=0, hasSpan=false;
+            for (var c=0;c<tr.cells.length;c++){
+              var td = tr.cells[c], cs = td.colSpan||1;
+              if (cs>1) hasSpan = true;
+              else if (td.tagName==='TD' && labels[col] && !td.hasAttribute('data-label')) td.setAttribute('data-label', labels[col]);
+              col += cs;
+            }
+            if (!hasSpan){
+              var tt = tr.querySelector(':scope > td.sticky-col') || tr.cells[0];
+              if (tt && !tt.classList.contains('m-title')) tt.classList.add('m-title');
+              for (var k=0;k<tr.cells.length;k++){
+                var cl = tr.cells[k], tx = (cl.textContent||'').replace(/\s+/g,' ').trim();
+                if (cl.getAttribute('data-label')==='#' || (cl.hasAttribute('data-label') && (tx==='—' || tx==='-' || tx==='') && !cl.querySelector('input,select,textarea,button'))) cl.classList.add('m-hide'); // ẩn ô trống để thẻ gọn
+              }
+            }
+            if (hasSpan) tr.classList.add('m-banner');
+            if (hasSpan && tr.classList.contains('tr-total')) { tr.classList.remove('m-banner'); tr.classList.add('m-total'); }
+            tr.setAttribute('data-mdone','1');
+            // nút − / + cho ô số lượng (chỉ ô nhập gọn trong bảng)
+            if (!hasSpan) tr.querySelectorAll('input.input-inline[type=number]').forEach(addStepper);
+          }
+        });
+        ['bh-ngay','inv-q-sl'].forEach(function(id){ var e = document.getElementById(id); if (e && pg.contains(e)) addStepper(e); });
+      }
+    } finally {
+      if (obs) obs.observe(document.getElementById('app-root'), {childList:true, subtree:true, attributes:true, attributeFilter:['class']});
+    }
+  }
+  function schedule(){ if (pending) return; pending = true; (window.requestAnimationFrame||setTimeout)(enhance); }
+  function init(){
+    var root = document.getElementById('app-root'); if (!root) return;
+    obs = new MutationObserver(schedule);
+    obs.observe(root, {childList:true, subtree:true, attributes:true, attributeFilter:['class']});
+    (MQ.addEventListener ? MQ.addEventListener('change', schedule) : MQ.addListener(schedule));
+    schedule();
+  }
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
 </body>
 </html>
